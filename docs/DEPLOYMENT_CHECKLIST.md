@@ -1,0 +1,12 @@
+# Deployment checklist
+- [x] Supabase project URL and publishable key configured in `js/config.js`.
+- [ ] Keep the service-role/secret key out of all browser files.
+- [ ] Confirm the single Admin Auth user still has `profiles.role='admin'`.
+- [ ] Test sign-in and sign-out on production HTTPS.
+- [ ] Confirm RLS on every table used by the console.
+- [ ] Review Security Advisor SECURITY DEFINER findings individually.
+- [ ] Back up the database before applying the optional single-admin trigger migration.
+- [ ] Test buyer/seller registration and all Marketplace RPC flows after any grant change.
+- [ ] Add dedicated audited RPCs for withdrawals, refunds, dispute resolution, order status transitions, wallet ledger adjustments and category management before enabling those actions.
+- [ ] Configure a safe owner-controlled Admin recovery procedure.
+- [ ] Test mobile and desktop layouts.
