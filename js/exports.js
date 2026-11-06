@@ -1,0 +1,2 @@
+export function downloadCSV(rows,filename='zune-export.csv'){if(!rows?.length)throw new Error('Hakuna records za export.');const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv=[cols.map(esc).join(','),...rows.map(r=>cols.map(c=>esc(r[c])).join(','))].join('
+');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
