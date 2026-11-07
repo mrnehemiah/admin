@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/admin.css">
+  <link rel="stylesheet" href="css/admin.css">
   <style>
     .page-section{display:none}.page-section.active{display:block}
     .section-intro{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 0 18px}
@@ -58,7 +58,7 @@
     .progress-track{height:7px;border-radius:20px;background:#ffffff12;overflow:hidden}.progress-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#b88c43,#f0d99c)}
     @media(max-width:760px){.section-intro{align-items:flex-start}.form-grid,.audit-checklist,.detail-grid{grid-template-columns:1fr}.table-toolbar{justify-content:stretch}.table-search{min-width:0;flex:1;width:100%}}
   </style>
-  <link rel="stylesheet" href="assets/css/premium-v2.css">
+  <link rel="stylesheet" href="css/premium-v2.css">
 </head>
 <body>
 <div class="app-shell">
@@ -222,7 +222,7 @@
 
       <section class="page-section" id="categoriesPage" data-section="categories"><div class="section-intro"><div><h2>Categories</h2><p>Simamia makundi na mpangilio wa bidhaa.</p></div><button class="primary-btn" id="addCategoryBtn" type="button">＋ Add Category</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Category</th><th>Slug</th><th>Bidhaa</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="categoriesTableBody"><tr><td colspan="5" class="empty-state">Inasubiri categories...</td></tr></tbody></table></div></div></section>
 
-      <section class="page-section" id="ordersPage" data-section="orders"><div class="section-intro"><div><h2>Orders Management</h2><p>Fuatilia maagizo, malipo na usafirishaji. Mabadiliko ya status hupita RPC ya backend yenye validation, sababu na audit.</p></div></div><div class="panel"><div class="table-toolbar"><input class="table-search" id="ordersSearch" type="search" placeholder="Tafuta Order ID au neno..." aria-label="Tafuta order"><select id="orderStatusFilter" aria-label="Status"><option value="">Status zote</option><option>pending</option><option>paid</option><option>confirmed</option><option>processing</option><option>shipped</option><option>delivered</option><option>completed</option><option>cancelled</option><option>returned</option><option>refunded</option></select><select id="orderSort" aria-label="Panga"><option value="created_at.desc">Mpya kwanza</option><option value="created_at.asc">Za zamani kwanza</option><option value="total_price.desc">Kiasi: juu</option><option value="total_price.asc">Kiasi: chini</option></select></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Mteja</th><th>Seller</th><th>Kiasi</th><th>Status</th><th>Tarehe</th><th>Kitendo</th></tr></thead><tbody id="ordersTableBody"><tr><td colspan="7" class="empty-state">Inapakia orders…</td></tr></tbody></table></div><div class="pager"><button id="ordersPrev" type="button">‹ Nyuma</button><span id="ordersPageInfo" aria-live="polite"></span><button id="ordersNext" type="button">Mbele ›</button></div></div></section>
+      <section class="page-section" id="ordersPage" data-section="orders"><div class="section-intro"><div><h2>Orders Management</h2><p>Fuatilia maagizo, malipo, usafirishaji na ukamilishaji.</p></div></div><div class="panel"><div class="table-toolbar"><input class="table-search" id="ordersSearch" placeholder="Tafuta order..."><select id="orderStatusFilter"><option value="">Status zote</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Mteja</th><th>Seller</th><th>Kiasi</th><th>Status</th><th>Tarehe</th><th>Kitendo</th></tr></thead><tbody id="ordersTableBody"><tr><td colspan="7" class="empty-state">Inasubiri orders...</td></tr></tbody></table></div></div></section>
 
       <section class="page-section" id="delivery-pricingPage" data-section="delivery-pricing"><div class="section-intro"><div><h2>Delivery & Pricing</h2><p>Simamia maeneo, gharama na masharti ya delivery.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Eneo</th><th>Aina ya delivery</th><th>Bei</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="deliveryPricingBody"><tr><td colspan="5" class="empty-state">Inasubiri delivery pricing...</td></tr></tbody></table></div></div></section>
 
@@ -320,28 +320,27 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="services/config.js"></script>
-<script src="services/security.js"></script>
-<script src="assets/js/layout.js"></script>
-<script src="assets/js/router.js"></script>
-<script src="services/core.js"></script>
-<script src="services/admin-actions.js"></script>
-<script src="pages/notifications/notifications.js"></script>
-<script src="pages/dashboard/dashboard.js"></script>
-<script src="pages/users/users.js"></script>
-<script src="pages/sellers/sellers.js"></script>
-<script src="pages/seller-applications/seller-applications.js"></script>
-<script src="pages/products/products.js"></script>
-<script src="pages/orders/orders.js"></script>
-<script src="pages/wallets/wallet.js"></script>
-<script src="pages/payments/transactions.js"></script>
-<script src="pages/disputes/disputes.js"></script>
-<script src="pages/delivery/delivery-pricing.js"></script>
-<script src="services/operations.js"></script>
-<script src="pages/reports/reports.js"></script>
-<script src="pages/audit/activity-logs.js"></script>
-<script src="pages/settings/settings.js"></script>
-<script src="assets/js/admin.js"></script>
-<script src="assets/js/premium-v2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/security.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/router.js"></script>
+<script src="js/core.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/users.js"></script>
+<script src="js/sellers.js"></script>
+<script src="js/seller-applications.js"></script>
+<script src="js/products.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/wallet.js"></script>
+<script src="js/transactions.js"></script>
+<script src="js/disputes.js"></script>
+<script src="js/delivery-pricing.js"></script>
+<script src="js/operations.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/activity-logs.js"></script>
+<script src="js/settings.js"></script>
+<script src="admin.js"></script>
+<script src="js/premium-v2.js"></script>
 </body>
 </html>
