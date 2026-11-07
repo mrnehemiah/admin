@@ -1,59 +1,91 @@
 <!doctype html>
-<html lang="sw">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#087a55">
-  <meta name="description" content="ZUNE Premium Admin — ukurasa wa kuanzisha mfumo">
-  <title>ZUNE PREMIUM ADMIN 3.0</title>
-  <style>
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}
-    body{background:#f4f7f6;font:14px system-ui,sans-serif}
-    #zune-page{display:block;width:100%;height:100%;border:0;background:#fff}
-    #zune-loader{position:fixed;inset:0;display:grid;place-items:center;background:#f4f7f6;color:#087a55;z-index:2}
-    #zune-loader[hidden]{display:none}.loader-card{text-align:center;padding:24px}
-    .spinner{width:30px;height:30px;border:3px solid #d7e8e1;border-top-color:#087a55;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020"><title>ZUNE PREMIUM ADMIN 3.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="js/config.js"></script><script defer src="js/supabase.js"></script><script defer src="js/auth.js"></script><script defer src="js/app.js"></script>
 </head>
-<body>
-  <!-- index.html ni bootstrap pekee. UI na modules zinatoka pages/*.html -->
-  <div id="zune-loader"><div class="loader-card"><div class="spinner"></div><strong>ZUNE PREMIUM ADMIN</strong><p>Inapakia module…</p></div></div>
-  <iframe id="zune-page" title="ZUNE Premium Admin module" src="pages/dashboard.html"></iframe>
-  <script>
-    (() => {
-      'use strict';
-      const frame = document.getElementById('zune-page');
-      const loader = document.getElementById('zune-loader');
-      const allowed = new Set([
-        'dashboard','users','sellers','seller-applications','verification','products',
-        'categories','orders','payments','wallets','withdrawals','commissions','delivery',
-        'disputes','support','promotions','announcements','notifications','reports',
-        'settings','security','audit','admin-account','ai','health','database','backup','login'
-      ]);
-      function pageFromHash() {
-        const raw = location.hash.replace(/^#/, '').split(/[/?]/)[0];
-        return allowed.has(raw) ? raw : 'dashboard';
-      }
-      function loadPage() {
-        const target = 'pages/' + pageFromHash() + '.html';
-        if (!frame.src.endsWith('/' + target) && !frame.src.endsWith(target)) frame.src = target;
-      }
-      frame.addEventListener('load', () => { loader.hidden = true; });
-      frame.addEventListener('error', () => {
-        loader.hidden = false;
-        loader.querySelector('p').textContent = 'Imeshindikana kupakia pages module. Hakikisha folder la pages lipo.';
-      });
-      window.addEventListener('message', event => {
-        if (event.source !== frame.contentWindow || !event.data || event.data.type !== 'zune:module-route') return;
-        const page = String(event.data.page || '');
-        if (!allowed.has(page)) return;
-        if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page);
-        loadPage();
-      });
-      window.addEventListener('hashchange', loadPage);
-      loadPage();
-    })();
-  </script>
-</body>
-</html>
+<body class="app-body">
+<div id="loginScreen" class="login-screen hidden">
+  <div class="login-card">
+    <div class="brand-mark">Z</div><p class="eyebrow">ZUNE CONTROL CENTER</p><h1>Welcome back</h1><p class="muted">Sign in with your authorized administrator account.</p>
+    <form id="loginForm"><label>Email address<input id="loginEmail" type="email" required autocomplete="username" placeholder="admin@example.com"></label>
+    <label>Password<input id="loginPassword" type="password" required autocomplete="current-password" placeholder="••••••••"></label>
+    <button class="btn btn-primary full" type="submit">Sign in securely</button><p id="loginError" class="form-error"></p></form>
+    <p class="tiny muted">Demo mode uses a local preview session. Connect Supabase and enable admin access before production use.</p>
+  </div>
+</div>
+<div id="appShell" class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark">Z</div><div><b>ZUNE</b><span>PREMIUM ADMIN <i>3.0</i></span></div></div>
+    <div class="workspace"><span class="online-dot"></span><span>Control Center</span><small id="connectionLabel">DEMO MODE</small></div>
+    <nav id="mainNav" class="main-nav">
+      <div class="nav-caption">OVERVIEW</div>
+      <a class="nav-link active" href="index.html"><span>◫</span> Dashboard</a>
+      <div class="nav-caption">CORE ADMIN</div>
+      <a class="nav-link" href="pages/users.html"><span>♙</span> Users Management</a>
+      <a class="nav-link" href="pages/admins.html"><span>♜</span> Admin Accounts</a>
+      <a class="nav-link" href="pages/roles.html"><span>◇</span> Roles & Permissions</a>
+      <a class="nav-link" href="pages/security.html"><span>⌑</span> Security Center</a>
+      <a class="nav-link" href="pages/activity-logs.html"><span>≋</span> Activity Logs</a>
+      <div class="nav-caption">MARKETPLACE</div>
+      <a class="nav-link" href="pages/sellers.html"><span>♧</span> Sellers</a>
+      <a class="nav-link" href="pages/verification.html"><span>✓</span> Verification</a>
+      <a class="nav-link" href="pages/products.html"><span>▦</span> Products</a>
+      <a class="nav-link" href="pages/categories.html"><span>▤</span> Categories</a>
+      <a class="nav-link" href="pages/orders.html"><span>▣</span> Orders</a>
+      <div class="nav-caption">FINANCIAL</div>
+      <a class="nav-link" href="pages/payments.html"><span>◈</span> Payments</a>
+      <a class="nav-link" href="pages/wallets.html"><span>◉</span> Wallets</a>
+      <a class="nav-link" href="pages/withdrawals.html"><span>↗</span> Withdrawals</a>
+      <a class="nav-link" href="pages/commissions.html"><span>％</span> Commissions</a>
+      <div class="nav-caption">OPERATIONS</div>
+      <a class="nav-link" href="pages/notifications.html"><span>♧</span> Notifications</a>
+      <a class="nav-link" href="pages/support.html"><span>☏</span> Support Tickets</a>
+      <a class="nav-link" href="pages/disputes.html"><span>⚑</span> Disputes</a>
+      <a class="nav-link" href="pages/delivery.html"><span>⌁</span> Delivery</a>
+      <div class="nav-caption">INSIGHTS & SYSTEM</div>
+      <a class="nav-link" href="pages/analytics.html"><span>▥</span> Analytics & Reports</a>
+      <a class="nav-link" href="pages/settings.html"><span>⚙</span> Settings</a>
+      <a class="nav-link" href="pages/system-health.html"><span>⌘</span> System Health</a>
+    </nav>
+    <div class="sidebar-bottom"><div class="avatar">ZA</div><div class="admin-mini"><b id="sidebarAdmin">ZUNE Admin</b><small>Administrator</small></div><button id="logoutBtn" class="icon-btn" title="Sign out">↪</button></div>
+  </aside>
+  <main class="main-area">
+    <header class="topbar"><button class="icon-btn mobile-menu" id="menuBtn">☰</button><div class="crumb">ZUNE / <b>Dashboard</b></div><div class="top-actions"><span class="live-pill"><i></i> System live</span><button class="icon-btn" title="Notifications" onclick="location.href='pages/notifications.html'">♧</button><button class="profile-chip"><span class="avatar small">ZA</span><span id="topAdmin">Administrator</span></button></div></header>
+    <section class="page-wrap">
+      <div class="page-heading"><div><p class="eyebrow">SATURDAY, NOVEMBER 07, 2026</p><h1>Dashboard overview</h1><p class="muted">Your marketplace at a glance. Monitor performance and take action.</p></div><div class="heading-actions"><button class="btn btn-ghost" id="refreshDashboard">↻ Refresh</button><button class="btn btn-primary" onclick="location.href='pages/users.html'">＋ Add user</button></div></div>
+      <div class="notice-bar" id="modeNotice"><span>✦</span><div><b>Preview environment</b><small>UI actions are available with sample data. Connect your Supabase project and run database/schema.sql to enable live data.</small></div><button class="text-btn" onclick="location.href='pages/settings.html'">Configure ↗</button></div>
+      <div class="section-head"><div><h2>Key performance indicators</h2><p>Live overview of your platform</p></div><span class="subtle-tag">LAST 30 DAYS</span></div>
+      <div class="kpi-grid" id="kpiGrid">
+        <article class="kpi-card"><div class="kpi-top"><span>Total users</span><i>♙</i></div><strong id="kpiUsers">12,840</strong><small class="positive">↑ 8.4% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Active users</span><i>◉</i></div><strong>10,294</strong><small class="positive">↑ 5.2% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Suspended users</span><i>⊘</i></div><strong>126</strong><small class="negative">↑ 1.2% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Total sellers</span><i>♧</i></div><strong>1,284</strong><small class="positive">↑ 12.8% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Active sellers</span><i>✓</i></div><strong>1,106</strong><small class="positive">↑ 7.1% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Transactions</span><i>⇄</i></div><strong>28,491</strong><small class="positive">↑ 14.6% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Total revenue</span><i>◈</i></div><strong>TZS 84.6M</strong><small class="positive">↑ 9.3% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Seller sales</span><i>▦</i></div><strong>TZS 61.2M</strong><small class="positive">↑ 11.2% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Seller earnings</span><i>◉</i></div><strong>TZS 54.8M</strong><small class="positive">↑ 8.1% <em>vs last month</em></small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Pending verification</span><i>⌑</i></div><strong>48</strong><small class="neutral">Needs review</small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>Pending withdrawals</span><i>↗</i></div><strong>23</strong><small class="neutral">Needs review</small></article>
+        <article class="kpi-card"><div class="kpi-top"><span>System alerts</span><i>⚑</i></div><strong>3</strong><small class="negative">Requires attention</small></article>
+      </div>
+      <div class="content-grid dashboard-grid">
+        <section class="panel chart-panel"><div class="panel-head"><div><h3>Revenue performance</h3><p>Monthly revenue overview</p></div><select class="select-small"><option>Last 30 days</option><option>Last 7 days</option><option>This year</option></select></div><div class="chart-area"><div class="chart-y"><span>100M</span><span>75M</span><span>50M</span><span>25M</span><span>0</span></div><svg viewBox="0 0 700 220" preserveAspectRatio="none" class="line-chart"><defs><linearGradient id="areaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8b7cff" stop-opacity=".3"/><stop offset="1" stop-color="#8b7cff" stop-opacity="0"/></linearGradient></defs><path d="M0 180 C50 160 65 170 100 142 S170 150 200 118 S270 132 300 95 S370 110 400 82 S470 100 500 62 S570 78 600 42 S660 52 700 18 L700 220 L0 220Z" fill="url(#areaFill)"/><path d="M0 180 C50 160 65 170 100 142 S170 150 200 118 S270 132 300 95 S370 110 400 82 S470 100 500 62 S570 78 600 42 S660 52 700 18" fill="none" stroke="#9b8cff" stroke-width="3" vector-effect="non-scaling-stroke"/></svg><div class="chart-x"><span>Oct 08</span><span>Oct 13</span><span>Oct 18</span><span>Oct 23</span><span>Oct 28</span><span>Nov 02</span><span>Nov 07</span></div></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Account distribution</h3><p>Current account status</p></div><a href="pages/users.html" class="text-btn">View all ↗</a></div><div class="donut-wrap"><div class="donut"><div><b>12.8k</b><small>Total users</small></div></div><div class="legend"><span><i class="dot purple"></i> Active <b>80.2%</b></span><span><i class="dot blue"></i> Pending <b>12.1%</b></span><span><i class="dot orange"></i> Suspended <b>7.7%</b></span></div></div></section>
+      </div>
+      <div class="content-grid lower-grid">
+        <section class="panel"><div class="panel-head"><div><h3>Pending actions</h3><p>Items that need your attention</p></div><span class="count-badge">71</span></div><div class="action-list"><a href="pages/verification.html"><span class="action-icon violet">✓</span><span><b>Verification requests</b><small>48 applications awaiting review</small></span><strong>48</strong></a><a href="pages/withdrawals.html"><span class="action-icon blue">↗</span><span><b>Withdrawal requests</b><small>23 requests awaiting approval</small></span><strong>23</strong></a></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Recent activity</h3><p>Latest administrative events</p></div><a href="pages/activity-logs.html" class="text-btn">View logs ↗</a></div><div class="activity-list"><div><span class="activity-dot"></span><p><b>New user registered</b><small>user@example.com · 4 minutes ago</small></p></div><div><span class="activity-dot blue"></span><p><b>Withdrawal approved</b><small>WD-2026-1048 · 21 minutes ago</small></p></div><div><span class="activity-dot orange"></span><p><b>Verification submitted</b><small>Seller account · 38 minutes ago</small></p></div></div></section>
+      </div>
+      <footer class="footer">© 2026 ZUNE PREMIUM ADMIN <span>Built for clarity, control & scale.</span></footer>
+    </section>
+  </main>
+</div>
+<div id="toastHost" class="toast-host"></div>
+</body></html>
