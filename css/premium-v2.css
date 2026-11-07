@@ -71,3 +71,17 @@ tbody tr{transition:background .2s,transform .2s}tbody tr:hover{background:#45d3
 .user-detail-section{margin-top:17px;padding-top:15px;border-top:1px solid var(--line)}.user-detail-section h4{margin:0 0 11px;color:var(--gold-2);font-size:13px}.users-muted{font-size:11px;line-height:1.7;color:var(--muted)}.users-action-grid{display:flex;flex-wrap:wrap;gap:9px}.users-action-grid button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:950px){.users-overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.user-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.user-mini-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.users-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.users-toolbar{grid-template-columns:1fr}.users-toolbar input,.users-toolbar select{width:100%;box-sizing:border-box}.users-pagination{align-items:flex-start;flex-direction:column}.users-pagination>div{width:100%}.users-pagination button{flex:1}.users-detail-panel{padding:15px}.users-detail-head{align-items:flex-start}.users-detail-head h3{font-size:18px}.user-detail-grid{grid-template-columns:1fr}.user-mini-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.users-action-grid{display:grid;grid-template-columns:1fr 1fr}.users-action-grid button{min-height:42px}}
+
+/* 3.0: confirmation dialog, pager, focus, reduced motion */
+.zune-dialog{border:1px solid #d1d5db;border-radius:16px;padding:0;max-width:min(92vw,460px);width:100%;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.zune-dialog::backdrop{background:rgba(15,23,42,.55)}
+.zd-form{display:grid;gap:12px;padding:20px}.zd-form h3{margin:0}.zd-form p{margin:0}.zd-form label{display:grid;gap:6px;font-weight:600}
+.zd-form select,.zd-form textarea{font:inherit;padding:10px;border:1px solid #d1d5db;border-radius:10px;min-height:44px}
+.zd-check{display:flex!important;align-items:center;gap:8px;font-weight:500!important}
+.zd-error{color:#b91c1c}.zd-actions{display:flex;gap:8px;justify-content:flex-end}
+.zd-btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #d1d5db;background:#fff;font:inherit;cursor:pointer}
+.zd-btn.primary{background:#047857;border-color:#047857;color:#fff}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 4px}
+.pager button{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}.pager button:disabled{opacity:.5;cursor:not-allowed}
+.zune-dialog :focus-visible,.pager button:focus-visible,.zd-btn:focus-visible,[data-go]:focus-visible{outline:3px solid #047857;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
