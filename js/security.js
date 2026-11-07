@@ -8,7 +8,7 @@
     if (error) throw error;
     if (!session?.user) {
       const back = encodeURIComponent(location.pathname + location.hash);
-      location.replace(`login.html?redirect=${back}`);
+      location.replace(`pages/login.html?redirect=${back}`);
       return null;
     }
     const { data: profile, error: profileError } = await db().from('profiles')
@@ -29,7 +29,7 @@
   }
   async function signOut() {
     if (db()) await db().auth.signOut();
-    location.replace('login.html');
+    location.replace('pages/login.html');
   }
   window.ZUNE_SECURITY = { requireAdmin, signOut };
 })();
