@@ -3,293 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b7657">
-  <meta name="description" content="Users Management — ZUNE PREMIUM ADMIN 3.0">
-  <title>ZUNE PREMIUM ADMIN 3.0 | Users Management</title>
-  <style>
-    :root{
-      --bg:#f4f7f6;--panel:#fff;--ink:#172521;--muted:#71817b;--line:#e5ece8;
-      --green:#087a58;--green2:#e8f5ef;--dark:#102a22;--red:#c83d4b;--redbg:#fff0f1;
-      --amber:#9a6713;--amberbg:#fff6e4;--blue:#2865a7;--bluebg:#edf5ff;
-      --shadow:0 12px 36px rgba(20,50,40,.07);--radius:18px
-    }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    button,input,select,textarea{font:inherit} button{cursor:pointer}
-    .layout{min-height:100vh;display:grid;grid-template-columns:252px 1fr}
-    aside{background:var(--dark);color:#eaf4ef;padding:24px 16px;display:flex;flex-direction:column;gap:26px}
-    .brand{display:flex;align-items:center;gap:11px;padding:2px 8px;color:white;text-decoration:none}
-    .brand-mark{width:42px;height:42px;border-radius:14px;background:#13a477;display:grid;place-items:center;font-weight:900;font-size:22px}
-    .brand b{display:block;letter-spacing:1.5px}.brand small{display:block;color:#9eb8ac;font-size:9px;letter-spacing:1.3px}
-    .admin{display:flex;gap:11px;align-items:center;padding:13px;background:#1b3a30;border:1px solid #315347;border-radius:15px}
-    .avatar{width:39px;height:39px;border-radius:13px;background:#d8f2e7;color:#126447;display:grid;place-items:center;font-weight:800;flex:none}
-    .admin small{display:block;color:#a9c2b7;font-size:11px}.admin b{font-size:13px}
-    nav{display:grid;gap:6px}.nav-label{color:#87a69a;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:0 12px;margin-bottom:4px}
-    nav a{color:#c7d8d0;text-decoration:none;padding:11px 12px;border-radius:11px;display:flex;gap:11px;align-items:center}
-    nav a.active{background:#1b4b3b;color:#fff;font-weight:700}nav a span:first-child{width:20px;text-align:center}
-    .side-note{margin-top:auto;border:1px solid #315347;border-radius:14px;padding:13px;color:#b6ccc2;font-size:11px}
-    main{min-width:0;padding:26px clamp(16px,3vw,38px) 30px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
-    .eyebrow{font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--green)}
-    h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1px;margin:3px 0 0}
-    .top-right{display:flex;align-items:center;gap:10px}.status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px}
-    .dot{width:8px;height:8px;background:#d99a35;border-radius:50%}
-    .btn{border:1px solid var(--line);background:white;color:var(--ink);padding:10px 14px;border-radius:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-    .btn.primary{background:var(--green);color:white;border-color:var(--green)}.btn.danger{background:var(--redbg);border-color:#f6d4d8;color:var(--red)}
-    .btn.soft{background:var(--green2);border-color:#d3ebdf;color:var(--green)}.btn:disabled{opacity:.5;cursor:not-allowed}
-    .notice{padding:12px 15px;border-radius:12px;margin:0 0 16px;background:var(--bluebg);color:#285c91;border:1px solid #d7e8fb}
-    .notice.warn{background:var(--amberbg);color:#805710;border-color:#f1dfb8}.notice.good{background:var(--green2);color:#126447;border-color:#d4ebdf}
-    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
-    .stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .stat{padding:17px 18px}.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:650}
-    .stat-icon{width:34px;height:34px;border-radius:11px;background:var(--green2);display:grid;place-items:center;color:var(--green);font-size:16px}
-    .stat strong{display:block;font-size:27px;letter-spacing:-1px;margin-top:8px}.stat small{color:var(--muted);font-size:11px}
-    .panel{padding:19px;margin-bottom:17px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
-    h2{font-size:16px;margin:0;letter-spacing:-.3px}.sub{color:var(--muted);font-size:12px;margin:3px 0 0}
-    .toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}.field{position:relative;flex:1;min-width:190px}
-    .field input,.field select,.control input,.control select,.control textarea{width:100%;border:1px solid #dfe8e3;background:#fff;border-radius:10px;padding:10px 12px;outline:none;color:var(--ink)}
-    input:focus,select:focus,textarea:focus{border-color:#69b99a!important;box-shadow:0 0 0 3px rgba(8,122,88,.09)}
-    .toolbar select{min-width:135px}.table-wrap{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:850px}th{text-align:left;color:#81908a;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:12px 10px;border-bottom:1px solid var(--line)}
-    td{padding:13px 10px;border-bottom:1px solid #eef2ef;vertical-align:middle}tbody tr:last-child td{border-bottom:0}
-    .user{display:flex;align-items:center;gap:10px;min-width:190px}.user .avatar{width:36px;height:36px;border-radius:12px}
-    .user b{display:block;font-size:12px}.user small{display:block;color:var(--muted);font-size:11px}
-    .pill{display:inline-flex;align-items:center;padding:4px 8px;border-radius:30px;font-size:10px;font-weight:800;background:#f0f3f1;color:#68756f}
-    .pill.active{background:var(--green2);color:var(--green)}.pill.banned{background:var(--redbg);color:var(--red)}
-    .pill.pending{background:var(--amberbg);color:var(--amber)}.pill.buyer{background:var(--bluebg);color:var(--blue)}
-    .row-actions{display:flex;gap:5px}.icon-btn{border:1px solid var(--line);background:white;border-radius:8px;width:31px;height:31px;color:#61716a}
-    .empty{text-align:center;padding:42px 16px;color:var(--muted)}.empty strong{display:block;color:var(--ink);font-size:14px;margin:8px}
-    .empty .symbol{font-size:30px}.pagination{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px;padding-top:13px}
-    .lower{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}.quick-list{display:grid;gap:10px}
-    .quick{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px}
-    .quick b{font-size:12px}.quick small{display:block;color:var(--muted);font-size:11px}
-    .guard{background:#f8faf9;border:1px dashed #cbd9d2;border-radius:12px;padding:12px;color:#64756d;font-size:11px}
-    footer{text-align:center;color:#91a099;font-size:10px;padding:12px}
-    .modal{position:fixed;inset:0;background:rgba(9,28,21,.52);display:grid;place-items:center;padding:16px;z-index:10}
-    .modal[hidden]{display:none}.modal-card{width:min(720px,100%);max-height:92vh;overflow:auto;background:white;border-radius:20px;padding:23px;box-shadow:0 25px 80px #071b1440}
-    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}.close{border:0;background:#f1f5f2;width:34px;height:34px;border-radius:10px;font-size:20px}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.control label{display:block;font-size:11px;font-weight:750;margin:0 0 6px}
-    .control.full{grid-column:1/-1}.control textarea{resize:vertical;min-height:78px}
-    .help{font-size:10px;color:var(--muted);margin-top:5px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
-    .danger-zone{border:1px solid #f1d6d9;background:#fff8f8;padding:13px;border-radius:12px;margin-top:12px}
-    @media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:220px 1fr}}
-    @media(max-width:760px){.layout{display:block}aside{display:none}main{padding:20px 13px}.top{align-items:flex-start}.top-right{flex-direction:column;align-items:flex-end}.lower{grid-template-columns:1fr}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:23px}.form-grid{grid-template-columns:1fr}.control.full{grid-column:auto}}
-    @media(max-width:430px){.stats{grid-template-columns:1fr 1fr}.top .status{display:none}.btn{padding:9px 10px;font-size:12px}}
-  </style>
+  <meta name="theme-color" content="#087a55">
+  <meta name="description" content="Usimamizi wa akaunti na majukumu — ZUNE PREMIUM ADMIN 3.0">
+  <title>ZUNE PREMIUM ADMIN 3.0 | Watumiaji</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/admin-v3.css">
 </head>
 <body>
-<div class="layout">
-  <aside>
-    <a class="brand" href="../index.html"><span class="brand-mark">Z</span><span><b>ZUNE</b><small>PREMIUM ADMIN 3.0</small></span></a>
-    <div class="admin"><div class="avatar">AM</div><div><b>Admin Mkuu</b><small>● Mamlaka kuu</small></div></div>
-    <nav aria-label="Menyu ya admin">
-      <div class="nav-label">CONTROL CENTER</div>
-      <a href="../index.html"><span>▦</span> Dashboard</a>
-      <a class="active" href="users.html"><span>♙</span> Users Management</a>
-      <a href="verification.html"><span>✓</span> Verification <small style="margin-left:auto">↗</small></a>
-      <a href="#"><span>▤</span> Orders</a><a href="#"><span>◈</span> Wallet & Payments</a>
-      <a href="#"><span>▧</span> Reports & Complaints</a><a href="#"><span>⌁</span> Audit Logs</a>
-      <div class="nav-label" style="margin-top:15px">SYSTEM</div>
-      <a href="#"><span>⚙</span> Settings</a>
-    </nav>
-    <div class="side-note">Usimamizi wa akaunti za Buyer na Seller. Hakuna akaunti ya Admin inayoweza kuundwa kupitia ukurasa huu.</div>
-  </aside>
-
-  <main>
-    <header class="top">
-      <div><div class="eyebrow">ZUNE MARKETPLACE / CONTROL CENTER</div><h1>Users Management</h1><div class="sub">Dhibiti akaunti, ruhusa za matumizi na hali za watumiaji.</div></div>
-      <div class="top-right"><div class="status"><span class="dot"></span><span id="connectionText">Backend haijaunganishwa · UI preview</span></div><button class="btn primary" id="addBtn">＋ Ongeza User</button></div>
-    </header>
-
-    <div class="notice warn" id="previewNotice"><b>Muonekano wa UI:</b> Ukurasa huu uko tayari kwa kuunganishwa na Supabase. Vitendo vya akaunti havitabadilisha Auth au database mpaka backend salama iunganishwe.</div>
-
-    <section class="stats" aria-label="Muhtasari wa watumiaji">
-      <article class="stat"><div class="stat-top"><span>Watumiaji wote</span><span class="stat-icon">♙</span></div><strong id="totalCount">0</strong><small>Buyer + Seller</small></article>
-      <article class="stat"><div class="stat-top"><span>Akaunti hai</span><span class="stat-icon">✓</span></div><strong id="activeCount">0</strong><small>Zinazoweza kutumia mfumo</small></article>
-      <article class="stat"><div class="stat-top"><span>Buyers</span><span class="stat-icon">⌂</span></div><strong id="buyerCount">0</strong><small>Wanunuzi</small></article>
-      <article class="stat"><div class="stat-top"><span>Sellers</span><span class="stat-icon">▣</span></div><strong id="sellerCount">0</strong><small>Wauzaji</small></article>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><div><h2>Orodha ya Watumiaji</h2><p class="sub">Tafuta, chuja, kagua na simamia akaunti.</p></div><button class="btn" id="exportBtn">⇩ Export CSV</button></div>
-      <div class="toolbar">
-        <div class="field"><input id="searchInput" type="search" placeholder="Tafuta jina, email, simu au User ID…"></div>
-        <select id="roleFilter" aria-label="Chuja kwa role"><option value="">Roles zote</option><option value="buyer">Buyer</option><option value="seller">Seller</option></select>
-        <select id="statusFilter" aria-label="Chuja kwa hali"><option value="">Hali zote</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="temporary_ban">Temporary ban</option><option value="permanent_ban">Permanent ban</option><option value="deleted">Soft deleted</option></select>
-        <select id="sortFilter" aria-label="Panga"><option value="newest">Walioongezwa karibuni</option><option value="oldest">Wa zamani</option><option value="name">Jina A–Z</option></select>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Mtumiaji</th><th>User ID</th><th>Role</th><th>Hali</th><th>Alijiunga</th><th>Vitendo</th></tr></thead>
-          <tbody id="usersBody"><tr><td colspan="6"><div class="empty"><div class="symbol">♙</div><strong>Hakuna watumiaji wa kuonyesha</strong>Unganisha backend ya Supabase ili kupakia rekodi halisi za watumiaji.</div></td></tr></tbody>
-        </table>
-      </div>
-      <div class="pagination"><span id="resultCount">Rekodi 0</span><span>Orodha itatumia pagination ya server baada ya backend kuunganishwa.</span></div>
-    </section>
-
-    <section class="lower">
-      <article class="panel"><div class="panel-head"><div><h2>Usimamizi wa Akaunti</h2><p class="sub">Vitendo vinavyopatikana kwa Admin Mkuu.</p></div></div>
-        <div class="quick-list">
-          <div class="quick"><div><b>Ongeza mtumiaji</b><small>Unda Buyer au Seller kupitia Supabase Auth.</small></div><button class="btn soft" id="quickAdd">Ongeza</button></div>
-          <div class="quick"><div><b>Temporary / Permanent ban</b><small>Weka muda wa zuio au zuio la kudumu.</small></div><span class="pill banned">Ban</span></div>
-          <div class="quick"><div><b>Soft delete / Permanent delete</b><small>Uthibitisho wa ziada kabla ya kufuta.</small></div><span class="pill pending">Protected</span></div>
-          <div class="quick"><div><b>Hariri taarifa za mtumiaji</b><small>Sehemu zote zinazoweza kuhaririwa, kwa ruhusa salama.</small></div><span class="pill active">Edit</span></div>
-        </div>
-      </article>
-      <article class="panel"><div class="panel-head"><div><h2>Mipaka ya Usalama</h2><p class="sub">Sheria za msingi za Users Management.</p></div></div>
-        <div class="quick-list">
-          <div class="guard">✓ Roles zinazoweza kuundwa: <b>Buyer</b> na <b>Seller</b> pekee.</div>
-          <div class="guard">✓ Hakuna kuunda Admin Mkuu mwingine, kujipandisha cheo au kujisajili kama Admin.</div>
-          <div class="guard">✓ Verification inasimamiwa kwenye module tofauti.</div>
-          <div class="guard">✓ Kila kitendo nyeti kinahitaji sababu, uthibitisho na Audit Log ya backend.</div>
-          <div class="guard">✓ Permanent delete lazima iheshimu wajibu wa kisheria na uadilifu wa orders/payments.</div>
-        </div>
-      </article>
-    </section>
-    <footer>© <span id="year"></span> ZUNE Marketplace · Premium Admin 3.0 · Users Management</footer>
-  </main>
-</div>
-
-<!-- Add / edit user -->
-<div class="modal" id="userModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
-    <div class="modal-head"><div><div class="eyebrow">USER ACCOUNT</div><h2 id="userModalTitle">Ongeza Mtumiaji</h2><p class="sub">Jaza taarifa za akaunti. Hakuna Admin role kwenye fomu hii.</p></div><button class="close" data-close="userModal" aria-label="Funga">×</button></div>
-    <form id="userForm">
-      <div class="form-grid">
-        <div class="control"><label for="fullName">Jina kamili *</label><input id="fullName" required maxlength="120" autocomplete="name"></div>
-        <div class="control"><label for="email">Barua pepe *</label><input id="email" type="email" required maxlength="254" autocomplete="email"></div>
-        <div class="control"><label for="phone">Namba ya simu</label><input id="phone" type="tel" maxlength="30" autocomplete="tel"></div>
-        <div class="control"><label for="role">Aina ya akaunti *</label><select id="role" required><option value="buyer">Buyer</option><option value="seller">Seller</option></select></div>
-        <div class="control"><label for="initialStatus">Hali ya mwanzo</label><select id="initialStatus"><option value="active">Active</option><option value="suspended">Suspended</option></select></div>
-        <div class="control"><label for="locale">Lugha</label><select id="locale"><option value="sw">Kiswahili</option><option value="en">English</option></select></div>
-        <div class="control full"><label for="adminReason">Sababu / maelezo ya Admin *</label><textarea id="adminReason" required minlength="5" placeholder="Eleza sababu ya kuongeza au kubadilisha akaunti…"></textarea><div class="help">Sababu hii itatumwa kwenye audit log ya backend.</div></div>
-      </div>
-      <div class="guard" style="margin-top:13px">Password haitengenezwi wala kuonyeshwa hapa. Backend itatuma mwaliko salama au recovery link kupitia Supabase Auth.</div>
-      <div class="modal-actions"><button type="button" class="btn" data-close="userModal">Ghairi</button><button class="btn primary" type="submit">Hifadhi / Tuma mwaliko</button></div>
-    </form>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="../index.html#dashboard"><span class="brand-icon">Z</span><span><b>ZUNE</b><small>PREMIUM ADMIN 3.0</small></span></a>
+      <div class="admin-card"><div class="avatar">AM</div><div><b id="adminName">Admin Mkuu</b><small><i></i> Mamlaka kuu</small></div></div>
+      <nav id="mainNav" aria-label="Navigation"></nav>
+      <button class="logout" id="logoutBtn">Toka kwenye mfumo</button>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Fungua menyu">☰</button>
+        <div><small>ZUNE MARKETPLACE / CONTROL CENTER</small><h1 id="pageTitle">Watumiaji</h1></div>
+        <div class="top-actions"><input id="globalSearch" placeholder="Tafuta module au rekodi…" aria-label="Global search"><span class="live-dot"></span><span id="systemLabel">Inaunganisha…</span></div>
+      </header>
+      <div id="appNotice" class="notice" hidden></div>
+      <section id="pageContent" aria-live="polite"></section>
+      <footer>© <span id="year"></span> ZUNE Marketplace · Premium Admin 3.0 · <span id="connectionLabel">Supabase</span></footer>
+    </main>
   </div>
-</div>
-
-<!-- Sensitive action confirmation -->
-<div class="modal" id="actionModal" hidden>
-  <div class="modal-card" style="max-width:510px" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
-    <div class="modal-head"><div><div class="eyebrow">UTHIBITISHO WA ADMIN</div><h2 id="actionTitle">Thibitisha kitendo</h2></div><button class="close" data-close="actionModal" aria-label="Funga">×</button></div>
-    <p id="actionDescription" class="sub" style="font-size:13px;margin-bottom:14px"></p>
-    <div class="form-grid" id="banFields" hidden>
-      <div class="control"><label for="banDuration">Aina ya ban</label><select id="banDuration"><option value="temporary">Temporary ban</option><option value="permanent">Permanent ban</option></select></div>
-      <div class="control" id="banUntilWrap"><label for="banUntil">Ban inaisha tarehe/saa</label><input id="banUntil" type="datetime-local"></div>
-    </div>
-    <div class="control" style="margin-top:12px"><label for="actionReason">Sababu (angalau herufi 5) *</label><textarea id="actionReason" minlength="5" required placeholder="Andika sababu ya kitendo hiki…"></textarea></div>
-    <div class="danger-zone" id="permanentWarning" hidden>Permanent delete haiwezi kutenduliwa. Backend lazima ihakiki utekelezaji wa wajibu wa kisheria, orders, wallet na payment records kabla ya kufuta.</div>
-    <div class="modal-actions"><button class="btn" data-close="actionModal">Ghairi</button><button class="btn danger" id="confirmAction">Thibitisha</button></div>
-  </div>
-</div>
-<div id="toast" role="status" aria-live="polite" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17372c;color:white;padding:11px 16px;border-radius:12px;box-shadow:var(--shadow);display:none;z-index:20;max-width:90vw"></div>
-
-<script>
-(() => {
-  "use strict";
-  const $ = id => document.getElementById(id);
-  const state = { users: [], editingId: null, pendingAction: null };
-  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const initials = name => String(name || "U").trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
-  const toast = message => { const el=$("toast"); el.textContent=message; el.style.display="block"; clearTimeout(toast.timer); toast.timer=setTimeout(()=>el.style.display="none",4200); };
-  const showModal = id => { $(id).hidden=false; };
-  const closeModal = id => { $(id).hidden=true; };
-  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
-  $("year").textContent = new Date().getFullYear();
-
-  // Production integration contract:
-  // Define window.ZUNE_USERS_API with listUsers(), createUser(payload), updateUser(id,payload),
-  // performUserAction(id,payload), export is generated from currently loaded permitted rows.
-  // All privileged actions MUST be authorized server-side and written to immutable audit logs.
-  const api = window.ZUNE_USERS_API || null;
-  function backendUnavailable(){ toast("Backend haijaunganishwa. Hakuna mabadiliko yaliyofanyika."); }
-  function render(){
-    const q=$("searchInput").value.trim().toLowerCase(), role=$("roleFilter").value, status=$("statusFilter").value, sort=$("sortFilter").value;
-    let rows=state.users.filter(u=>{
-      const text=[u.full_name,u.email,u.phone,u.id].join(" ").toLowerCase();
-      return (!q||text.includes(q))&&(!role||u.role===role)&&(!status||u.status===status);
-    });
-    rows.sort((a,b)=>sort==="name"?String(a.full_name).localeCompare(String(b.full_name)):sort==="oldest"?new Date(a.created_at)-new Date(b.created_at):new Date(b.created_at)-new Date(a.created_at));
-    $("totalCount").textContent=state.users.length;$("activeCount").textContent=state.users.filter(u=>u.status==="active").length;
-    $("buyerCount").textContent=state.users.filter(u=>u.role==="buyer").length;$("sellerCount").textContent=state.users.filter(u=>u.role==="seller").length;
-    $("resultCount").textContent=`Rekodi ${rows.length}`;
-    if(!rows.length){$("usersBody").innerHTML=`<tr><td colspan="6"><div class="empty"><div class="symbol">♙</div><strong>${state.users.length?"Hakuna matokeo yaliyolingana":"Hakuna watumiaji wa kuonyesha"}</strong>${state.users.length?"Badilisha utafutaji au vichujio.":"Unganisha backend ya Supabase ili kupakia rekodi halisi za watumiaji."}</div></td></tr>`;return;}
-    $("usersBody").innerHTML=rows.map(u=>{
-      const statusLabel={active:"Active",suspended:"Suspended",temporary_ban:"Temporary ban",permanent_ban:"Permanent ban",deleted:"Soft deleted"}[u.status]||u.status;
-      const date=u.created_at?new Date(u.created_at).toLocaleDateString("sw-TZ"):"—";
-      return `<tr><td><div class="user"><div class="avatar">${escapeHTML(initials(u.full_name))}</div><div><b>${escapeHTML(u.full_name)}</b><small>${escapeHTML(u.email)}</small></div></div></td><td><small>${escapeHTML(u.id)}</small></td><td><span class="pill ${u.role==="buyer"?"buyer":""}">${u.role==="buyer"?"Buyer":"Seller"}</span></td><td><span class="pill ${u.status==="active"?"active":(["temporary_ban","permanent_ban"].includes(u.status)?"banned":"pending")}">${escapeHTML(statusLabel)}</span></td><td>${escapeHTML(date)}</td><td><div class="row-actions"><button class="icon-btn" title="Hariri" data-action="edit" data-id="${escapeHTML(u.id)}">✎</button><button class="icon-btn" title="Vitendo" data-action="manage" data-id="${escapeHTML(u.id)}">⋯</button></div></td></tr>`;
-    }).join("");
-  }
-  async function loadUsers(){
-    if(!api?.listUsers){ render(); return; }
-    try{ const result=await api.listUsers(); state.users=Array.isArray(result)?result:(result?.data||[]); render(); $("connectionText").textContent="Backend imeunganishwa"; $("previewNotice").hidden=true; }
-    catch(e){ $("previewNotice").textContent="Imeshindikana kupakia watumiaji. Hakiki muunganisho na ruhusa za backend kisha jaribu tena."; $("previewNotice").classList.add("warn"); }
-  }
-  function openAdd(){state.editingId=null;$("userForm").reset();$("userModalTitle").textContent="Ongeza Mtumiaji";showModal("userModal");}
-  function openEdit(id){
-    const u=state.users.find(x=>String(x.id)===String(id));if(!u)return;
-    state.editingId=id;$("userModalTitle").textContent="Hariri Taarifa za Mtumiaji";
-    $("fullName").value=u.full_name||"";$("email").value=u.email||"";$("phone").value=u.phone||"";$("role").value=u.role||"buyer";$("initialStatus").value=u.status==="suspended"?"suspended":"active";$("locale").value=u.locale||"sw";$("adminReason").value="";
-    showModal("userModal");
-  }
-  $("addBtn").addEventListener("click",openAdd);$("quickAdd").addEventListener("click",openAdd);
-  $("userForm").addEventListener("submit",async e=>{
-    e.preventDefault();
-    const payload={full_name:$("fullName").value.trim(),email:$("email").value.trim(),phone:$("phone").value.trim(),role:$("role").value,status:$("initialStatus").value,locale:$("locale").value,reason:$("adminReason").value.trim()};
-    if(payload.reason.length<5){toast("Tafadhali eleza sababu yenye angalau herufi 5.");return;}
-    if(!api){backendUnavailable();return;}
-    try{
-      if(state.editingId) await api.updateUser(state.editingId,payload);
-      else await api.createUser(payload); // Server must create Auth user + profile, invite/recovery flow, and audit event.
-      closeModal("userModal");toast(state.editingId?"Taarifa zimewasilishwa kwa backend.":"Ombi la kuongeza user limewasilishwa.");await loadUsers();
-    }catch(err){toast("Ombi halikukamilika. Hakiki ujumbe wa backend.");}
-  });
-  $("usersBody").addEventListener("click",e=>{
-    const b=e.target.closest("[data-action]");if(!b)return;
-    if(b.dataset.action==="edit"){openEdit(b.dataset.id);return;}
-    const u=state.users.find(x=>String(x.id)===b.dataset.id);if(!u)return;
-    openActionMenu(u);
-  });
-  function openActionMenu(u){
-    const choices=[
-      ["suspend","Simamisha akaunti"],["restore","Rejesha akaunti"],["ban","Weka ban"],["revoke_sessions","Ondoa sessions zote"],
-      ["soft_delete","Soft delete"],["permanent_delete","Permanent delete"]
-    ];
-    const action=prompt("Chagua kitendo:\n"+choices.map((x,i)=>`${i+1}. ${x[1]}`).join("\n")+"\n\nAndika namba ya kitendo:");
-    const selected=choices[Number(action)-1];if(!selected)return;
-    prepareAction(u,selected[0],selected[1]);
-  }
-  function prepareAction(u,action,label){
-    state.pendingAction={id:u.id,action};
-    $("actionTitle").textContent=label;$("actionDescription").textContent=`Unaomba "${label}" kwa ${u.full_name} (${u.email}). Kitendo hiki lazima kiidhinishwe na backend.`;
-    $("actionReason").value="";$("banFields").hidden=action!=="ban";$("permanentWarning").hidden=action!=="permanent_delete";
-    $("banDuration").value="temporary";$("banUntil").value="";
-    $("banUntilWrap").hidden=false;showModal("actionModal");
-  }
-  $("banDuration").addEventListener("change",()=>{$("banUntilWrap").hidden=$("banDuration").value==="permanent";});
-  $("confirmAction").addEventListener("click",async()=>{
-    const reason=$("actionReason").value.trim();if(reason.length<5){toast("Sababu inahitaji angalau herufi 5.");return;}
-    if(!state.pendingAction)return;if(!api?.performUserAction){backendUnavailable();return;}
-    const payload={...state.pendingAction,reason};
-    if(payload.action==="ban"){
-      payload.ban_type=$("banDuration").value;
-      payload.banned_until=payload.ban_type==="temporary"?$("banUntil").value:null;
-      if(payload.ban_type==="temporary"&&!payload.banned_until){toast("Weka tarehe na muda wa mwisho wa ban.");return;}
-    }
-    try{await api.performUserAction(payload.id,payload);closeModal("actionModal");toast("Kitendo kimewasilishwa kwa backend.");state.pendingAction=null;await loadUsers();}
-    catch(err){toast("Kitendo kimeshindwa. Hakuna mafanikio yaliyothibitishwa.");}
-  });
-  ["searchInput","roleFilter","statusFilter","sortFilter"].forEach(id=>$(id).addEventListener("input",render));
-  $("exportBtn").addEventListener("click",()=>{
-    if(!state.users.length){toast("Hakuna rekodi zilizopakiwa za ku-export.");return;}
-    const keys=["id","full_name","email","phone","role","status","created_at"];
-    const csv=[keys.join(","),...state.users.map(u=>keys.map(k=>`"${String(u[k]??"").replace(/"/g,'""')}"`).join(","))].join("\r\n");
-    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="zune-users.csv";a.click();URL.revokeObjectURL(url);
-  });
-  loadUsers();
-})();
-</script>
+  <div class="modal" id="modal" hidden><div class="modal-card"><button class="modal-x" id="modalClose">×</button><h2 id="modalTitle">Thibitisha kitendo</h2><p id="modalText"></p><label>Sababu (angalau herufi 5)<textarea id="modalReason" rows="3"></textarea></label><label id="modalExtraLabel" hidden>Maelezo ya ziada<input id="modalExtra"></label><div class="modal-actions"><button class="btn ghost" id="modalCancel">Ghairi</button><button class="btn primary" id="modalConfirm">Thibitisha</button></div></div></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script>/* Module entry point: users */ location.hash = "users";</script>
+  <script>
+    (() => {
+      const notify = () => {
+        const page = location.hash.replace(/^#/, '').split(/[/?]/)[0];
+        if (page) parent.postMessage({type:'zune:module-route', page}, location.origin);
+      };
+      window.addEventListener('hashchange', notify);
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/security.js"></script>
+  <script src="../js/app-v3.js"></script>
 </body>
 </html>

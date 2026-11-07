@@ -33,6 +33,15 @@
   <div class="modal" id="modal" hidden><div class="modal-card"><button class="modal-x" id="modalClose">×</button><h2 id="modalTitle">Thibitisha kitendo</h2><p id="modalText"></p><label>Sababu (angalau herufi 5)<textarea id="modalReason" rows="3"></textarea></label><label id="modalExtraLabel" hidden>Maelezo ya ziada<input id="modalExtra"></label><div class="modal-actions"><button class="btn ghost" id="modalCancel">Ghairi</button><button class="btn primary" id="modalConfirm">Thibitisha</button></div></div></div>
   <div id="toast" class="toast" role="status"></div>
   <script>/* Module entry point: withdrawals */ location.hash = "withdrawals";</script>
+  <script>
+    (() => {
+      const notify = () => {
+        const page = location.hash.replace(/^#/, '').split(/[/?]/)[0];
+        if (page) parent.postMessage({type:'zune:module-route', page}, location.origin);
+      };
+      window.addEventListener('hashchange', notify);
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/security.js"></script>
