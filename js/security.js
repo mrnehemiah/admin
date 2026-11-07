@@ -1,2 +1,35 @@
-import {rpc} from './api.js';import {escapeHtml} from './ui.js';
-export async function render(el){el.innerHTML='<div class="empty">Inakagua admin access na RLS…</div>';const checks=[];try{const ok=await rpc('is_admin');checks.push(['Admin RPC',!!ok,ok?'Admin imethibitishwa':'Admin haijathibitishwa']);}catch(e){checks.push(['Admin RPC',false,e.message]);}try{const {supabase}=await import('./supabase.js');const {data:{user}}=await supabase.auth.getUser();checks.push(['Auth session',!!user,user?.email||'Hakuna session']);}catch(e){checks.push(['Auth session',false,e.message]);}let audit=null;try{audit=await rpc('admin_rls_security_audit');}catch(e){audit={error:e.message};}el.innerHTML=`<div class="page-head"><div><h2>Security Center</h2><p>Ukaguzi wa read-only; hakuna sera itakayobadilishwa moja kwa moja.</p></div></div><div class="grid section-grid">${checks.map(([n,ok,d])=>`<div class="card"><span class="badge ${ok?'green':'red'}">${ok?'PASS':'CHECK'}</span><h3>${escapeHtml(n)}</h3><p class="small muted">${escapeHtml(d)}</p></div>`).join('')}</div><div class="card" style="margin-top:16px"><h3 class="card-title">RLS security audit RPC</h3><pre style="white-space:pre-wrap;font-size:11px">${escapeHtml(JSON.stringify(audit,null,2))}</pre></div><div class="notice warn">Supabase Security Advisor imeonyesha baadhi ya SECURITY DEFINER RPC za public schema zinaweza kuitwa na anon/authenticated. Hizi zinahitaji ukaguzi wa grants na auth checks kabla ya kufungwa; usifanye revoke ya jumla bila kutathmini matumizi ya Marketplace.</div>`;}
+(() => {
+  'use strict';
+  const db = () => window.zuneSupabase;
+  const cfg = window.ZUNE_CONFIG || {};
+  async function requireAdmin() {
+    if (!db()) throw new Error('Supabase haijaunganishwa.');
+    const { data: { session }, error } = await db().auth.getSession();
+    if (error) throw error;
+    if (!session?.user) {
+      const back = encodeURIComponent(location.pathname + location.hash);
+      location.replace(`login.html?redirect=${back}`);
+      return null;
+    }
+    const { data: profile, error: profileError } = await db().from('profiles')
+      .select('id,full_name,email,role,account_status').eq('id', session.user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (!profile || String(profile.role || '').toLowerCase() !== String(cfg.ADMIN_ROLE || 'admin')) {
+      await db().auth.signOut();
+      throw new Error('Akaunti hii haina mamlaka ya Admin Mkuu.');
+    }
+    if (/suspended|blocked|disabled/i.test(String(profile.account_status || ''))) {
+      await db().auth.signOut();
+      throw new Error('Akaunti ya msimamizi imesimamishwa.');
+    }
+    window.ZUNE_CURRENT_USER = session.user;
+    window.ZUNE_ADMIN_PROFILE = profile;
+    window.ZUNE_AUTH_READY = Promise.resolve(profile);
+    return profile;
+  }
+  async function signOut() {
+    if (db()) await db().auth.signOut();
+    location.replace('login.html');
+  }
+  window.ZUNE_SECURITY = { requireAdmin, signOut };
+})();

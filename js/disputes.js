@@ -1,2 +1,1 @@
-import { renderDataPage } from './data-page.js';
-export function render(el){return renderDataPage('disputes',el);}
+(() => {'use strict';const c=()=>window.ZUNE_CORE,ui=()=>window.ZUNE_LAYOUT;async function load(){try{const rows=await c().rows(c().cfg.TABLES.disputes,300);c().setRows('disputesTableBody',rows,[{key:'case_number'},{key:'order_id'},{key:'opened_by'},{key:'issue_type'},{key:'status',html:x=>ui().status(x.status)},{key:'created_at',html:x=>ui().date(x.created_at)},{key:'amount',html:x=>ui().money(x.amount)}]);}catch(e){c().error('disputesTableBody',e);}}document.addEventListener('DOMContentLoaded',load);document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='disputes')load();});window.ZUNE_DISPUTES={load};})();
