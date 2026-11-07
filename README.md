@@ -11,3 +11,7 @@ Msingi wa usalama wa 3.0 umeongezwa juu ya v2.1. Sehemu kubwa za spec bado hazij
 
 ## Backup/recovery
 Tumia Supabase Backups (Dashboard > Database > Backups) kabla ya kila migration; PITR ikiwezeshwa.
+
+## Muundo (3.0)
+`assets/` (css, js) • `services/` (config, core, security, admin-actions) • `pages/<module>/` • `supabase/migrations` (0001-0004) •
+`supabase/seed` • `tests/` (`npm run check`) • `docs/STATUS.md` (hali halisi ya kila module).

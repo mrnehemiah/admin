@@ -1,0 +1,1 @@
+{ "name": "zune-premium-admin", "version": "3.0.0", "private": true, "scripts": { "check": "node tests/static-check.js" } }
