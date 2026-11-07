@@ -1,5 +1,10 @@
-import { supabase,isConfigured } from './supabase.js';
-import { setUser } from './state.js';
-export async function signIn(email,password){if(!isConfigured)throw new Error('Weka publishable key kwenye js/config.js.');const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;return verifyAdmin(data.user);}
-export async function verifyAdmin(user=null){if(!supabase)throw new Error('Supabase haijawekwa.');const {data:{user:current},error}=user?{data:{user},error:null}:await supabase.auth.getUser();if(error||!current)throw new Error('Tafadhali ingia tena.');const {data:isAdmin,error:adminError}=await supabase.rpc('is_admin');if(adminError)throw adminError;if(!isAdmin) {await supabase.auth.signOut();throw new Error('Akaunti hii haina ruhusa ya Admin Mkuu.');}const {data:profile,error:profileError}=await supabase.from('profiles').select('id,full_name,email,role,is_verified,account_status').eq('id',current.id).single();if(profileError)throw profileError;if(profile.role!=='admin')throw new Error('Admin role haijathibitishwa.');setUser(current,profile);return {user:current,profile};}
-export async function signOut(){if(supabase)await supabase.auth.signOut();setUser(null,null);location.href='login.html';}
+document.addEventListener("DOMContentLoaded",async()=>{
+ const login=document.getElementById("loginScreen"),shell=document.getElementById("appShell"),form=document.getElementById("loginForm"),logout=document.getElementById("logoutBtn");
+ const isIndex=location.pathname.endsWith("/")||location.pathname.endsWith("index.html");
+ if(!window.zuneIsLive){if(login)login.classList.add("hidden");if(shell)shell.classList.remove("hidden");return;}
+ const {data:{session}}=await zuneSupabase.auth.getSession();
+ if(!session){if(login)login.classList.remove("hidden");if(shell)shell.classList.add("hidden");}
+ else {if(login)login.classList.add("hidden");if(shell)shell.classList.remove("hidden");}
+ if(form)form.addEventListener("submit",async e=>{e.preventDefault();const b=form.querySelector("button");b.disabled=true;b.textContent="Signing in…";const {error}=await zuneSupabase.auth.signInWithPassword({email:loginEmail.value,password:loginPassword.value});if(error){loginError.textContent=error.message;b.disabled=false;b.textContent="Sign in securely"}else location.reload()});
+ if(logout)logout.addEventListener("click",async()=>{if(window.zuneIsLive)await zuneSupabase.auth.signOut();location.href=isIndex?"index.html":"../index.html"});
+});
