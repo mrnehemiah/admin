@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="sw">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#087a55">
+  <meta name="description" content="Malipo na miamala — ZUNE PREMIUM ADMIN 3.0">
+  <title>ZUNE PREMIUM ADMIN 3.0 | Payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/admin-v3.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="../index.html#dashboard"><span class="brand-icon">Z</span><span><b>ZUNE</b><small>PREMIUM ADMIN 3.0</small></span></a>
+      <div class="admin-card"><div class="avatar">AM</div><div><b id="adminName">Admin Mkuu</b><small><i></i> Mamlaka kuu</small></div></div>
+      <nav id="mainNav" aria-label="Navigation"></nav>
+      <button class="logout" id="logoutBtn">Toka kwenye mfumo</button>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Fungua menyu">☰</button>
+        <div><small>ZUNE MARKETPLACE / CONTROL CENTER</small><h1 id="pageTitle">Payments</h1></div>
+        <div class="top-actions"><input id="globalSearch" placeholder="Tafuta module au rekodi…" aria-label="Global search"><span class="live-dot"></span><span id="systemLabel">Inaunganisha…</span></div>
+      </header>
+      <div id="appNotice" class="notice" hidden></div>
+      <section id="pageContent" aria-live="polite"></section>
+      <footer>© <span id="year"></span> ZUNE Marketplace · Premium Admin 3.0 · <span id="connectionLabel">Supabase</span></footer>
+    </main>
+  </div>
+  <div class="modal" id="modal" hidden><div class="modal-card"><button class="modal-x" id="modalClose">×</button><h2 id="modalTitle">Thibitisha kitendo</h2><p id="modalText"></p><label>Sababu (angalau herufi 5)<textarea id="modalReason" rows="3"></textarea></label><label id="modalExtraLabel" hidden>Maelezo ya ziada<input id="modalExtra"></label><div class="modal-actions"><button class="btn ghost" id="modalCancel">Ghairi</button><button class="btn primary" id="modalConfirm">Thibitisha</button></div></div></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script>/* Module entry point: payments */ location.hash = "payments";</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/security.js"></script>
+  <script src="../js/app-v3.js"></script>
+</body>
+</html>
