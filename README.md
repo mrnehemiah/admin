@@ -1,77 +1,64 @@
-# ZUNE PREMIUM ADMIN — Upgrade Package (3.0 alignment)
+# ZUNE PREMIUM ADMIN 3.0 — TOTAL DOMINATION CONTROL CENTER
 
-**Package status:** upgraded foundation based on the supplied `2.1 USERS MANAGEMENT` ZIP and the supplied ZUNE 3.0 specification.  
-**Important:** this is **not** a claim that all 23+ modules in the 3.0 specification are implemented. The existing package is primarily a Users Management admin application. This upgrade preserves working code, clarifies its real integration boundaries, and adds the 3.0 master specification and implementation controls.
+## Package status
+This delivery is a working admin frontend aligned to the supplied ZUNE 3.0 specification and connected to the existing Supabase project configuration. It uses the live database schema and existing server-authorized RPCs where those are available. It does not claim that every marketplace workflow has a complete backend implementation.
 
-## What's included
+## File organization
+- `index.html` is the only HTML file in the project root.
+- All module HTML documents are stored separately in `pages/` (one file per module), alongside `pages/login.html`.
+- All JavaScript files, including the former root `admin.js`, are stored in `js/`.
+- All stylesheets are stored in `css/`.
+- Each module has its own standalone HTML entry file in `pages/`. Each entry loads the shared app shell, styles and JavaScript, then opens the selected module. The main `index.html` remains the central SPA entry point.
 
-- Existing ZUNE Admin frontend, CSS, JavaScript and SQL migration, preserved.
-- Supplied ZUNE Premium Admin 3.0 specification in `docs/`.
-- An implementation matrix distinguishing existing functionality, backend-dependent functionality and modules not yet implemented.
-- A deployment/security checklist and environment configuration guidance.
-- Existing Supabase project URL and publishable key retained in `js/config.js`. A Supabase publishable key is intended for browser use; never add a service-role key or other secret to frontend files.
+## Included modules
+Dashboard; Users; Sellers & Stores; Seller Applications; Verification; Products; Categories; Orders; Payments; Wallet & Ledger; Withdrawals; Commission Rules; Delivery; Disputes; Support Tickets; Coupons & Promotions; Announcements; Notifications; Reports; Marketplace Settings; Security Center; Audit Logs; Admin Account; ZUNE AI usage; System Health; Database Monitoring; Backup & Recovery.
 
-## Current implementation scope
+## Requirements
+- Modern browser with internet access.
+- Supabase project URL and publishable key in `js/config.js`.
+- Existing Supabase Auth admin account. No public admin registration is provided.
+- Admin profile must have the backend-controlled `profiles.role = 'admin'` role.
+- HTTPS hosting is required for production.
 
-| Area | Current package status |
-|---|---|
-| Admin login | Supabase Auth password login; profile role check in frontend |
-| Admin route guard | Session and `profiles.role` check in frontend |
-| Users list | Uses `admin_list_users` RPC |
-| Users overview | Uses `admin_users_overview` RPC |
-| User details | Uses `admin_get_user_details` RPC |
-| User account status | Uses `admin_set_user_status` RPC; backend function must enforce authorization |
-| Seller/product/order/financial screens | Some navigation/UI exists; do not assume full operational integration |
-| Notifications | SQL table, admin read/update policies and Realtime-oriented frontend support |
-| Admin activity logs | SQL table and append-only trigger; browser audit helper is best-effort, not a substitute for trusted server-side audit |
-| Remaining 3.0 modules | Not complete unless separately implemented, migrated and tested |
+## Install
+1. Unzip this package and host the contents of `ZUNE_PREMIUM_ADMIN/` on an HTTPS origin.
+2. Confirm `js/config.js` points to the intended Supabase project. It contains a publishable browser key only; never add `service_role` or secret keys.
+3. Open `pages/login.html`, sign in using the pre-provisioned Admin Mkuu account, then use the dashboard.
+4. Test with a non-admin account and confirm it is denied.
 
-## Required backend RPC contracts
+## Backend integration
+This package reuses the existing project schema and RPCs, including `admin_dashboard_overview`, `admin_list_users`, `admin_list_seller_applications`, `admin_list_verification_applications`, `admin_set_user_status`, `approve_seller_application`, `admin_review_verification_application`, `admin_review_withdrawal`, `admin_get_settings`, and `admin_update_setting`.
 
-The Users Management screen expects these existing RPC functions:
+Read operations are restricted by Supabase RLS and RPC authorization. Mutations exposed in the UI are limited to RPCs with server-side admin checks and audit behavior. Other modules are intentionally read-only until a dedicated backend RPC / Edge Function and tests exist. The UI does not update wallet balances, confirm payments, issue refunds, or alter financial records directly.
 
-- `admin_users_overview()`
-- `admin_list_users(p_search, p_role, p_status, p_limit, p_offset)`
-- `admin_get_user_details(p_user_id)`
-- `admin_set_user_status(target_user_id, new_status, action_reason)`
+## Database notes
+The connected project was inspected before building. It already contains a broad marketplace schema and multiple ZUNE Admin 3.0 migrations. This package therefore does not create duplicate tables or automatically apply new migrations. Review the database migration history and security advisors before production changes.
 
-Confirm the exact argument names and return shape in the connected Supabase project before deployment. Every function that reads private user data or changes account state must independently verify `auth.uid()` and admin authorization on the server. Frontend checks are only a usability layer.
+## Security and operational cautions
+- The browser only uses the Supabase publishable key. Keep service-role keys, webhook secrets, payment-provider credentials and AI provider keys on trusted server infrastructure.
+- A frontend route guard is not an authorization boundary. RLS and every privileged RPC must enforce the actor and single-admin invariant server-side.
+- Payment success must come from trusted provider verification/webhooks, never from a browser button.
+- Wallet balances must be derived from ledger entries; never write balances directly from the client.
+- Withdrawal payout status must only be set after the actual payout has been confirmed by the operator/provider.
+- Do not represent Supabase Dashboard backup status, uptime, database internals or AI provider cost as available unless those sources are explicitly integrated.
+- Enable leaked-password protection and review SECURITY DEFINER RPC grants/findings before production.
 
-## Install / deploy
+## Verification performed
+- JavaScript syntax checked with Node.js.
+- ZIP integrity checked after packaging.
+- Supabase schema, migration history, key RPC signatures and security/performance advisors were inspected.
+- Full end-to-end browser tests, payment-provider reconciliation, backup restore drills and all RLS negative-path tests still require execution in the deployment environment.
 
-1. Host the contents of `ZUNE_PREMIUM_ADMIN/` on an HTTPS origin. Keep `index.html`, `login.html`, `css/` and `js/` at the relative paths shown.
-2. Confirm `js/config.js` points to the intended Supabase project and contains only the project URL and publishable key.
-3. Review `sql/01_admin_notifications_and_audit.sql` against the live database and run it in Supabase SQL Editor only after backup and review.
-4. Confirm the database already has the required `profiles` schema and `public.zune_is_admin()` helper referenced by the migration. Do not run blindly on an unknown schema.
-5. Confirm the admin account is provisioned securely by an authorized operator. Do not create a public admin registration flow or allow self-promotion.
-6. Confirm the four RPC contracts above exist, have correct grants, validate the actor server-side, and return the expected fields.
-7. Verify RLS on every table exposed to the browser. The publishable key is public by design; RLS and server authorization are the security boundary.
-8. Deploy over HTTPS and test with an admin account and a non-admin account.
+## Known boundaries
+- CSV export is available for loaded datasets. PDF report generation is not implemented.
+- Category editing, product moderation, ticket replies, dispute resolution, refunds, commission writes, provider setup, AI configuration changes, session revocation, and backup/restore execution remain read-only or require Supabase Dashboard/provider integrations.
+- `System Health` and `Backup & Recovery` display recorded logs only; they do not fabricate live health or backup success.
 
-## Security requirements before production
-
-- Enforce the single-admin invariant in trusted backend/database provisioning logic; a frontend role check does not enforce one-admin-only.
-- Protect all sensitive RPCs with server-side authorization and input validation.
-- Keep `service_role` keys, provider secrets and signing secrets out of browser code, ZIP files and source control.
-- Keep RLS enabled and test both allowed and denied access paths.
-- Treat payment, wallet, refund, withdrawal and commission changes as server-side ledger operations only. This package does not implement those financial workflows.
-- Do not expose passwords, access tokens, private documents or unnecessary personal data in logs.
-- Audit sensitive actions server-side. The included browser audit helper is best-effort and must not be treated as tamper-proof evidence.
-- Back up the database before migrations and maintain a tested recovery procedure.
-
-## 3.0 implementation order
-
-Use `docs/IMPLEMENTATION_MATRIX.md` to track modules. Recommended sequence:
-
-1. Inspect the actual Supabase schema, RLS policies, triggers and RPCs.
-2. Harden identity, single-admin provisioning, authorization and audit.
-3. Complete Users, Sellers and Seller Applications.
-4. Complete Products, Categories and Verification.
-5. Implement Orders, Payments, Wallet Ledger, Withdrawals and Commission with idempotency and reconciliation.
-6. Implement Delivery, Disputes, Support, Promotions and Notifications.
-7. Implement Reports, Settings, Security Center, AI Control Center and System Health.
-8. Add automated tests, mobile QA, backup/recovery tests and production monitoring.
-
-## Honest delivery rule
-
-A screen is not a completed module merely because it appears in navigation. Mark a module complete only when its UI, database schema, RLS, RPC/Edge Functions, validation, audit trail, error states and tests are all present and verified. The supplied 3.0 master specification is preserved in `docs/ZUNE_PREMIUM_ADMIN_3.0_MASTER_SPEC.md`.
+## Suggested next QA sequence
+1. Login as the provisioned Admin Mkuu and check dashboard counts against Supabase SQL.
+2. Login as a buyer/vendor and confirm admin routes and RPCs are denied.
+3. Test user suspend/reactivate with a test account.
+4. Test seller approval with a test seller application.
+5. Test verification approve/reject and withdrawal review using test records only.
+6. Review RLS and SECURITY DEFINER findings in Supabase Advisors and remediate before production.
+7. Test mobile layouts, refresh/deep links, CSV exports and error states.
