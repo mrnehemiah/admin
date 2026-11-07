@@ -40,3 +40,4 @@ ZUNE_PREMIUM_ADMIN_3.0_RESTRUCTURED/
 ```
 
 Kila `pages/<module>.html` ni entry point inayofungua module husika kwa kutumia shared shell na JavaScript ya pamoja. `index.html` inabaki entry point kuu.
+\n\n## Entry-point rule (3.0 Pages-Dependent)\n`index.html` is a bootstrap/loader only. It must not contain module UI or shared admin-shell markup. The application UI is loaded from the matching `pages/*.html` document. Shared behavior remains in `js/` and shared styles remain in `css/`.\n

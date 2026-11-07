@@ -4,11 +4,10 @@
 This delivery is a working admin frontend aligned to the supplied ZUNE 3.0 specification and connected to the existing Supabase project configuration. It uses the live database schema and existing server-authorized RPCs where those are available. It does not claim that every marketplace workflow has a complete backend implementation.
 
 ## File organization
-- `index.html` is the only HTML file in the project root.
-- All module HTML documents are stored separately in `pages/` (one file per module), alongside `pages/login.html`.
-- All JavaScript files, including the former root `admin.js`, are stored in `js/`.
-- All stylesheets are stored in `css/`.
-- Each module has its own standalone HTML entry file in `pages/`. Each entry loads the shared app shell, styles and JavaScript, then opens the selected module. The main `index.html` remains the central SPA entry point.
+- `index.html` is a minimal bootstrap only: it contains no sidebar, dashboard, module UI, modal, or application content. It loads `pages/dashboard.html` inside a full-window frame and routes module hashes to the matching file in `pages/`.
+- Every module HTML document is stored separately in `pages/` (one file per module), alongside `pages/login.html`. These pages own their module entry markup and load shared styles/scripts from `css/` and `js/`.
+- All JavaScript files are stored in `js/`; all stylesheets are stored in `css/`.
+- Open `index.html` as the application entry point. Direct module files in `pages/` remain independently addressable.
 
 ## Included modules
 Dashboard; Users; Sellers & Stores; Seller Applications; Verification; Products; Categories; Orders; Payments; Wallet & Ledger; Withdrawals; Commission Rules; Delivery; Disputes; Support Tickets; Coupons & Promotions; Announcements; Notifications; Reports; Marketplace Settings; Security Center; Audit Logs; Admin Account; ZUNE AI usage; System Health; Database Monitoring; Backup & Recovery.
@@ -23,7 +22,7 @@ Dashboard; Users; Sellers & Stores; Seller Applications; Verification; Products;
 ## Install
 1. Unzip this package and host the contents of `ZUNE_PREMIUM_ADMIN/` on an HTTPS origin.
 2. Confirm `js/config.js` points to the intended Supabase project. It contains a publishable browser key only; never add `service_role` or secret keys.
-3. Open `pages/login.html`, sign in using the pre-provisioned Admin Mkuu account, then use the dashboard.
+3. Open `index.html` (or `pages/login.html` directly), sign in using the pre-provisioned Admin Mkuu account, then use the dashboard.
 4. Test with a non-admin account and confirm it is denied.
 
 ## Backend integration
