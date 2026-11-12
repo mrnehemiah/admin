@@ -61,7 +61,6 @@
     const year=$('#footerYear'); if(year)year.textContent=new Date().getFullYear();
     const dateEl=$('#currentDate'); if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('sw-TZ',{dateStyle:'full'}).format(new Date());
     $('#adminLogoutBtn')?.addEventListener('click',()=>window.ZUNE_SECURITY?.signOut());
-    $('#exportUsersBtn')?.addEventListener('click',()=>exportTable('usersTableBody','zune-users'));
     $('#exportAuditBtn')?.addEventListener('click',()=>exportTable('adminAuditLogsBody','zune-admin-audit'));
     $('#exportReportsBtn')?.addEventListener('click',()=>exportTable('ordersTableBody','zune-orders-report'));
   });

@@ -1,5 +1,20 @@
-import { rpc,updateRow,insertRow } from './api.js';
-import { toast } from './ui.js';
-const reason=()=>{const r=prompt('Andika sababu ya kitendo hiki (angalau herufi 5):');if(!r||r.trim().length<5)throw new Error('Sababu ya kitendo inahitajika.');return r.trim();};
-export async function runAction(action,row){try{let result;switch(action){case 'approve-seller':result=await rpc('approve_seller_application',{p_application_id:row.id});break;case 'review-verification':{const choice=prompt('Andika APPROVED au REJECTED:');if(!choice)return;if(!['approved','rejected'].includes(choice.trim().toLowerCase()))throw new Error('Chagua approved au rejected.');const decision=choice.trim().toLowerCase();result=await rpc('admin_review_verification_application',{p_application_id:row.id,p_source:'application',p_decision:decision,p_reason:reason()});break;}case 'review-verification-request':{const choice=prompt('Andika APPROVED au REJECTED:');if(!choice)return;if(!['approved','rejected'].includes(choice.trim().toLowerCase()))throw new Error('Chagua approved au rejected.');const decision=choice.trim().toLowerCase();result=await rpc('admin_review_verification_application',{p_application_id:row.id,p_source:'request',p_decision:decision,p_reason:reason()});break;}case 'user-suspend':result=await rpc('admin_set_user_status',{target_user_id:row.id,new_status:'suspended',action_reason:reason()});break;case 'user-active':result=await rpc('admin_set_user_status',{target_user_id:row.id,new_status:'active',action_reason:reason()});break;case 'user-block':result=await rpc('admin_set_user_status',{target_user_id:row.id,new_status:'blocked',action_reason:reason()});break;case 'verify-user':result=await rpc('admin_set_user_verification',{p_user_id:row.id,p_verified:!row.is_verified,p_reason:reason()});break;case 'feature-product':result=await updateRow('products',row.id,{is_featured:!row.is_featured});break;case 'reply-ticket':{const reply=prompt('Andika jibu kwa mteja:');if(!reply?.trim())return;result=await updateRow('support_tickets',row.id,{admin_reply:reply.trim(),status:'answered',updated_at:new Date().toISOString()});break;}case 'save-setting':{const key=prompt('Setting key (mfano marketplace.commission_percent):');if(!key)return;const value=prompt('Setting value (JSON):','{}');if(value===null)return;let parsed;try{parsed=JSON.parse(value);}catch{throw new Error('Value lazima iwe JSON sahihi.');}result=await rpc('admin_update_setting',{p_key:key,p_value:parsed,p_reason:reason()});break;}case 'payment-review':{const choice=prompt('Andika APPROVED au REJECTED:');if(!choice)return;if(!['approved','rejected'].includes(choice.trim().toLowerCase()))throw new Error('Chagua approved au rejected.');const decision=choice.trim().toLowerCase();result=await rpc('zune_admin_review_payment',{p_payment_id:row.id,p_decision:decision,p_reason:reason()});break;}default:throw new Error('Action haijasanidiwa kwa usalama.');}toast('Kitendo kimekamilika.');return result;}catch(e){toast(e.message||'Kitendo kimeshindwa.', 'error');throw e;}}
-export async function createCoupon(form){const payload={code:form.code.trim().toUpperCase(),description:form.description||null,discount_type:form.discount_type,discount_value:Number(form.discount_value),min_order_amount:Number(form.min_order_amount||0),max_discount_amount:form.max_discount_amount?Number(form.max_discount_amount):null,usage_limit:form.usage_limit?Number(form.usage_limit):null,starts_at:form.starts_at||new Date().toISOString(),expires_at:form.expires_at||null,status:'active'};return insertRow('coupons',payload);}
+(() => {
+  'use strict';
+  const ui=()=>window.ZUNE_LAYOUT, db=()=>window.ZUNE_CORE.db();
+  let busy=false;
+  async function rpc(name,args={}){if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;const {data,error}=await db().rpc(name,args);if(error)throw error;return data;}
+  // Shared confirmation: uses the existing modal (reason required, min 5 chars, blocks double submit).
+  function confirm({title,message,confirmText,fn,reason=''}){
+    ui().openModal({title,message,confirmText,onConfirm:async r=>{
+      if(r.length<5)throw new Error('Sababu lazima iwe na angalau herufi 5.');
+      if(busy)return;busy=true;try{await fn(r);}finally{busy=false;}
+    }});
+    const el=document.getElementById('adminActionReason');if(el&&reason)el.value=reason;
+  }
+  function csvCell(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+  function downloadCsv(name,rows){
+    const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  window.ZUNE_ACTIONS={rpc,confirm,csvCell,downloadCsv};
+})();

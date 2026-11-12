@@ -17,7 +17,7 @@
     if(!data?.length){body.innerHTML=`<tr><td colspan="${columns.length}" class="empty-state">${ui().esc(empty)}</td></tr>`;return;}
     body.innerHTML=data.map(row=>`<tr>${columns.map(c=>`<td>${c.html?c.html(row):ui().esc(row[c.key]??'—')}</td>`).join('')}</tr>`).join('');
   }
-  function error(id,e){const el=document.getElementById(id);if(el)el.innerHTML=`<tr><td colspan="12" class="empty-state">Imeshindikana kupakia data: ${ui().esc(e.message||e)}</td></tr>`;console.warn('ZUNE data error',e);}
+  function error(id,e){const el=document.getElementById(id);if(!el)return;const n=el.closest('table')?.querySelectorAll('th').length||12;el.innerHTML=`<tr><td colspan="${n}" class="empty-state">Imeshindikana kupakia data: ${ui().esc(e.message||e)}</td></tr>`;console.warn('ZUNE data error',e);}
   function notice(section,message){const el=document.querySelector(`[data-section="${section}"]`);if(!el)return;let n=el.querySelector('.schema-note');if(!n){n=document.createElement('div');n.className='notice-box schema-note';el.appendChild(n);}n.textContent=message;}
   async function audit(action,targetType,targetId,reason,details={}){
     const user=window.ZUNE_CURRENT_USER;if(!db()||!user)return;
