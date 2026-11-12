@@ -1,63 +1,158 @@
-# ZUNE PREMIUM ADMIN 3.0 — TOTAL DOMINATION CONTROL CENTER
+# ZUNE PREMIUM ADMIN — build mpya
 
-## Package status
-This delivery is a working admin frontend aligned to the supplied ZUNE 3.0 specification and connected to the existing Supabase project configuration. It uses the live database schema and existing server-authorized RPCs where those are available. It does not claim that every marketplace workflow has a complete backend implementation.
+Package hii ina muundo wa Admin Mkuu uliokubaliwa:
+- Sidebar ya kudumu kwenye desktop; sidebar inayoteleza kwenye simu (haijaondolewa).
+- Bottom navigation ya simu: Home, Users, Sellers, Orders na More/Notifications.
+- Top navigation yenye global search, profile na notification bell.
+- SPA routing: kila kipengee cha navigation kinafungua page section yake na URL hash yake; back/forward na refresh huhifadhi page.
+- Notification Center yenye unread badge, preview dropdown, mark-as-read na Supabase Realtime.
+- Admin role check dhidi ya `profiles.role = 'admin'`.
+- Seller role ni `vendor`; buyer role ni `buyer`.
+- Seller details profile ina sehemu za taarifa za mtu/duka, verification, activity, orders, products, wallet, disputes na security.
+- Commission policy ya ZUNE ni 3%; hesabu ya mapato haibuniwi bila kuthibitisha amount/payment schema.
+- Audit log table append-only kwa RLS na trigger ya kuzuia UPDATE/DELETE.
 
-## File organization
-- `index.html` is a minimal bootstrap only: it contains no sidebar, dashboard, module UI, modal, or application content. It loads `pages/dashboard.html` inside a full-window frame and routes module hashes to the matching file in `pages/`.
-- Every module HTML document is stored separately in `pages/` (one file per module), alongside `pages/login.html`. These pages own their module entry markup and load shared styles/scripts from `css/` and `js/`.
-- All JavaScript files are stored in `js/`; all stylesheets are stored in `css/`.
-- Open `index.html` as the application entry point. Direct module files in `pages/` remain independently addressable.
+## Muundo
 
-## Included modules
-Dashboard; Users; Sellers & Stores; Seller Applications; Verification; Products; Categories; Orders; Payments; Wallet & Ledger; Withdrawals; Commission Rules; Delivery; Disputes; Support Tickets; Coupons & Promotions; Announcements; Notifications; Reports; Marketplace Settings; Security Center; Audit Logs; Admin Account; ZUNE AI usage; System Health; Database Monitoring; Backup & Recovery.
+```text
+ZUNE_PREMIUM_ADMIN/
+├── index.html
+├── login.html
+├── admin.js
+├── README.md
+├── css/admin.css
+├── js/
+│   ├── config.js
+│   ├── login.js
+│   ├── security.js
+│   ├── layout.js
+│   ├── router.js
+│   ├── core.js
+│   ├── dashboard.js
+│   ├── users.js
+│   ├── sellers.js
+│   ├── products.js
+│   ├── orders.js
+│   ├── wallet.js
+│   ├── transactions.js
+│   ├── disputes.js
+│   ├── delivery-pricing.js
+│   ├── notifications.js
+│   ├── reports.js
+│   └── activity-logs.js
+└── sql/01_admin_notifications_and_audit.sql
+```
 
-## Requirements
-- Modern browser with internet access.
-- Supabase project URL and publishable key in `js/config.js`.
-- Existing Supabase Auth admin account. No public admin registration is provided.
-- Admin profile must have the backend-controlled `profiles.role = 'admin'` role.
-- HTTPS hosting is required for production.
+## Kuweka kwenye hosting
 
-## Install
-1. Unzip this package and host the contents of `ZUNE_PREMIUM_ADMIN/` on an HTTPS origin.
-2. Confirm `js/config.js` points to the intended Supabase project. It contains a publishable browser key only; never add `service_role` or secret keys.
-3. Open `index.html` (or `pages/login.html` directly), sign in using the pre-provisioned Admin Mkuu account, then use the dashboard.
-4. Test with a non-admin account and confirm it is denied.
+1. Upload folder contents kwenye sehemu ya admin ya hosting yako; usiweke `index.html` ndani ya subfolder tofauti na `css/` na `js/`.
+2. Supabase URL na publishable key tayari zimewekwa kwenye `js/config.js` kulingana na taarifa ulizotuma. Publishable key ni salama kuwekwa frontend; USIWEKE `service_role` key hapa.
+3. Fungua Supabase Dashboard → SQL Editor, kisha run `sql/01_admin_notifications_and_audit.sql`.
+4. Hakikisha `profiles` ina row ya akaunti ya msimamizi yenye `role='admin'`. Login hutumia Supabase Auth email/password.
+5. Hakikisha RLS ya marketplace tables inaruhusu Admin SELECT. Package haitazima RLS wala kubadilisha policies zilizopo.
+6. Deploy site kupitia HTTPS.
 
-## Backend integration
-This package reuses the existing project schema and RPCs, including `admin_dashboard_overview`, `admin_list_users`, `admin_list_seller_applications`, `admin_list_verification_applications`, `admin_set_user_status`, `approve_seller_application`, `admin_review_verification_application`, `admin_review_withdrawal`, `admin_get_settings`, and `admin_update_setting`.
+## Data tables zinazotumiwa
 
-Read operations are restricted by Supabase RLS and RPC authorization. Mutations exposed in the UI are limited to RPCs with server-side admin checks and audit behavior. Other modules are intentionally read-only until a dedicated backend RPC / Edge Function and tests exist. The UI does not update wallet balances, confirm payments, issue refunds, or alter financial records directly.
+| Module | Table / source | Hali |
+|---|---|---|
+| Users & Sellers | `profiles` | Inasoma `select *`; seller ni `role='vendor'` |
+| Seller applications | `seller_applications` | Table ipo kwenye seller application code ya mradi; schema ya columns haibadilishwi |
+| Products | `products` | Inasoma records; columns zisizojulikana huonyeshwa kwa fallback |
+| Orders | `orders` | Inasoma records; totals huonyeshwa tu kama amount column inapatikana |
+| Wallet | `admin_wallet_transactions` | Jina la table limetumika kwenye code iliyokuwepo; hakiki RLS |
+| Disputes | `transaction_disputes` | Jina la table limetumika kwenye code iliyokuwepo; hakiki RLS |
+| Notifications | `admin_notifications` | Hutengenezwa na SQL migration hii |
+| Admin Activity | `admin_activity_logs` | Hutengenezwa na SQL migration hii |
 
-## Database notes
-The connected project was inspected before building. It already contains a broad marketplace schema and multiple ZUNE Admin 3.0 migrations. This package therefore does not create duplicate tables or automatically apply new migrations. Review the database migration history and security advisors before production changes.
+## Notifications za matukio ya wateja
 
-## Security and operational cautions
-- The browser only uses the Supabase publishable key. Keep service-role keys, webhook secrets, payment-provider credentials and AI provider keys on trusted server infrastructure.
-- A frontend route guard is not an authorization boundary. RLS and every privileged RPC must enforce the actor and single-admin invariant server-side.
-- Payment success must come from trusted provider verification/webhooks, never from a browser button.
-- Wallet balances must be derived from ledger entries; never write balances directly from the client.
-- Withdrawal payout status must only be set after the actual payout has been confirmed by the operator/provider.
-- Do not represent Supabase Dashboard backup status, uptime, database internals or AI provider cost as available unless those sources are explicitly integrated.
-- Enable leaked-password protection and review SECURITY DEFINER RPC grants/findings before production.
+Notification center hupokea rows kutoka `admin_notifications` na kusikiliza Realtime. SQL migration ina function `zune_create_admin_notification(...)` inayopatikana kwa `service_role` pekee. Backend/Edge Function au database trigger inayojua schema halisi ya event inapaswa kuiita baada ya tukio kufanikiwa, mfano seller application, product submitted, order created, withdrawal request au dispute opened. Hii imeachwa upande wa trusted backend kwa makusudi; hatujabuni columns/triggers kwenye tables za wateja ambazo hatujaziona.
 
-## Verification performed
-- JavaScript syntax checked with Node.js.
-- ZIP integrity checked after packaging.
-- Supabase schema, migration history, key RPC signatures and security/performance advisors were inspected.
-- Full end-to-end browser tests, payment-provider reconciliation, backup restore drills and all RLS negative-path tests still require execution in the deployment environment.
+Mfano wa server-side call (usiweke service-role key kwenye browser):
 
-## Known boundaries
-- CSV export is available for loaded datasets. PDF report generation is not implemented.
-- Category editing, product moderation, ticket replies, dispute resolution, refunds, commission writes, provider setup, AI configuration changes, session revocation, and backup/restore execution remain read-only or require Supabase Dashboard/provider integrations.
-- `System Health` and `Backup & Recovery` display recorded logs only; they do not fabricate live health or backup success.
+```sql
+select public.zune_create_admin_notification(
+  'Maombi mapya ya Seller',
+  'Seller mpya ametuma ombi la kujiunga.',
+  'seller_application', 'high',
+  'seller_applications', 'APPLICATION_UUID',
+  'seller-applications', '{}'::jsonb
+);
+```
 
-## Suggested next QA sequence
-1. Login as the provisioned Admin Mkuu and check dashboard counts against Supabase SQL.
-2. Login as a buyer/vendor and confirm admin routes and RPCs are denied.
-3. Test user suspend/reactivate with a test account.
-4. Test seller approval with a test seller application.
-5. Test verification approve/reject and withdrawal review using test records only.
-6. Review RLS and SECURITY DEFINER findings in Supabase Advisors and remediate before production.
-7. Test mobile layouts, refresh/deep links, CSV exports and error states.
+## Vitendo vinavyohitaji backend RPC
+
+Buttons za kusimamisha/kuzuia/kufuta akaunti, kuidhinisha badge, kubadilisha role, kufanya payout/refund au kubadilisha fedha hazijaruhusiwa kuandika moja kwa moja kwenye tables kutoka browser. Zinaonyesha maelezo ya hatua inayohitajika hadi RPC/Edge Function salama ilinganishwe na schema ya Supabase. Hii inazuia kuharibu wallet, orders na foreign keys.
+
+## Mambo ya kuthibitisha kabla ya kuwezesha modules zote
+
+Schema kamili ya `products`, `orders`, `admin_wallet_transactions`, `transaction_disputes`, badge requests, verification documents, categories, delivery pricing, payments, coupons, announcements na support tickets haikupatikana pamoja na files tulizoweza kusoma. Modules hizo zina navigation na UI, lakini baadhi huonyesha ujumbe wa schema mapping badala ya kubuni columns au kuandika data isiyothibitishwa.
+
+
+## ZUNE PREMIUM ADMIN 2.0 — visual upgrade
+
+- Dark Emerald / Gold / Black visual system.
+- Advanced page, card, modal, toast, hover and notification animations.
+- Desktop collapsible sidebar with saved preference; mobile drawer and bottom navigation remain available.
+- Premium Lucide icon set loaded from CDN; a text/emoji fallback remains in the original markup if the CDN is unavailable.
+- Existing page modules and Supabase configuration retained from the supplied project archive.
+- Added `css/premium-v2.css` and `js/premium-v2.js`; these are enhancement layers, not replacements for the existing business modules.
+
+### Deployment
+1. Back up the current admin folder.
+2. Extract this ZIP and deploy the contents of `ZUNE_PREMIUM_ADMIN/` preserving folder paths.
+3. Confirm `js/config.js` contains the correct Supabase project URL and publishable key. Never put a service-role key in browser code.
+4. Run `sql/01_admin_notifications_and_audit.sql` in Supabase SQL Editor only after reviewing it against the current schema. The admin role check uses `p.role::text = 'admin'` for ENUM compatibility.
+5. Test login, navigation, notifications, verification, seller details and all data pages with an Admin account.
+
+Note: New navigation/visual enhancements do not create missing business tables or invent database schemas. Pages whose underlying table is not configured will continue to show their existing connection/schema notice.
+
+## Schema mapping iliyothibitishwa kwenye ZUNE
+
+Muunganisho wa sasa umetumia majina/columns yaliyopo kwenye project:
+- `profiles`: `full_name`, `phone_number`, `role`, `is_verified`, `account_status`.
+- `orders`: `buyer_id`, `product_id`, `quantity`, `total_price`, `commission_fee`, `status`, `payment_status`.
+- `products`: `vendor_id`, `title`, `price`, `stock_quantity`, `is_featured`.
+- `payments`: `transaction_reference`, `buyer_id`, `amount`, `payment_method`, `payment_status`.
+- `admin_wallet_transactions`: `reference`, `user_id`, `transaction_type`, `amount`, `status`.
+- `transaction_disputes`: `case_number`, `order_id`, `opened_by`, `issue_type`, `amount`, `status`.
+- `delivery_pricing`, `coupons`, `admin_announcements`, `support_tickets`, `verification_requests`.
+
+`admin_notifications` na `admin_activity_logs` zimeundwa kwenye project iliyounganishwa. Module ya notifications husoma `admin_notifications`, huweka alama ya read na kusikiliza Realtime. Audit module husoma `admin_activity_logs`; audit writes hufanywa kupitia `ZUNE_CORE.audit(...)` kutoka vitendo vya admin vinavyowezeshwa na backend.
+
+Muhimu: buttons za mabadiliko hatarishi (kufuta/ku-block akaunti, kuidhinisha seller, payout/refund na kubadilisha role) bado hazijawezeshwa kwa direct browser writes. Zihitaji RPC/Edge Functions zenye uthibitisho wa Admin Mkuu, reason, na audit log ya server-side. Usiongeze service-role key kwenye frontend.
+
+## System Settings integration (2026-11-06)
+
+- `js/settings.js` connects the System Settings screen to `admin_get_settings` and `admin_update_setting`.
+- The Marketplace profile is stored under `marketplace.general` as JSONB. Saving requires an authenticated Admin Mkuu session and a reason; the database RPC writes both `admin_settings_audit` and `admin_activity_logs`.
+- The screen remains locked if the read RPC fails. The frontend does not attempt direct writes to either settings table.
+- Delivery pricing remains managed by the existing `delivery_pricing` module/table; the Settings card links to that page rather than creating a second source of truth.
+- Seller commission remains read-only at 3% until the commission calculation backend is changed and verified to consume a centrally managed setting.
+- Account-security controls are informational only. Password, MFA, and session-policy changes are not exposed until they are connected to enforced Supabase Auth controls.
+- Marketplace general values are currently persisted in the admin settings registry. The public storefront must be separately connected to read these values before they change live storefront labels/contact details.
+
+Validation performed for this package: JavaScript syntax checks passed for `admin.js` and `js/settings.js`. Database inspection confirmed one `profiles.role='admin'` account, RLS enabled on both settings tables, and the expected empty initial settings/audit tables. The authenticated browser RPC test must still be completed in the signed-in Admin Mkuu session.
+
+## Users Management 2.1
+
+The Users page now uses the admin-only Supabase RPC endpoints instead of reading the `profiles` table directly from the browser:
+
+- `admin_users_overview()` for dashboard counters.
+- `admin_list_users(p_search, p_role, p_status, p_limit, p_offset)` for server-side search, filters and pagination.
+- `admin_get_user_details(p_user_id)` for the user profile, account metrics, applications, recent orders/products, disputes, wallet transactions and audit history.
+- `admin_set_user_status(target_user_id, new_status, action_reason)` for Active, Suspended and temporary Removed states.
+- `admin_change_user_role(p_user_id, p_new_role, p_reason)` for controlled Buyer/Seller role changes.
+
+Admin profiles are visible for review but are protected from actions in this page. Permanent account deletion is intentionally disabled until a dedicated backend workflow with approvals, session revocation and retention checks is implemented. Login/device history, advanced risk alerts and custom per-admin permissions are clearly marked as not connected because their data tables and secure RPC contracts have not yet been verified. The interface does not fabricate those records.
+
+Run `node --check` against the JavaScript files after editing. This package uses the existing Supabase project configuration and does not contain a service-role key.
+
+## Actions update (2026-11-12)
+
+- New `js/actions.js` (shared reason modal, CSV-safe export), `js/seller-actions.js`, `js/badges.js`.
+- Buttons added: Users (Suspend/Restore/Remove/Role/Badge, state-aware), Sellers (Suspend/Restore/Remove Role/Verify), Seller Requests (Approve/Reject), Badge Requests (Review/Approve/Reject), Badge Management (Remove Badge).
+- Run `sql/02_admin_action_rpcs.sql` after reviewing its assumptions: `admin_review_seller_application`, `admin_review_badge_request`, `admin_set_badge`. Buttons show an error until it is applied.
+- Fixed: syntax error in `js/core.js`, duplicate `totalUsers` id, stale search responses, full-filter Users export with CSV formula protection, `removed` admins blocked at login.
+- Still disabled (no RPC): Block seller, Delete seller, permanent removal.
