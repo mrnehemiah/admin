@@ -75,3 +75,31 @@ button{cursor:pointer}
 @media(min-width:761px){.main-area{margin-left:260px}}
 
 .admin-toast{padding:12px 15px;margin:8px 0;border:1px solid var(--line);border-radius:11px;background:#102c24;color:var(--text);font-size:11px;box-shadow:var(--shadow);animation:toastIn .2s ease}.admin-toast.success{border-color:#36b98266}.admin-toast.error{border-color:#e36e7066}.admin-toast.warning{border-color:#eaa35c66}@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+
+/* Seller applications — premium review workspace */
+.seller-applications-page{--seller-app-accent:var(--gold-2)}
+.seller-app-hero{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:clamp(20px,3vw,30px);margin:0 0 16px;border:1px solid var(--line);border-radius:19px;background:radial-gradient(ellipse at 90% 0%,#d9b66c18,transparent 48%),linear-gradient(135deg,#103329,#0b241e);box-shadow:var(--shadow)}
+.seller-app-hero-copy{min-width:0}.seller-app-eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--gold-2);font-size:9px;font-weight:800;letter-spacing:1.7px;margin-bottom:10px}
+.seller-app-eyebrow-dot,.seller-app-live-tag i{width:7px;height:7px;border-radius:50%;background:var(--gold-2);box-shadow:0 0 0 4px #d9b66c18}
+.seller-app-hero h2{font:800 clamp(22px,3vw,30px) Manrope;margin:0 0 8px;color:var(--text)}
+.seller-app-hero p{max-width:610px;margin:0;color:var(--muted);font-size:12px;line-height:1.7}
+.seller-app-pending-card{display:flex;align-items:center;gap:13px;flex:none;min-width:175px;padding:15px 18px;border:1px solid #d9b66c38;border-radius:15px;background:#d9b66c0c}
+.seller-app-pending-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#d9b66c18;color:var(--gold-2);font-size:21px}
+.seller-app-pending-card small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.seller-app-pending-card strong{font:800 25px Manrope;color:var(--text);font-variant-numeric:tabular-nums}
+.seller-app-guidance{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;margin-bottom:16px;border:1px solid #36b98230;border-radius:13px;background:#36b9820a}
+.seller-app-guidance-icon{display:grid;place-items:center;flex:none;width:25px;height:25px;border-radius:50%;background:#36b98218;color:#62d7a4;font-weight:900}
+.seller-app-guidance strong{display:block;font-size:11px;color:var(--text);margin:1px 0 4px}.seller-app-guidance p{margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.seller-app-list-panel{overflow:hidden;border:1px solid var(--line);border-radius:17px;background:var(--panel);box-shadow:var(--shadow)}
+.seller-app-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:19px 20px;border-bottom:1px solid var(--line)}
+.seller-app-list-heading h3{margin:0 0 4px;font:800 14px Manrope;color:var(--text)}.seller-app-list-heading p{margin:0;color:var(--muted);font-size:10px}
+.seller-app-live-tag{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #36b98235;border-radius:99px;color:#70d8ad;font-size:8px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+.seller-app-live-tag i{background:#53ce98;box-shadow:0 0 0 4px #36b98218}
+.seller-app-table-wrap{padding:0 16px 12px}.seller-app-table{min-width:760px;border-collapse:separate;border-spacing:0 7px}
+.seller-app-table thead th{padding:12px 13px;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.seller-app-table tbody td{padding:14px 13px;background:#ffffff04;border-top:1px solid #ffffff08;border-bottom:1px solid #ffffff08;font-size:11px;vertical-align:middle}
+.seller-app-table tbody td:first-child{border-left:1px solid #ffffff08;border-radius:10px 0 0 10px}.seller-app-table tbody td:last-child{border-right:1px solid #ffffff08;border-radius:0 10px 10px 0}
+.seller-app-table tbody tr:hover td{background:#d9b66c09}
+.seller-app-table .action-row{gap:7px;flex-wrap:wrap}.seller-app-table .action-row button{min-height:34px;padding:8px 12px;border-radius:9px;font-size:10px;font-weight:800}
+@media(max-width:760px){.seller-app-hero{align-items:stretch;flex-direction:column;gap:16px;padding:19px;border-radius:15px}.seller-app-pending-card{width:100%;min-width:0}.seller-app-guidance{padding:12px}.seller-app-list-heading{padding:15px;align-items:flex-start}.seller-app-table-wrap{padding:0 10px 10px}.seller-app-table{min-width:700px}.seller-app-table tbody td{padding:12px 10px}}
+@media(max-width:390px){.seller-app-live-tag{font-size:7px;padding:6px 8px}.seller-app-list-heading h3{font-size:12px}}
