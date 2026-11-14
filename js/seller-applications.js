@@ -10,7 +10,8 @@
       {key:'status',html:r=>ui().status(r.status)},
       {key:'id',html:r=>open(r)?`<div class="action-row"><button class="primary-btn" type="button" data-app-act="approved" data-id="${ui().esc(r.id)}">Approve</button><button class="danger-btn" type="button" data-app-act="rejected" data-id="${ui().esc(r.id)}">Reject</button></div>`:'<span class="muted">Imekamilika</span>'}
     ],'Hakuna maombi ya Seller.');
-    c().setText('pendingApplications',rows.filter(r=>String(r.status||'').toLowerCase()==='pending').length.toLocaleString());
+    const pendingCount=rows.filter(r=>String(r.status||'').toLowerCase()==='pending').length.toLocaleString();
+    c().setText('sellerApplicationsPendingCount',pendingCount);
   }
   function load(){
     if(inflight)return inflight;
