@@ -37,7 +37,7 @@ begin
  insert into public.product_moderation_reviews(user_id,product_id,title,status,reason,categories,model)
  values(v_product.vendor_id,p_product_id,v_product.title,case when v_action='message' then 'review' else v_status end,coalesce(v_reason,v_message),case when v_product.category is null then '[]'::jsonb else jsonb_build_array(v_product.category) end,'admin-manual');
  insert into public.notifications(user_id,type,title_sw,title_en,body_sw,body_en,action_url,data,is_read)
- values(v_product.vendor_id,'product_moderation',v_title,v_title,v_body,v_body,'/#seller-dashboard',jsonb_build_object('product_id',p_product_id,'product_title',v_product.title,'action',v_action,'moderation_status',v_status),false);
+ values(v_product.vendor_id,'product_moderation',v_title,v_title,v_body,v_body,'./seller-dashboard.html',jsonb_build_object('product_id',p_product_id,'product_title',v_product.title,'action',v_action,'moderation_status',v_status),false);
  insert into public.admin_activity_logs(actor_id,action,target_type,target_id,reason,details,result)
  values(auth.uid(),'product_'||v_action,'product',p_product_id::text,coalesce(v_reason,v_message,'Admin product action'),jsonb_build_object('product_title',v_product.title,'vendor_id',v_product.vendor_id,'previous_status',v_product.moderation_status,'new_status',v_status,'seller_message',v_message),'success');
  return jsonb_build_object('success',true,'product_id',p_product_id,'action',v_action,'moderation_status',v_status);
