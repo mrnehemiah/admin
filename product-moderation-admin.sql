@@ -7,8 +7,8 @@ alter table public.products add constraint products_moderation_status_check chec
 alter table public.product_moderation_reviews drop constraint if exists product_moderation_reviews_status_check;
 alter table public.product_moderation_reviews add constraint product_moderation_reviews_status_check check (status = any (array['approved','blocked','review','error','removed']));
 
-create or replace function public.zune_admin_manage_product(p_product_id uuid,p_action text,p_reason text default null,p_message text default null)
-returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+drop policy if exists zune_admin_insert_product_notifications on public.notifications;\ncreate policy zune_admin_insert_product_notifications on public.notifications for insert to authenticated with check (public.zune_is_admin());\ndrop policy if exists zune_admin_insert_product_reviews on public.product_moderation_reviews;\ncreate policy zune_admin_insert_product_reviews on public.product_moderation_reviews for insert to authenticated with check (public.zune_is_admin());\n\ncreate or replace function public.zune_admin_manage_product(p_product_id uuid,p_action text,p_reason text default null,p_message text default null)
+returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
 declare
  v_product public.products%rowtype;
  v_action text:=lower(trim(coalesce(p_action,'')));
