@@ -30,7 +30,10 @@ function render(){
   p.title,p.description,p.category,p.vendor_id,sellerOf(p).full_name,sellerOf(p).email,storeOf(p).store_name
  ].some(v=>String(v||'').toLowerCase().includes(q))));
  grid.innerHTML=rows.length?rows.map(renderCard).join(''):'<p class="empty-state">Hakuna bidhaa zinazolingana na utafutaji huu.</p>';
- c().setText('totalProducts',products.length.toLocaleString());\n c().setText('productPendingCount',products.filter(p=>productStatus(p)==='pending').length.toLocaleString());\n c().setText('productBlockedCount',products.filter(p=>productStatus(p)==='blocked').length.toLocaleString());\n c().setText('productRemovedCount',products.filter(p=>productStatus(p)==='removed').length.toLocaleString());
+ c().setText('totalProducts',products.length.toLocaleString());
+ c().setText('productPendingCount',products.filter(p=>productStatus(p)==='pending').length.toLocaleString());
+ c().setText('productBlockedCount',products.filter(p=>productStatus(p)==='blocked').length.toLocaleString());
+ c().setText('productRemovedCount',products.filter(p=>productStatus(p)==='removed').length.toLocaleString());
 }
 async function load(){
  try{
@@ -99,7 +102,8 @@ function openAction(p,action){
 }
 document.addEventListener('DOMContentLoaded',()=>{
  $('productsSearch')?.addEventListener('input',render);
- $('productStatusFilter')?.addEventListener('change',render);\n $('refreshProductsBtn')?.addEventListener('click',load);
+ $('productStatusFilter')?.addEventListener('change',render);
+ $('refreshProductsBtn')?.addEventListener('click',load);
  $('productsCardsGrid')?.addEventListener('click',e=>{const b=e.target.closest('[data-product-view]');if(b)openDetails(b.dataset.productView);});
  load();
 });
