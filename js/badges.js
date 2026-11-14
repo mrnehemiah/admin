@@ -5,18 +5,14 @@
   const lc=v=>String(v||'').toLowerCase(), isOpen=r=>['pending','under_review'].includes(lc(r.status));
   const refilter=id=>$(id)?.dispatchEvent(new Event('input'));
   function reqButtons(r){
-    if(!isOpen(r))return '<span class="muted">—</span>';
+    if(lc(r.status)!=='pending')return '<span class="muted">—</span>';
     const id=ui().esc(r.id);
-    return `<div class="action-row">${lc(r.status)==='pending'?`<button class="secondary-btn" type="button" data-badge-act="under_review" data-id="${id}">Review</button>`:''}<button class="primary-btn" type="button" data-badge-act="approved" data-id="${id}">Approve</button><button class="danger-btn" type="button" data-badge-act="rejected" data-id="${id}">Reject</button></div>`;
+    return `<div class="action-row"><button class="primary-btn" type="button" data-badge-act="approved" data-id="${id}">Approve</button><button class="danger-btn" type="button" data-badge-act="rejected" data-id="${id}">Reject</button></div>`;
   }
   function renderRequests(){
     const f=$('badgeRequestStatus')?.value||'', data=f?reqs.filter(r=>lc(r.status)===f):reqs;
-    c().setRows('badgeRequestsBody',data,[
-      {html:r=>ui().esc(r.full_name||r.user_id||'—')},{html:r=>ui().esc(r.user_id||'—')},
-      {html:r=>ui().esc(r.user_type||r.document_type||'—')},{html:r=>ui().esc(r.reason||r.admin_note||'—')},
-      {html:r=>ui().esc(r.document_number||'—')},{html:r=>ui().date(r.created_at)},
-      {html:r=>ui().status(r.status)},{html:reqButtons}
-    ],'Hakuna badge requests.');
+    const body=$('badgeRequestsBody'); if(!body)return;
+    body.innerHTML=data.length?data.map(r=>{const doc=r.__documentUrl?'<a href="'+ui().esc(r.__documentUrl)+'" target="_blank" rel="noopener"><img src="'+ui().esc(r.__documentUrl)+'" alt="Verification document" style="width:76px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--border)"></a>':'<span class="muted">Haijawekwa</span>';return '<tr><td>'+ui().esc(r.full_name||r.user_id||'—')+'</td><td>'+ui().esc(r.user_id||'—')+'</td><td>'+ui().esc(r.verification_type==='seller'?'Seller / Verified Store':'Customer / Verified Account')+'</td><td>'+ui().esc(r.rejection_reason||r.business_name||'—')+'</td><td>'+doc+'</td><td>'+ui().date(r.created_at)+'</td><td>'+ui().status(r.status)+'</td><td>'+reqButtons(r)+'</td></tr>';}).join(''):'<tr><td colspan="8" class="empty-state">Hakuna badge requests.</td></tr>';
     const n=s=>reqs.filter(r=>lc(r.status)===s).length.toLocaleString();
     c().setText('badgePendingCount',n('pending'));c().setText('badgeReviewCount',n('under_review'));c().setText('badgeApprovedCount',n('approved'));c().setText('badgeRejectedCount',n('rejected'));
     refilter('badgeRequestsSearch');
@@ -31,7 +27,7 @@
     ],'Hakuna watumiaji wenye Verified Badge.');
     refilter('verifiedUsersSearch');
   }
-  function loadRequests(){if(inR)return inR;inR=(async()=>{try{reqs=await c().rows('verification_requests',300);renderRequests();}catch(e){c().error('badgeRequestsBody',e);}finally{inR=null;}})();return inR;}
+  function loadRequests(){if(inR)return inR;inR=(async()=>{try{await window.ZUNE_AUTH_READY;const {data,error}=await c().db().from('verified_badge_requests').select('*').order('created_at',{ascending:false}).limit(300);if(error)throw error;reqs=data||[];await Promise.all(reqs.map(async r=>{if(!r.document_path)return;const {data:link,error:linkError}=await c().db().storage.from('zune-verification-documents').createSignedUrl(r.document_path,300);if(!linkError&&link?.signedUrl)r.__documentUrl=link.signedUrl;}));renderRequests();}catch(e){c().error('badgeRequestsBody',e);}finally{inR=null;}})();return inR;}
   function loadVerified(){if(inV)return inV;inV=(async()=>{try{if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;
     const {data,error}=await c().db().from('profiles').select('id,full_name,email,role,is_verified,created_at').eq('is_verified',true).order('created_at',{ascending:false}).limit(500);
     if(error)throw error;verified=data||[];renderVerified();}catch(e){c().error('verifiedUsersBody',e);}finally{inV=null;}})();return inV;}
@@ -39,7 +35,7 @@
   function decide(r,decision){
     const label={under_review:'Weka Under Review',approved:'Idhinisha',rejected:'Kataa'}[decision];
     A().confirm({title:`${label} — Verified Badge`,message:`${label}: ${r.full_name||r.user_id}. ${decision==='approved'?'Badge itatolewa kwa mtumiaji huyu.':''} Andika sababu.`,confirmText:label,
-      fn:async reason=>{await A().rpc('admin_review_badge_request',{p_request_id:r.id,p_decision:decision,p_reason:reason});ui().toast('Ombi la badge limesasishwa.','success');await reloadAll();}});
+      fn:async reason=>{await A().rpc('admin_review_zune_badge_request',{p_request_id:r.id,p_decision:decision==='under_review'?'approved':decision,p_reason:reason});ui().toast('Ombi la badge limesasishwa.','success');await reloadAll();}});
   }
   function removeBadge(userId,label,reason=''){
     A().confirm({title:'Ondoa Verified Badge',message:`Ondoa badge: ${label}. Akaunti haitafutwa.`,confirmText:'Remove Badge',reason,
