@@ -103,3 +103,6 @@ button{cursor:pointer}
 .seller-app-table .action-row{gap:7px;flex-wrap:wrap}.seller-app-table .action-row button{min-height:34px;padding:8px 12px;border-radius:9px;font-size:10px;font-weight:800}
 @media(max-width:760px){.seller-app-hero{align-items:stretch;flex-direction:column;gap:16px;padding:19px;border-radius:15px}.seller-app-pending-card{width:100%;min-width:0}.seller-app-guidance{padding:12px}.seller-app-list-heading{padding:15px;align-items:flex-start}.seller-app-table-wrap{padding:0 10px 10px}.seller-app-table{min-width:700px}.seller-app-table tbody td{padding:12px 10px}}
 @media(max-width:390px){.seller-app-live-tag{font-size:7px;padding:6px 8px}.seller-app-list-heading h3{font-size:12px}}
+
+.seller-app-scroll-hint{display:none}
+@media(max-width:760px){.seller-app-scroll-hint{display:block;margin:0 14px 8px;color:var(--muted);font-size:10px;line-height:1.5}.seller-app-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}.seller-app-table{min-width:700px}}
