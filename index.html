@@ -58,7 +58,7 @@
     .progress-track{height:7px;border-radius:20px;background:#ffffff12;overflow:hidden}.progress-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#b88c43,#f0d99c)}
     @media(max-width:760px){.section-intro{align-items:flex-start}.form-grid,.audit-checklist,.detail-grid{grid-template-columns:1fr}.table-toolbar{justify-content:stretch}.table-search{min-width:0;flex:1;width:100%}}
   </style>
-  <link rel="stylesheet" href="css/premium-v2.css">
+  <link rel="stylesheet" href="css/premium-v2.css">\n  <link rel="stylesheet" href="css/product-management.css">
 </head>
 <body>
 <div class="app-shell">
@@ -216,8 +216,15 @@
       </section>
 
       <section class="page-section" id="productsPage" data-section="products">
-        <div class="section-intro"><div><h2>Bidhaa</h2><p>Dhibiti bidhaa, bei, stock na bidhaa zinazoripotiwa.</p></div></div>
-        <div class="panel"><div class="table-toolbar"><input class="table-search" id="productsSearch" placeholder="Tafuta bidhaa..."><select id="productStatusFilter"><option value="">Hali zote</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div><div id="productsCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:14px"><p class="empty-state">Inasubiri bidhaa...</p></div></div>
+        <div class="section-intro"><div><h2>Bidhaa</h2><p>Angalia maelezo, dhibiti uchapishaji na wasiliana na Seller kuhusu marekebisho.</p></div><button class="secondary-btn" id="refreshProductsBtn" type="button">↻ Refresh</button></div>
+        <div class="metrics-grid compact-metrics">
+          <article class="metric-card"><span>Bidhaa zote</span><strong id="totalProducts">—</strong></article>
+          <article class="metric-card"><span>Pending</span><strong id="productPendingCount">—</strong></article>
+          <article class="metric-card"><span>Blocked</span><strong id="productBlockedCount">—</strong></article>
+          <article class="metric-card"><span>Removed</span><strong id="productRemovedCount">—</strong></article>
+        </div>
+        <div class="panel"><div class="table-toolbar"><input class="table-search" id="productsSearch" placeholder="Tafuta jina, maelezo, duka au Seller..."><select id="productStatusFilter"><option value="">Hali zote</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="blocked">Blocked</option><option value="review">In Review</option><option value="removed">Removed / Archived</option></select></div><div id="productsCardsGrid" class="zune-admin-products-grid"><p class="empty-state">Inasubiri bidhaa...</p></div></div>
+        <div class="notice-box">Bidhaa ikiondolewa, haiwezi kuonekana sokoni lakini rekodi yake inabaki kwenye database kama Removed / Archived. Kila hatua ya Admin ina sababu, notification kwa Seller na audit record.</div>
       </section>
 
       <section class="page-section" id="categoriesPage" data-section="categories"><div class="section-intro"><div><h2>Categories</h2><p>Simamia makundi na mpangilio wa bidhaa.</p></div><button class="primary-btn" id="addCategoryBtn" type="button">＋ Add Category</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Category</th><th>Slug</th><th>Bidhaa</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="categoriesTableBody"><tr><td colspan="5" class="empty-state">Inasubiri categories...</td></tr></tbody></table></div></div></section>
