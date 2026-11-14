@@ -23,7 +23,36 @@
  }
  function bindActions(){
   document.getElementById('globalSearch')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;const page=/order/i.test(q)?'orders':/seller|duka/i.test(q)?'sellers':/product|bidhaa/i.test(q)?'products':'users';window.ZUNE_ROUTER.show(page);const target=document.querySelector(`[data-section="${page}"] input[type="search"], [data-section="${page}"] input`);if(target){target.value=q;target.dispatchEvent(new Event('input'));}});
-  document.getElementById('addSellerBtn')?.addEventListener('click',()=>ui().toast('Kuongeza seller kunahitaji utaratibu wa backend unaobadilisha profiles.role kwa usalama.','warning'));
+  document.getElementById('addSellerBtn')?.addEventListener('click',async()=>{
+   const btn=document.getElementById('addSellerBtn');if(btn?.disabled)return;
+   const original=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='Inatafuta Buyer...';}
+   try{
+    if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;
+    const db=c().db();if(!db)throw new Error('Supabase haijaunganishwa.');
+    const term=window.prompt('Tafuta akaunti ya Buyer kwa jina, email, simu au ZUNE ID:');
+    if(term===null)return;if(!term.trim())throw new Error('Weka taarifa za kumtafuta Buyer.');
+    const {data,error}=await db.rpc('admin_list_users',{p_search:term.trim(),p_role:'buyer',p_status:null,p_limit:100,p_offset:0});
+    if(error)throw error;
+    const buyers=Array.isArray(data?.users)?data.users:[];
+    if(!buyers.length)throw new Error('Hakuna akaunti ya Buyer iliyopatikana kwa utafutaji huo. Hakikisha mtumiaji amesajiliwa kama Buyer.');
+    let selected=buyers[0];
+    if(buyers.length>1){
+     const options=buyers.map((u,i)=>`${i+1}. ${u.full_name||'Bila jina'} — ${u.email||u.phone_number||u.zune_id||u.id}`).join('\\n');
+     const choice=window.prompt(`Akaunti zaidi ya moja zimepatikana. Chagua namba ya Buyer:\\n\\n${options}`,'1');
+     if(choice===null)return;const index=Number(choice)-1;if(!Number.isInteger(index)||index<0||index>=buyers.length)throw new Error('Namba ya chaguo si sahihi.');selected=buyers[index];
+    }
+    const reason=window.prompt(`Unaongeza ${selected.full_name||selected.email||'Buyer huyu'} kuwa Seller. Andika sababu (angalau herufi 5):`);
+    if(reason===null)return;if(reason.trim().length<5)throw new Error('Sababu lazima iwe na angalau herufi 5.');
+    if(btn)btn.textContent='Inaongeza Seller...';
+    const {data:result,error:rpcError}=await db.rpc('admin_add_seller',{p_user_id:selected.id,p_reason:reason.trim()});
+    if(rpcError)throw rpcError;
+    if(!result?.success)throw new Error('Backend haikuthibitisha kuongezwa kwa Seller.');
+    ui().toast(`${selected.full_name||selected.email||'Mtumiaji'} ameongezwa kama Seller kwa mafanikio.`,'success');
+    await window.ZUNE_SELLERS?.load?.();
+    document.dispatchEvent(new Event('zune:admin-refresh'));
+   }catch(e){console.error('ZUNE Add Seller failed:',e);ui().toast(e.message||'Imeshindikana kuongeza Seller.','error');}
+   finally{if(btn){btn.disabled=false;btn.textContent=original||'＋ Add Seller';}}
+  });
   document.getElementById('addCategoryBtn')?.addEventListener('click',()=>ui().toast('Tunahitaji kuthibitisha schema ya categories kabla ya kuhifadhi.','warning'));
   ['blockSellerBtn','deleteSellerBtn'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>ui().toast('Hatua hii inahitaji RPC ya backend na audit record; haijawashwa ili kuzuia mabadiliko yasiyo salama.','warning')));
   document.getElementById('refreshDashboard')?.addEventListener('click',()=>document.dispatchEvent(new Event('zune:admin-refresh')));
