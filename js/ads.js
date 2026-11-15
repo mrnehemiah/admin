@@ -46,6 +46,13 @@
         x=>x.status==='pending_review' || x.status==='approved' || x.status==='paused'
           ? '<button class="secondary-btn ads-review" data-id="'+esc(x.id)+'" data-decision="approved">Approve</button> <button class="warning-btn ads-review" data-id="'+esc(x.id)+'" data-decision="'+(x.status==='approved'?'paused':'rejected')+'">'+(x.status==='approved'?'Pause':'Reject')+'</button>' : '—'
       ],'Hakuna kampeni zilizowasilishwa.');
+      body('adsReviewRows',campaignRows.filter(x=>x.status==='pending_review'),[
+        x=>'<strong>'+esc(x.title)+'</strong>',
+        x=>esc(names.get(x.seller_id)),
+        x=>status(x.placement),
+        x=>esc(date(x.created_at)),
+        x=>'<button class="secondary-btn ads-review" data-id="'+esc(x.id)+'" data-decision="approved">Approve</button> <button class="warning-btn ads-review" data-id="'+esc(x.id)+'" data-decision="rejected">Reject</button>'
+      ],'Hakuna kampeni zinazosubiri review.');
       body('adsPackageRows',packages,[
         x=>'<strong>'+esc(x.name)+'</strong><small>'+esc(x.description||'')+'</small>',
         x=>status(x.campaign_type),x=>esc(x.duration_days)+' siku',
@@ -54,7 +61,7 @@
         x=>'<button class="secondary-btn ads-package-toggle" data-id="'+esc(x.id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'Zima':'Washa')+'</button>'
       ],'Hakuna package zilizowekwa bado.');
       body('adsWalletRows',transactions.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
-        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>',
+        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>'+(x.receipt_path?'<small>Receipt: '+esc(x.receipt_path)+'</small>':''),
         x=>money(x.amount_tzs),x=>status(x.status),x=>esc(date(x.created_at)),
         x=>x.transaction_type==='deposit_request' && x.status==='pending'
           ? '<button class="secondary-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="approved">Thibitisha</button> <button class="warning-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="rejected">Kataa</button>' : '—'
