@@ -18,7 +18,12 @@ function render(){
  ],'Hakuna orders zinazolingana na vichujio.');
  c().setText('totalOrders',allOrders.length.toLocaleString());
 }
-async function load(){try{allOrders=await c().rows('orders',500);render();}catch(e){c().error('ordersTableBody',e);}}
+async function load(){try{
+ allOrders=await c().rows('orders',500);
+ const ids=[...new Set(allOrders.map(x=>x.product_id).filter(Boolean))];
+ if(ids.length){const {data,error}=await db().from('products').select('id,vendor_id').in('id',ids);if(error)throw error;const owners=new Map((data||[]).map(x=>[x.id,x.vendor_id]));allOrders=allOrders.map(x=>({...x,seller_id:owners.get(x.product_id)||null}));}
+ render();
+ }catch(e){c().error('ordersTableBody',e);}}
 async function updateStatus(id){
  const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;
  const select=document.querySelector('[data-order-next="'+CSS.escape(String(id))+'"]');const next=select?.value;
