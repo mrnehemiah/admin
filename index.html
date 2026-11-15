@@ -88,6 +88,7 @@
       <a class="nav-link" href="#delivery-pricing" data-page="delivery-pricing"><span class="nav-icon">⇢</span> Delivery & Pricing</a>
       <a class="nav-link" href="#coupons" data-page="coupons"><span class="nav-icon">％</span> Coupons & Promotions</a>
       <a class="nav-link" href="#announcements" data-page="announcements"><span class="nav-icon">◉</span> Matangazo</a>
+      <a class="nav-link" href="#ads" data-page="ads"><span class="nav-icon">▣</span> Ads Management</a>
       <a class="nav-link" href="#payments" data-page="payments"><span class="nav-icon">▧</span> Payments</a>
       <a class="nav-link" href="#wallet" data-page="wallet"><span class="nav-icon">◈</span> Wallet & Commission</a>
       <a class="nav-link" href="#disputes" data-page="disputes"><span class="nav-icon">⚖</span> Disputes</a>
@@ -251,6 +252,31 @@
 
       <section class="page-section" id="announcementsPage" data-section="announcements"><div class="section-intro"><div><h2>Matangazo</h2><p>Tuma taarifa rasmi kwa watumiaji na wauzaji.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Kichwa</th><th>Walengwa</th><th>Tarehe</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="announcementsTableBody"><tr><td colspan="5" class="empty-state">Inasubiri matangazo...</td></tr></tbody></table></div></div></section>
 
+      <section class="page-section" id="adsPage" data-section="ads">
+        <div class="section-intro"><div><h2>Ads Management</h2><p>Usimamizi wa Sponsored Stores, Sponsored Products na kampeni za matangazo ya kulipia.</p></div><span class="badge-pill warning">Backend haijaunganishwa</span></div>
+        <div class="notice-box" style="margin-bottom:16px"><strong>Hali ya utekelezaji:</strong> Muonekano wa Ads Management umeongezwa. Mfumo wa sasa haujaunganishwa na jedwali/API za matangazo, kwa hiyo takwimu, approvals, malipo na mabadiliko bado havifanyi kazi. Hakuna data ya kubuniwa wala kitendo cha kifedha kinachofanyika hapa.</div>
+        <div class="metrics-grid compact-metrics">
+          <article class="metric-card"><span>Kampeni zote</span><strong>—</strong><small>Inasubiri muunganisho wa Ads API</small></article>
+          <article class="metric-card"><span>Zinasubiri review</span><strong>—</strong><small>Inasubiri muunganisho wa Ads API</small></article>
+          <article class="metric-card"><span>Active Ads</span><strong>—</strong><small>Inasubiri muunganisho wa Ads API</small></article>
+          <article class="metric-card"><span>Mapato ya Ads</span><strong>TZS —</strong><small>Inasubiri muunganisho wa malipo</small></article>
+        </div>
+        <div class="seller-tabs ads-tabs" role="tablist" aria-label="Sehemu za Ads Management">
+          <button type="button" class="active" data-ads-tab="campaigns">Kampeni</button>
+          <button type="button" data-ads-tab="review">Ad Review</button>
+          <button type="button" data-ads-tab="packages">Packages & Pricing</button>
+          <button type="button" data-ads-tab="wallet">Ads Wallet</button>
+          <button type="button" data-ads-tab="analytics">Analytics</button>
+          <button type="button" data-ads-tab="reports">Reports & Refunds</button>
+        </div>
+        <div class="seller-tab-content active" id="adsCampaignsTab"><div class="panel"><div class="panel-heading"><div><p class="eyebrow">CAMPAIGN CONTROL</p><h3>Kampeni za Sponsored Ads</h3></div><span class="badge-pill warning">Haijaunganishwa</span></div><div class="metrics-grid compact-metrics"><article class="metric-card"><span>Sponsored Stores</span><strong>—</strong></article><article class="metric-card"><span>Sponsored Products</span><strong>—</strong></article><article class="metric-card"><span>Combo Campaigns</span><strong>—</strong></article></div><div class="table-wrap"><table><thead><tr><th>Kampeni</th><th>Seller</th><th>Aina</th><th>Placement</th><th>Bajeti</th><th>Muda</th><th>Status</th></tr></thead><tbody><tr><td colspan="7" class="empty-state">Hakuna data iliyopakiwa. Campaigns API/schema inahitajika kabla ya kuonyesha rekodi.</td></tr></tbody></table></div></div></div>
+        <div class="seller-tab-content" id="adsReviewTab"><div class="panel"><h3>Ad Review & Approval</h3><p class="muted">Kila tangazo litapitiwa kabla ya kuchapishwa. Admin ataweza kuapprove, kukataa kwa sababu, kusimamisha tangazo na kuruhusu marekebisho baada ya backend salama kuunganishwa.</p><div class="table-wrap"><table><thead><tr><th>Tangazo</th><th>Muombaji</th><th>Placement</th><th>Submitted</th><th>Review Status</th></tr></thead><tbody><tr><td colspan="5" class="empty-state">Review queue haijaunganishwa na database.</td></tr></tbody></table></div></div></div>
+        <div class="seller-tab-content" id="adsPackagesTab"><div class="panel"><h3>Ad Packages & Dynamic Pricing</h3><p class="muted">Packages za Sponsored Stores, Sponsored Products na Combo; muda, placement, ukubwa, slots, bei na eligibility rules zitasimamiwa na Admin.</p><div class="table-wrap"><table><thead><tr><th>Package</th><th>Category</th><th>Duration</th><th>Placement</th><th>Price</th><th>Eligibility</th><th>Status</th></tr></thead><tbody><tr><td colspan="7" class="empty-state">Package configuration API/schema haijaunganishwa.</td></tr></tbody></table></div></div></div>
+        <div class="seller-tab-content" id="adsWalletTab"><div class="panel"><h3>ZUNE Ads Wallet</h3><p class="muted">Salio la Available, Pending na Reserved; deposits zenye receipt/Transaction ID, campaign payments, refunds na Admin adjustments.</p><div class="metrics-grid compact-metrics"><article class="metric-card"><span>Available</span><strong>TZS —</strong></article><article class="metric-card"><span>Pending</span><strong>TZS —</strong></article><article class="metric-card"><span>Reserved</span><strong>TZS —</strong></article></div><div class="table-wrap"><table><thead><tr><th>Seller</th><th>Transaction</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody><tr><td colspan="6" class="empty-state">Ads Wallet ledger haijaunganishwa. Hakuna salio linaloweza kubadilishwa kwa sasa.</td></tr></tbody></table></div></div></div>
+        <div class="seller-tab-content" id="adsAnalyticsTab"><div class="panel"><h3>Ads Analytics & Reports</h3><p class="muted">Views, Clicks, Store Visits, attributed Orders, CTR na Conversion. Takwimu zitaonekana baada ya event tracking kuunganishwa.</p><div class="metrics-grid compact-metrics"><article class="metric-card"><span>Impressions</span><strong>—</strong></article><article class="metric-card"><span>Clicks</span><strong>—</strong></article><article class="metric-card"><span>CTR</span><strong>—</strong></article><article class="metric-card"><span>Conversions</span><strong>—</strong></article></div></div></div>
+        <div class="seller-tab-content" id="adsReportsTab"><div class="panel"><h3>Ad Reports, Complaints & Refunds</h3><p class="muted">Ripoti za fraud, maudhui yasiyo sahihi, picha zisizofaa, misleading ads na ukiukaji wa sera. Refunds zitahitaji uamuzi wa Admin wenye sababu na audit trail.</p><div class="table-wrap"><table><thead><tr><th>Report</th><th>Ad</th><th>Reason</th><th>Severity</th><th>Status</th><th>Refund</th></tr></thead><tbody><tr><td colspan="6" class="empty-state">Reports na refund requests hazijaunganishwa na database.</td></tr></tbody></table></div></div></div>
+      </section>
+
       <section class="page-section" id="paymentsPage" data-section="payments"><div class="section-intro"><div><h2>Payments</h2><p>Fuatilia miamala na uthibitisho wa malipo.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Mteja</th><th>Kiasi</th><th>Njia</th><th>Status</th><th>Tarehe</th></tr></thead><tbody id="paymentsTableBody"><tr><td colspan="6" class="empty-state">Inasubiri payments...</td></tr></tbody></table></div></div></section>
 
       <section class="page-section" id="walletPage" data-section="wallet"><div class="section-intro"><div><h2>Wallet & Transactions</h2><p>Salio, miamala, withdrawals na ledger.</p></div></div><div class="metrics-grid compact-metrics"><article class="metric-card"><span>Wallet balances</span><strong id="walletTotalBalance">TZS —</strong></article><article class="metric-card"><span>Withdrawals pending</span><strong id="pendingWithdrawals">—</strong></article><article class="metric-card"><span>Transactions</span><strong id="walletTransactionCount">—</strong></article></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Mtumiaji</th><th>Aina</th><th>Kiasi</th><th>Status</th><th>Tarehe</th></tr></thead><tbody id="walletTransactionsBody"><tr><td colspan="6" class="empty-state">Inasubiri wallet transactions...</td></tr></tbody></table></div></div></section>
@@ -356,6 +382,7 @@
 <script src="js/seller-applications.js?v=2"></script>
 <script src="js/products.js"></script>
 <script src="js/categories-admin.js"></script>
+<script src="js/ads.js"></script>
 <script src="js/orders.js"></script>
 <script src="js/wallet.js"></script>
 <script src="js/transactions.js"></script>
