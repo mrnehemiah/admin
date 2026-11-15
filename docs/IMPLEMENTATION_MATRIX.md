@@ -10,6 +10,7 @@
 | Products | Yes | `products` | None | Live read |
 | Categories | Yes | `product_categories` | None | Live read |
 | Orders | Yes | `orders`, `order_deliveries` | Admin status update + audit + buyer notification; cancellation restores checkout-deducted stock | Live read + controlled Admin lifecycle |
+| Product Reviews | Yes | `product_reviews` | Approve/reject with moderation note, audit log, and buyer/Seller notifications | Live read + moderation |
 | Payments | Yes | `payment_transactions` | None | Live read; payment provider verifies payment |
 | Wallet & Ledger | Yes | `wallet_ledger` | None | Live read; no direct balance writes |
 | Withdrawals | Yes | `withdrawal_requests` | Review via `admin_review_withdrawal()` | Live read + guarded RPC |
