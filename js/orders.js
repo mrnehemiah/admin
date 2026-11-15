@@ -7,11 +7,12 @@ const statusLabel=s=>({pending:'Pending',confirmed:'Confirmed',completed:'Comple
 function render(){
  const q=(document.getElementById('ordersSearch')?.value||'').trim().toLowerCase();
  const status=(document.getElementById('orderStatusFilter')?.value||'').toLowerCase();
- const rows=allOrders.filter(x=>(!status||String(x.status||'').toLowerCase()===status)&&(!q||[x.id,x.buyer_id,x.seller_id,x.total_price,x.status,x.payment_status].some(v=>String(v??'').toLowerCase().includes(q))));
+ const rows=allOrders.filter(x=>(!status||String(x.status||'').toLowerCase()===status)&&(!q||[x.id,x.buyer_id,x.seller_id,x.total_price,x.discount_total,x.status,x.payment_status].some(v=>String(v??'').toLowerCase().includes(q))));
  c().setRows('ordersTableBody',rows,[
   {html:x=>'<strong>'+esc(x.id)+'</strong><small>Checkout: '+esc(x.checkout_id||'—')+'</small>'},
   {html:x=>esc(x.buyer_id||'—')},{html:x=>esc(x.seller_id||'—')},
   {html:x=>ui().money(x.total_price??x.total_amount??0)},
+  {html:x=>x.discount_total>0?'<strong>-'+ui().money(x.discount_total)+'</strong>':'—'},
   {html:x=>'<span class="badge-pill">'+esc(statusLabel(x.status))+'</span>'},
   {html:x=>ui().date(x.created_at)},{html:x=>ui().status(x.payment_status||'pending')},
   {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'><option value="pending" '+(x.status==='pending'?'selected':'')+'>Pending</option><option value="confirmed" '+(x.status==='confirmed'?'selected':'')+'>Confirmed</option><option value="completed" '+(x.status==='completed'?'selected':'')+'>Completed</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>Cancelled</option></select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
@@ -22,6 +23,8 @@ async function load(){try{
  allOrders=await c().rows('orders',500);
  const ids=[...new Set(allOrders.map(x=>x.product_id).filter(Boolean))];
  if(ids.length){const {data,error}=await db().from('products').select('id,vendor_id').in('id',ids);if(error)throw error;const owners=new Map((data||[]).map(x=>[x.id,x.vendor_id]));allOrders=allOrders.map(x=>({...x,seller_id:owners.get(x.product_id)||null}));}
+ const checkoutIds=[...new Set(allOrders.map(x=>x.checkout_id).filter(Boolean))];
+ if(checkoutIds.length){const {data,error}=await db().from('order_checkouts').select('id,grand_total,discount_total,coupon_id').in('id',checkoutIds);if(error)throw error;const checkoutMap=new Map((data||[]).map(x=>[x.id,x]));allOrders=allOrders.map(x=>({...x,checkout_total:checkoutMap.get(x.checkout_id)?.grand_total??null,discount_total:checkoutMap.get(x.checkout_id)?.discount_total??0}));}
  render();
  }catch(e){c().error('ordersTableBody',e);}}
 async function updateStatus(id){
