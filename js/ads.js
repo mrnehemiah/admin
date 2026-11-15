@@ -26,7 +26,7 @@
     if(loading || !db()) return;
     loading=true;
     try {
-      if(window.ZUNE_AUTH_READY) await window.ZUNE_AUTH_READY;
+      if(window.ZUNE_AUTH_READY) await window.ZUNE_AUTH_READY; else if(window.ZUNE_SECURITY?.requireAdmin) await window.ZUNE_SECURITY.requireAdmin();
       const [campaigns,packages,wallets,transactions,events,reports,profiles,stores]=await Promise.all([
         query('ad_campaigns'),query('ad_packages'),query('ads_wallets'),query('ads_wallet_transactions'),
         query('ad_events'),query('ad_reports'),query('profiles','id,full_name'),query('stores','id,store_name,owner_id')
@@ -43,7 +43,7 @@
         x=>esc(names.get(x.seller_id)),x=>status(x.campaign_type),x=>status(x.placement),
         x=>money(x.budget_tzs),x=>esc(date(x.starts_at)+' – '+date(x.ends_at)),
         x=>'<span class="badge-pill">'+status(x.status)+'</span>',
-        x=>x.status==='pending_review' || x.status==='approved' || x.status==='paused'
+        x=>x.status==='pending_review' || x.status==='approved'
           ? '<button class="secondary-btn ads-review" data-id="'+esc(x.id)+'" data-decision="approved">Approve</button> <button class="warning-btn ads-review" data-id="'+esc(x.id)+'" data-decision="'+(x.status==='approved'?'paused':'rejected')+'">'+(x.status==='approved'?'Pause':'Reject')+'</button>' : '—'
       ],'Hakuna kampeni zilizowasilishwa.');
       body('adsReviewRows',campaignRows.filter(x=>x.status==='pending_review'),[
@@ -61,7 +61,7 @@
         x=>'<button class="secondary-btn ads-package-toggle" data-id="'+esc(x.id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'Zima':'Washa')+'</button>'
       ],'Hakuna package zilizowekwa bado.');
       body('adsWalletRows',transactions.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
-        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>'+(x.receipt_path?'<small>Receipt: '+esc(x.receipt_path)+'</small>':''),
+        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>'+(x.receipt_path?'<small>Receipt path: '+esc(x.receipt_path)+'</small>':''),
         x=>money(x.amount_tzs),x=>status(x.status),x=>esc(date(x.created_at)),
         x=>x.transaction_type==='deposit_request' && x.status==='pending'
           ? '<button class="secondary-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="approved">Thibitisha</button> <button class="warning-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="rejected">Kataa</button>' : '—'
