@@ -30,7 +30,7 @@
     try{
       await ensureAdmin();
       const {data,error}=await db().from('zune_theme_assets')
-        .select('id,title,description,preview_url,config,layout,version,is_featured,status,updated_at,created_at')
+        .select('id,title,description,preview_url,config,layout,component_code,version,is_featured,status,published_at,updated_at,created_at')
         .eq('asset_kind','theme').eq('scope','official').order('updated_at',{ascending:false});
       if(error)throw error;
       state.rows=data||[];
