@@ -9,7 +9,7 @@
     dashboard:'layout-dashboard',users:'users',sellers:'store', 'seller-applications':'file-check',
     'badge-requests':'badge-check','badge-management':'shield-check',verification:'shield-check',
     products:'package',categories:'tags',orders:'shopping-bag','delivery-pricing':'truck',
-    coupons:'ticket-percent',announcements:'megaphone',payments:'credit-card',wallet:'wallet',
+    coupons:'ticket-percent',announcements:'megaphone',ads:'megaphone',payments:'credit-card',wallet:'wallet',
     disputes:'scale', 'support-tickets':'headset',reports:'chart-no-axes-combined','audit-logs':'clipboard-list',
     'monthly-audit':'calendar-check',security:'shield-alert','system-health':'activity',database:'database',
     backup:'hard-drive-download',notifications:'bell',settings:'settings'
