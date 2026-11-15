@@ -48,6 +48,8 @@
    const bodyEn=decision==='approved'?'Your review is now visible on the product page.':('Your review was not published. Reason: '+(note||'Please contact Support.'));
    const notification=await db().from('notifications').insert({user_id:review.buyer_id,type:'product_review_'+decision,title_sw:titleSw,title_en:titleEn,body_sw:bodySw,body_en:bodyEn,action_url:'./orders.html',is_read:false});
    if(notification.error)console.warn('Review notification failed:',notification.error.message);
+   const sellerId=products.get(review.product_id)?.vendor_id;
+   if(sellerId){const sellerNote=await db().from('notifications').insert({user_id:sellerId,type:'store_product_review_'+decision,title_sw:decision==='approved'?'Mteja ameacha tathmini ya bidhaa':'Tathmini ya bidhaa imekataliwa',title_en:decision==='approved'?'A customer review was published':'A product review was rejected',body_sw:'Bidhaa: '+(products.get(review.product_id)?.title||'Bidhaa')+' · Nyota: '+review.rating+'/5',body_en:'Product: '+(products.get(review.product_id)?.title||'Product')+' · Rating: '+review.rating+'/5',action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller review notification failed:',sellerNote.error.message);}
    await c().audit('product_review_'+decision,'product_review',id,note,{product_id:review.product_id,buyer_id:review.buyer_id,order_id:review.order_id,rating:review.rating});
    ui().toast(decision==='approved'?'Tathmini imeidhinishwa.':'Tathmini imekataliwa.','success');
    await load();
