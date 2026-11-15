@@ -31,6 +31,7 @@
         query('ad_campaigns'),query('ad_packages'),query('ads_wallets'),query('ads_wallet_transactions'),
         query('ad_events'),query('ad_reports'),query('profiles','id,full_name'),query('stores','id,store_name,owner_id')
       ]);
+      const signedTransactions=await Promise.all(transactions.map(async tx=>{if(!tx.receipt_path)return tx;const {data}=await db().storage.from('ads-payment-receipts').createSignedUrl(tx.receipt_path,300);return {...tx,receipt_url:data?.signedUrl||null};}));
       const names=new Map(profiles.map(p=>[p.id,p.full_name||'—']));
       const storeNames=new Map(stores.map(s=>[s.id,s.store_name||'—']));
       const pending=campaigns.filter(x=>x.status==='pending_review').length;
@@ -60,8 +61,8 @@
         x=>'<span class="badge-pill">'+(x.is_active?'Active':'Inactive')+'</span>',
         x=>'<button class="secondary-btn ads-package-toggle" data-id="'+esc(x.id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'Zima':'Washa')+'</button>'
       ],'Hakuna package zilizowekwa bado.');
-      body('adsWalletRows',transactions.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
-        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>'+(x.receipt_path?'<small>Receipt path: '+esc(x.receipt_path)+'</small>':''),
+      body('adsWalletRows',signedTransactions.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
+        x=>esc(names.get(x.seller_id)),x=>status(x.transaction_type)+'<small>'+esc(x.external_transaction_id||x.id.slice(0,8))+'</small>'+(x.receipt_url?'<small><a href="'+esc(x.receipt_url)+'" target="_blank" rel="noopener">Fungua risiti</a></small>':(x.receipt_path?'<small>Receipt haijapatikana</small>':'')),
         x=>money(x.amount_tzs),x=>status(x.status),x=>esc(date(x.created_at)),
         x=>x.transaction_type==='deposit_request' && x.status==='pending'
           ? '<button class="secondary-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="approved">Thibitisha</button> <button class="warning-btn ads-deposit" data-id="'+esc(x.id)+'" data-decision="rejected">Kataa</button>' : '—'
