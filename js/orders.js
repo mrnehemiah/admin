@@ -14,7 +14,7 @@ function render(){
   {html:x=>ui().money(x.total_price??x.total_amount??0)},
   {html:x=>'<span class="badge-pill">'+esc(statusLabel(x.status))+'</span>'},
   {html:x=>ui().date(x.created_at)},{html:x=>ui().status(x.payment_status||'pending')},
-  {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'"><option value="pending" '+(x.status==='pending'?'selected':'')+'>Pending</option><option value="confirmed" '+(x.status==='confirmed'?'selected':'')+'>Confirmed</option><option value="completed" '+(x.status==='completed'?'selected':'')+'>Completed</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>Cancelled</option></select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
+  {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'><option value="pending" '+(x.status==='pending'?'selected':'')+'>Pending</option><option value="confirmed" '+(x.status==='confirmed'?'selected':'')+'>Confirmed</option><option value="completed" '+(x.status==='completed'?'selected':'')+'>Completed</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>Cancelled</option></select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
  ],'Hakuna orders zinazolingana na vichujio.');
  c().setText('totalOrders',allOrders.length.toLocaleString());
 }
@@ -26,6 +26,7 @@ async function load(){try{
  }catch(e){c().error('ordersTableBody',e);}}
 async function updateStatus(id){
  const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;
+ if(['completed','cancelled'].includes(String(order.status||''))){ui().toast('Oda iliyokamilika au kughairiwa haiwezi kubadilishwa tena.','warning');return;}
  const select=document.querySelector('[data-order-next="'+CSS.escape(String(id))+'"]');const next=select?.value;
  if(!['pending','confirmed','completed','cancelled'].includes(next)||next===order.status)return;
  let reason=window.prompt('Andika sababu ya kubadilisha hali ya oda (angalau herufi 5):')||'';
