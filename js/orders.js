@@ -45,6 +45,7 @@ async function updateStatus(id){
   const en=next==='completed'?'Your order is complete':next==='cancelled'?'Your order was cancelled':next==='confirmed'?'Your order was confirmed':'Your order status was updated';
   const note=await db().from('notifications').insert({user_id:data.buyer_id,type:'order_status_'+next,title_sw:sw,title_en:en,body_sw:'Oda #'+String(id).slice(0,8)+' · '+statusLabel(next),body_en:'Order #'+String(id).slice(0,8)+' · '+statusLabel(next),action_url:'./orders.html',is_read:false});
   if(note.error)console.warn('Order notification:',note.error.message);
+  if(vendorId){const sellerNote=await db().from('notifications').insert({user_id:vendorId,type:'seller_order_status_'+next,title_sw:'Hali ya oda ya duka imesasishwa',title_en:'Your store order status was updated',body_sw:'Oda #'+String(id).slice(0,8)+' · '+statusLabel(next),body_en:'Order #'+String(id).slice(0,8)+' · '+statusLabel(next),action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller order notification:',sellerNote.error.message);}
   ui().toast('Hali ya oda imebadilishwa.','success');await load();
  }catch(e){console.error('Order status update:',e);ui().toast(e.message||'Imeshindikana kubadilisha oda.','error');}
  finally{busy.delete(id);render();}
