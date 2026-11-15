@@ -123,8 +123,12 @@
         ]);
         const rows=[];
         if(applicationResult.status==='fulfilled'&&!applicationResult.value.error){
-          const payload=applicationResult.value.data||{};
-          (payload.applications||[]).forEach(r=>rows.push({...r,__source:r.source||'request',__key:(r.source||'request')+':'+r.id}));
+          const payload=applicationResult.value.data??[];
+          // Supabase RPCs may return either a JSON object or a set-returning array.
+          const applications=Array.isArray(payload)?payload:
+            Array.isArray(payload.applications)?payload.applications:
+            Array.isArray(payload.rows)?payload.rows:[];
+          applications.forEach(r=>rows.push({...r,__source:r.source||'request',__key:(r.source||'request')+':'+r.id}));
         }else if(applicationResult.status==='rejected'||applicationResult.value?.error){
           console.warn('Verification applications load failed',applicationResult.reason||applicationResult.value.error);
         }
@@ -134,7 +138,14 @@
           console.warn('Verified badge requests load failed',badgeResult.reason||badgeResult.value.error);
         }
         await Promise.all(rows.map(async r=>{try{r.__documentUrl=await verificationSignedUrl(r);}catch(e){console.warn('Document link unavailable',e);r.__documentUrl=null;}}));
-        verificationRows=rows.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+        // Avoid showing the same request twice when the RPC and fallback table overlap.
+        const uniqueRows=new Map();
+        rows.forEach(r=>{
+          const signature=[r.user_id||'',r.id||'',r.verification_type||'',r.document_path||r.document_url||''].join('|');
+          if(!uniqueRows.has(signature))uniqueRows.set(signature,r);
+          else if(!uniqueRows.get(signature).__documentUrl&&r.__documentUrl)uniqueRows.get(signature).__documentUrl=r.__documentUrl;
+        });
+        verificationRows=[...uniqueRows.values()].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
         renderVerificationDocuments();
         if(!rows.length&&applicationResult.status!=='fulfilled'&&badgeResult.status!=='fulfilled')c().error('verificationTableBody',applicationResult.reason||badgeResult.reason);
       }catch(e){c().error('verificationTableBody',e);}
