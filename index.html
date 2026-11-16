@@ -100,6 +100,7 @@
       <a class="nav-link" href="#monthly-audit" data-page="monthly-audit"><span class="nav-icon">▣</span> Ukaguzi wa Mwezi</a>
       <a class="nav-link" href="#security" data-page="security"><span class="nav-icon">⬡</span> Security Center</a>
       <a class="nav-link" href="#system-health" data-page="system-health"><span class="nav-icon">⌁</span> System Health</a>
+      <a class="nav-link" href="#supabase-management" data-page="supabase-management"><span class="nav-icon">◈</span> Supabase Management</a>
       <a class="nav-link" href="#database" data-page="database"><span class="nav-icon">▦</span> Database Monitoring</a>
       <a class="nav-link" href="#backup" data-page="backup"><span class="nav-icon">▣</span> Backup & Recovery</a>
       <a class="nav-link" href="#notifications" data-page="notifications"><span class="nav-icon">♧</span> Notifications</a>
@@ -307,6 +308,23 @@
 
       <section class="page-section" id="securityPage" data-section="security"><div class="section-intro"><div><h2>Security Center</h2><p>Udhibiti wa access, sessions, policies na matukio ya usalama.</p></div></div><div class="security-cards"><article class="panel"><span class="metric-icon">⬡</span><h3>Access control</h3><p>Admin Mkuu ndiye mwenye mamlaka kuu. Hakikisha role checks na server-side authorization.</p></article><article class="panel"><span class="metric-icon">▤</span><h3>Database protection</h3><p>RLS iwe imewashwa kwenye tables zote zenye taarifa binafsi au za kifedha.</p></article><article class="panel"><span class="metric-icon">◷</span><h3>Session monitoring</h3><p>Fuatilia sessions, login attempts na mabadiliko ya ruhusa.</p></article></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Tukio</th><th>Chanzo</th><th>Risk</th><th>Muda</th><th>Hali</th></tr></thead><tbody id="securityEventsBody"><tr><td colspan="5" class="empty-state">Inasubiri security events...</td></tr></tbody></table></div></div></section>
 
+      <section class="page-section" id="supabase-managementPage" data-section="supabase-management">
+        <div class="section-intro"><div><h2>Supabase Management</h2><p>Sehemu kuu ya kufikia na kufuatilia huduma za Supabase za ZUNE.</p></div><a class="secondary-btn" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo" target="_blank" rel="noopener">Fungua Supabase Dashboard ↗</a></div>
+        <div class="notice-box" style="margin-bottom:16px">Usimamizi huu unaunganisha kurasa zilizopo za ZUNE Admin na maeneo rasmi ya Supabase. Vitendo vyenye mamlaka ya juu vitawezeshwa kupitia backend salama pekee; hakuna service_role key inayowekwa kwenye browser.</div>
+        <div class="supabase-module-grid">
+          <a class="supabase-module" href="#users" data-page="users"><span>♙</span><div><strong>Users & ZUNE ID</strong><small>Watumiaji, email, role, hali na ZUNE ID kutoka profiles.</small></div><b>Fungua →</b></a>
+          <a class="supabase-module" href="#sellers" data-page="sellers"><span>▣</span><div><strong>Sellers & Stores</strong><small>Wasifu wa wauzaji, maombi na taarifa za maduka.</small></div><b>Fungua →</b></a>
+          <a class="supabase-module" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo/editor" target="_blank" rel="noopener"><span>▦</span><div><strong>Database / Tables</strong><small>Fungua Table Editor ya mradi wa ZUNE.</small></div><b>Fungua ↗</b></a>
+          <a class="supabase-module" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo/storage/buckets" target="_blank" rel="noopener"><span>▧</span><div><strong>Storage</strong><small>Angalia buckets za picha za bidhaa, maduka na nyaraka.</small></div><b>Fungua ↗</b></a>
+          <a class="supabase-module" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo/functions" target="_blank" rel="noopener"><span>⌘</span><div><strong>Edge Functions</strong><small>Angalia na dhibiti server-side functions.</small></div><b>Fungua ↗</b></a>
+          <a class="supabase-module" href="#security" data-page="security"><span>⬡</span><div><strong>Security & RLS</strong><small>Ukaguzi wa access control na sera za usalama.</small></div><b>Fungua →</b></a>
+          <a class="supabase-module" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo/logs/explorer" target="_blank" rel="noopener"><span>◷</span><div><strong>Logs & Monitoring</strong><small>Fungua logs za database na huduma za mradi.</small></div><b>Fungua ↗</b></a>
+          <a class="supabase-module" href="#system-health" data-page="system-health"><span>⌁</span><div><strong>System Health</strong><small>Hali ya huduma za ZUNE zilizopo kwenye Admin.</small></div><b>Fungua →</b></a>
+          <a class="supabase-module" href="https://supabase.com/dashboard/project/rpkogiieegqgxqbzwxwo/sql" target="_blank" rel="noopener"><span>⌨</span><div><strong>SQL Editor</strong><small>Fungua SQL Editor rasmi. Mabadiliko yanahitaji ukaguzi.</small></div><b>Fungua ↗</b></a>
+        </div>
+        <div class="panel" style="margin-top:16px"><div class="panel-heading"><div><p class="eyebrow">USALAMA</p><h3>Kanuni za usimamizi</h3></div><span class="badge-pill success">Protected</span></div><ul class="supabase-safety-list"><li>Admin Mkuu pekee ndiye atakayeruhusiwa kwenye vitendo nyeti.</li><li>Hakuna service_role key au secret key ndani ya JavaScript ya browser.</li><li>Database writes, user deletion na mabadiliko ya RLS yatahitaji Edge Function/RPC yenye ukaguzi wa role na audit log.</li><li>Kurasa za Supabase zinafunguka kwenye dashboard rasmi; ukurasa huu haujidai kuwa umefanya mabadiliko ya backend.</li></ul></div>
+      </section>
+
       <section class="page-section" id="system-healthPage" data-section="system-health"><div class="section-intro"><div><h2>System Health</h2><p>Ufuatiliaji wa huduma muhimu za marketplace.</p></div></div><div class="security-cards"><article class="panel"><h3>Supabase</h3><p id="supabaseHealth">Inasubiri connection check...</p></article><article class="panel"><h3>Authentication</h3><p id="authHealth">Inasubiri status...</p></article><article class="panel"><h3>Marketplace Services</h3><p id="serviceHealth">Inasubiri status...</p></article></div></section>
 
       <section class="page-section" id="databasePage" data-section="database"><div class="section-intro"><div><h2>Database Monitoring</h2><p>Ufuatiliaji wa database, data integrity na errors.</p></div></div><div class="panel"><div class="notice-box">Database metrics na health checks zitaonyeshwa hapa baada ya kuunganishwa na monitoring endpoint salama. Usionyeshe service_role key kwenye browser.</div><div class="table-wrap"><table><thead><tr><th>Check</th><th>Result</th><th>Last checked</th><th>Status</th></tr></thead><tbody id="databaseHealthBody"><tr><td colspan="4" class="empty-state">Inasubiri database checks...</td></tr></tbody></table></div></div></section>
@@ -406,6 +424,7 @@
 <script src="js/reports.js"></script>
 <script src="js/activity-logs.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/supabase-management.js"></script>
 <script src="admin.js?v=20261114-addseller2"></script>
 <script src="js/premium-v2.js"></script>
 </body>
