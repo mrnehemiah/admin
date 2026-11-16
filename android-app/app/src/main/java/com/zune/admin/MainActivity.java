@@ -38,6 +38,8 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
+        // Always fetch the latest Admin web build instead of reusing stale WebView assets.
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setLoadsImagesAutomatically(true);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(true);
@@ -75,8 +77,10 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (savedInstanceState != null) webView.restoreState(savedInstanceState);
-        else webView.loadUrl(ADMIN);
+        // Do not restore an old WebView snapshot: it can keep showing a previous deployment.
+        // Cookies and DOM storage remain enabled, so the Supabase login session is preserved.
+        webView.clearCache(false);
+        webView.loadUrl(ADMIN);
     }
 
     private void openExternal(String url) {
