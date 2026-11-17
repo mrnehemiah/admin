@@ -3,11 +3,20 @@
  const c=()=>window.ZUNE_CORE,ui=()=>window.ZUNE_LAYOUT;
  let cache=[];
  async function load(){
+  const body=document.getElementById('sellersTableBody');
+  if(body)body.innerHTML='<tr><td colspan="6" class="empty-state">Inapakia wauzaji kutoka Supabase...</td></tr>';
   try{
-   const [profiles,stores]=await Promise.all([
-    c().rows('profiles',500),
-    c().rows('stores',500)
+   if(window.ZUNE_AUTH_READY) await window.ZUNE_AUTH_READY;
+   const db=c().db();
+   if(!db) throw new Error('Supabase client haipo. Hakiki config.js na login ya Admin.');
+   const [profileResult,storeResult]=await Promise.all([
+    db.from('profiles').select('*').limit(1000),
+    db.from('stores').select('*').limit(1000)
    ]);
+   if(profileResult.error) throw new Error('profiles: '+profileResult.error.message);
+   if(storeResult.error) throw new Error('stores: '+storeResult.error.message);
+   const profiles=profileResult.data||[];
+   const stores=storeResult.data||[];
    const storeByOwner=new Map();
    stores.forEach(store=>{
     const owner=String(store.owner_id||'');
@@ -66,13 +75,16 @@
   c().setText('detailJoined',ui().date(s.created_at));c().setText('detailVerifyStatus',s.is_verified?'Verified':'Not verified');
   c().setText('sellerDetailsStatus',s.account_status||'active');c().setText('sellerDetailsVerification',s.is_verified?'Verified':'Not verified');
  }
- document.addEventListener('DOMContentLoaded',()=>{
+ function initSellers(){
+  if(window.__ZUNE_SELLERS_INIT__)return;
+  window.__ZUNE_SELLERS_INIT__=true;
   load();
   ['sellerStatusFilter','sellerVerificationFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',load));
   document.getElementById('sellersTableBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-seller-view]');if(b)details(b.dataset.sellerView);});
   document.getElementById('refreshSellersBtn')?.addEventListener('click',load);
   document.getElementById('backToSellersBtn')?.addEventListener('click',()=>window.ZUNE_ROUTER.show('sellers'));
- });
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSellers,{once:true});else initSellers();
  document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='sellers')load();});
  document.addEventListener('zune:admin-refresh-sellers',load);
  window.ZUNE_SELLERS={load,details,get cache(){return cache;}};
