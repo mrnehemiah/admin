@@ -77,6 +77,4 @@
  document.addEventListener('zune:admin-refresh-sellers',load);
  window.ZUNE_SELLERS={load,details,get cache(){return cache;}};
 
-.admin-store-media{position:relative;margin-bottom:58px}.admin-store-cover{display:block;width:100%;height:190px;object-fit:cover;border-radius:14px;border:1px solid var(--line);background:#0a211a}.admin-store-placeholder{display:grid;place-items:center;color:var(--muted);font-size:11px}.admin-store-logo-wrap{position:absolute;left:18px;bottom:-42px;width:84px;height:84px;border-radius:18px;padding:4px;background:var(--panel);border:1px solid var(--line)}.admin-store-logo{width:100%;height:100%;object-fit:cover;border-radius:14px;background:#0a211a}.admin-store-logo.admin-store-placeholder{font-size:9px;text-align:center}
-@media(max-width:760px){.admin-store-cover{height:145px}.admin-store-logo-wrap{width:72px;height:72px;bottom:-36px}}
 })();
