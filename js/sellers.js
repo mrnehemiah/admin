@@ -17,7 +17,7 @@
     .filter(p=>String(p.role||'').toLowerCase()==='vendor')
     .map(p=>{
      const store=storeByOwner.get(String(p.id))||{};
-     return {...p,store_name:store.store_name||p.store_name||p.business_name||'',store_id:store.id||null,store_logo_url:store.logo_url||'',store_cover_image_url:store.cover_image_url||'',store_description:store.description||'',store_category:store.category||'',store_phone:store.phone||'',store_email:store.email||'',store_region:store.region||'',store_district:store.district||'',store_address:store.address||'',store_status:store.store_status|| (store.is_active===false?'inactive':'active')};
+     return {...p,avatar_path:p.avatar_path||'',store_name:store.store_name||p.store_name||p.business_name||'',store_id:store.id||null,store_logo_url:store.logo_url||'',store_cover_image_url:store.cover_image_url||'',store_description:store.description||'',store_category:store.category||'',store_phone:store.phone||'',store_email:store.email||'',store_region:store.region||'',store_district:store.district||'',store_address:store.address||'',store_status:store.store_status|| (store.is_active===false?'inactive':'active')};
     });
    const st=document.getElementById('sellerStatusFilter')?.value||'';
    const vf=document.getElementById('sellerVerificationFilter')?.value||'';
@@ -34,13 +34,25 @@
    c().bindFilter('sellersSearch','sellersTableBody');
   }catch(e){c().error('sellersTableBody',e);}
  }
- function details(id){
+ async function details(id){
   const s=cache.find(x=>String(x.id)===String(id));if(!s)return;
   window.ZUNE_SELECTED_SELLER_ID=s.id;window.ZUNE_ROUTER.show('seller-details');
   const name=s.store_name||s.full_name||s.name||'Seller';
   c().setText('sellerDetailsName',name);c().setText('sellerDetailsStore',s.store_name||'Jina la duka halijawekwa');
   const avatar=document.getElementById('sellerDetailsAvatar');
-  if(avatar){avatar.textContent='';avatar.style.backgroundImage=s.store_logo_url?'url("'+ui().esc(s.store_logo_url)+'")':'';avatar.style.backgroundSize='cover';avatar.style.backgroundPosition='center';if(!s.store_logo_url)avatar.textContent=(s.full_name||'S').trim().charAt(0).toUpperCase();}
+  if(avatar){
+   avatar.textContent=(s.full_name||'S').trim().charAt(0).toUpperCase();
+   avatar.style.backgroundImage='none';
+   avatar.style.backgroundSize='cover';avatar.style.backgroundPosition='center';
+   if(s.avatar_path){
+    try{
+     const {data,error}=await c().db().storage.from('zune-avatars').createSignedUrl(s.avatar_path,3600);
+     if(error)throw error;
+     if(data?.signedUrl){avatar.textContent='';avatar.style.backgroundImage='url("'+ui().esc(data.signedUrl)+'")';}
+     else console.warn('Seller avatar signed URL haikupatikana');
+    }catch(err){console.warn('Seller avatar haikuweza kupakiwa:',err.message||err);}
+   }
+  }
   const storeBox=document.getElementById('sellerStoreContent');
   if(storeBox){
    const safeUrl=v=>{const x=String(v||'');return (x.startsWith('https://')||x.startsWith('http://'))?ui().esc(x):'';};
