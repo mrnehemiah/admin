@@ -4,7 +4,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=v=>'TSh '+Number(v||0).toLocaleString('en-US');
 const labels={pending:'Inasubiri',assigned:'Dereva amechaguliwa',ready_for_pickup:'Muuzaji amekabidhi',picked_up:'Dereva amepokea',in_transit:'Iko njiani',delivered:'Imefikishwa',completed:'Imekamilika',disputed:'Ina uchunguzi',cancelled:'Imeghairiwa'};
 let rows=[];
-async function load(){\n if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;
+async function load(){
+ if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;
  const db=window.ZUNE_CORE?.db?.();if(!db){body.innerHTML='<tr><td colspan="8">Supabase haijaunganishwa.</td></tr>';return;}
  body.innerHTML='<tr><td colspan="8">Inapakia...</td></tr>';
  const {data,error}=await db.rpc('zune_delivery_seller_queue');if(error)throw error;rows=data||[];
