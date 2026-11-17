@@ -15,6 +15,8 @@ function render(){
   {html:x=>x.discount_total>0?'<strong>-'+ui().money(x.discount_total)+'</strong>':'—'},
   {html:x=>'<span class="badge-pill">'+esc(statusLabel(x.status))+'</span>'},
   {html:x=>ui().date(x.created_at)},{html:x=>ui().status(x.payment_status||'pending')},
+  {html:x=>esc([x.delivery_address,x.delivery_ward,x.delivery_district,x.delivery_region,x.delivery_country].filter(Boolean).join(', ')||'Anwani haipo')},
+  {html:x=>x.delivery_latitude!=null&&x.delivery_longitude!=null?'<a class="secondary-btn" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(x.delivery_latitude)+'&mlon='+encodeURIComponent(x.delivery_longitude)+'#map=17/'+encodeURIComponent(x.delivery_latitude)+'/'+encodeURIComponent(x.delivery_longitude)+'">Fungua ramani ↗</a>':'GPS haipo'},
   {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'><option value="pending" '+(x.status==='pending'?'selected':'')+'>Pending</option><option value="confirmed" '+(x.status==='confirmed'?'selected':'')+'>Confirmed</option><option value="completed" '+(x.status==='completed'?'selected':'')+'>Completed</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>Cancelled</option></select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
  ],'Hakuna orders zinazolingana na vichujio.');
  c().setText('totalOrders',allOrders.length.toLocaleString());
