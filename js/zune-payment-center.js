@@ -7,7 +7,7 @@ const cell=(v)=>'<td>'+safe(v)+'</td>';
 const empty=(id,n,msg)=>{if($(id))$(id).innerHTML='<tr><td colspan="'+n+'" class="empty-state">'+safe(msg)+'</td></tr>';};
 async function read(table,cols='*',limit=100){const {data,error}=await window.zuneSupabase.from(table).select(cols).order('created_at',{ascending:false}).limit(limit);if(error)throw error;return data||[];}
 async function load(){
- if(!window.zuneIsLive||!window.zuneSupabase){['zpmTransactions','zpmAllocations','zpmEvents'].forEach((id,i)=>empty(id,[7,8,6][i],'Unganisha Supabase ili kuona taarifa halisi.'));return;}
+ if(!window.zuneSupabase){['zpmTransactions','zpmAllocations','zpmEvents'].forEach((id,i)=>empty(id,[7,8,6][i],'Unganisha Supabase ili kuona taarifa halisi.'));return;}
  const btn=$('refreshZunePayments');if(btn){btn.disabled=true;btn.textContent='Inapakia...';}
  try{
   const [payments,allocations,events]=await Promise.all([
