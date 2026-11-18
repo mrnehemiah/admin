@@ -17,9 +17,9 @@ async function loadDriverApplications(){
  const byId=new Map((drivers||[]).map(d=>[d.user_id,d]));
  appsBody.innerHTML=apps.map(a=>{
   const d=byId.get(a.user_id)||{};
-  const contact=[d.phone_number,d.email].filter(Boolean).join('<br>');
-  const vehicle=[d.vehicle_type,d.vehicle_registration,d.license_number].filter(Boolean).join(' · ');
-  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+esc(contact||'—')+'</td><td>'+esc(vehicle||'—')+'</td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(a.submitted_at?new Date(a.submitted_at).toLocaleString('sw-TZ'):'—')+'</td><td><div class="action-row"><button class="primary-btn" type="button" data-driver-review="approved" data-application-id="'+esc(a.id)+'">Idhinisha</button><button class="danger-btn" type="button" data-driver-review="rejected" data-application-id="'+esc(a.id)+'">Kataa</button></div></td></tr>';
+  const contact=[d.phone_number,d.email].filter(Boolean).map(esc).join('<br>');
+  const vehicle=[d.vehicle_type,d.vehicle_registration,d.license_number].filter(Boolean).map(esc).join(' · ');
+  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+(contact||'—')+'</td><td>'+(vehicle||'—')+'</td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(a.submitted_at?new Date(a.submitted_at).toLocaleString('sw-TZ'):'—')+'</td><td><div class="action-row"><button class="primary-btn" type="button" data-driver-review="approved" data-application-id="'+esc(a.id)+'">Idhinisha</button><button class="danger-btn" type="button" data-driver-review="rejected" data-application-id="'+esc(a.id)+'">Kataa</button></div></td></tr>';
  }).join('');
 }
 async function reviewDriverApplication(id,decision,button){
