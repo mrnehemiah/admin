@@ -17,7 +17,7 @@ function render(){
   {html:x=>ui().date(x.created_at)},{html:x=>ui().status(x.payment_status||'pending')},
   {html:x=>esc([x.delivery_address,x.delivery_ward,x.delivery_district,x.delivery_region,x.delivery_country].filter(Boolean).join(', ')||'Anwani haipo')},
   {html:x=>x.delivery_latitude!=null&&x.delivery_longitude!=null?'<a class="secondary-btn" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(x.delivery_latitude)+'&mlon='+encodeURIComponent(x.delivery_longitude)+'#map=17/'+encodeURIComponent(x.delivery_latitude)+'/'+encodeURIComponent(x.delivery_longitude)+'">Fungua ramani ↗</a>':'GPS haipo'},
-  {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'><option value="pending" '+(x.status==='pending'?'selected':'')+'>Pending</option><option value="confirmed" '+(x.status==='confirmed'?'selected':'')+'>Confirmed</option><option value="completed" '+(x.status==='completed'?'selected':'')+'>Completed</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>Cancelled</option></select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
+  {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'>'+ (x.status==='pending'?['pending','confirmed','cancelled']:x.status==='confirmed'?['confirmed','cancelled']:[x.status]).map(s=>'<option value="'+s+'" '+(x.status===s?'selected':'')+'>'+esc(statusLabel(s))+'</option>').join('') +'</select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Save</button></div>'}
  ],'Hakuna orders zinazolingana na vichujio.');
  c().setText('totalOrders',allOrders.length.toLocaleString());
 }
@@ -33,7 +33,9 @@ async function updateStatus(id){
  const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;
  if(['completed','cancelled'].includes(String(order.status||''))){ui().toast('Oda iliyokamilika au kughairiwa haiwezi kubadilishwa tena.','warning');return;}
  const select=document.querySelector('[data-order-next="'+CSS.escape(String(id))+'"]');const next=select?.value;
- if(!['pending','confirmed','completed','cancelled'].includes(next)||next===order.status)return;
+ if(!['confirmed','cancelled'].includes(next)||next===order.status)return;
+ if(order.status==='pending'&&!['confirmed','cancelled'].includes(next))return;
+ if(order.status==='confirmed'&&next!=='cancelled')return;
  let reason=window.prompt('Andika sababu ya kubadilisha hali ya oda (angalau herufi 5):')||'';
  if(reason.trim().length<5){ui().toast('Sababu lazima iwe na angalau herufi 5.','warning');return;}
  if(!window.confirm('Unathibitisha kubadilisha hali ya oda hii kuwa '+statusLabel(next)+'?'))return;
@@ -43,8 +45,7 @@ async function updateStatus(id){
   if(error)throw error;if(!data)throw new Error('Oda haikupatikana au haikubadilishwa.');
   let vendorId=null;
   if(data.product_id){const p=await db().from('products').select('vendor_id').eq('id',data.product_id).maybeSingle();if(p.error)throw p.error;vendorId=p.data?.vendor_id||null;}
-  const deliveryStatus=next==='completed'?'delivered':next==='cancelled'?'cancelled':next==='confirmed'?'confirmed':'pending';
-  if(data.checkout_id&&vendorId){const delivery=await db().from('order_deliveries').update({status:deliveryStatus}).eq('checkout_id',data.checkout_id).eq('vendor_id',vendorId);if(delivery.error)console.warn('Delivery status update:',delivery.error.message);}
+  // Delivery state is controlled by seller handover, assigned driver and buyer receipt RPCs.
   await c().audit('order_status_'+next,'order',id,reason,{previous_status:order.status,new_status:next,checkout_id:data.checkout_id});
   const sw=next==='completed'?'Oda yako imekamilika':next==='cancelled'?'Oda yako imeghairiwa':next==='confirmed'?'Oda yako imethibitishwa':'Hali ya oda yako imesasishwa';
   const en=next==='completed'?'Your order is complete':next==='cancelled'?'Your order was cancelled':next==='confirmed'?'Your order was confirmed':'Your order status was updated';
