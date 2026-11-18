@@ -30,10 +30,12 @@ async function load(){try{
  render();
  }catch(e){c().error('ordersTableBody',e);}}
 async function updateStatus(id){
- const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;if(next==='completed'){ui().toast('Oda inakamilika baada ya mnunuzi kuthibitisha kupokea kupitia ZUNE Delivery.','warning');return;}
+ const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;
  if(['completed','cancelled'].includes(String(order.status||''))){ui().toast('Oda iliyokamilika au kughairiwa haiwezi kubadilishwa tena.','warning');return;}
  const select=document.querySelector('[data-order-next="'+CSS.escape(String(id))+'"]');const next=select?.value;
- if(!['pending','confirmed','completed','cancelled'].includes(next)||next===order.status)return;
+ if(!['confirmed','cancelled'].includes(next)||next===order.status)return;
+ if(order.status==='pending'&&!['confirmed','cancelled'].includes(next))return;
+ if(order.status==='confirmed'&&next!=='cancelled')return;
  let reason=window.prompt('Andika sababu ya kubadilisha hali ya oda (angalau herufi 5):')||'';
  if(reason.trim().length<5){ui().toast('Sababu lazima iwe na angalau herufi 5.','warning');return;}
  if(!window.confirm('Unathibitisha kubadilisha hali ya oda hii kuwa '+statusLabel(next)+'?'))return;
