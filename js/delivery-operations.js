@@ -6,21 +6,33 @@ const labels={pending:'Inasubiri',assigned:'Dereva amechaguliwa',ready_for_picku
 let rows=[];
 async function loadDriverApplications(){
  const appsBody=$('#driverApplicationsBody');if(!appsBody)return;
- const db=window.ZUNE_CORE?.db?.();if(!db){appsBody.innerHTML='<tr><td colspan="6">Supabase haijaunganishwa.</td></tr>';return;}
- appsBody.innerHTML='<tr><td colspan="6">Inapakia maombi...</td></tr>';
+ const db=window.ZUNE_CORE?.db?.();if(!db){appsBody.innerHTML='<tr><td colspan="7">Supabase haijaunganishwa.</td></tr>';return;}
+ appsBody.innerHTML='<tr><td colspan="7">Inapakia maombi...</td></tr>';
  const {data:apps,error}=await db.from('delivery_driver_applications').select('id,user_id,application_source,status,submitted_at').eq('status','pending').order('submitted_at',{ascending:true});
- if(error){appsBody.innerHTML='<tr><td colspan="6">'+esc(error.message)+'</td></tr>';return;}
- if(!apps?.length){appsBody.innerHTML='<tr><td colspan="6" class="empty-state">Hakuna maombi ya dereva yanayosubiri.</td></tr>';return;}
+ if(error){appsBody.innerHTML='<tr><td colspan="7">'+esc(error.message)+'</td></tr>';return;}
+ if(!apps?.length){appsBody.innerHTML='<tr><td colspan="7" class="empty-state">Hakuna maombi ya dereva yanayosubiri.</td></tr>';return;}
  const ids=apps.map(a=>a.user_id);
- const {data:drivers,error:driverError}=await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,license_number').in('user_id',ids);
- if(driverError){appsBody.innerHTML='<tr><td colspan="6">'+esc(driverError.message)+'</td></tr>';return;}
+ const {data:drivers,error:driverError}=await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,license_number,national_id_photo_path,license_photo_path,vehicle_photo_path').in('user_id',ids);
+ if(driverError){appsBody.innerHTML='<tr><td colspan="7">'+esc(driverError.message)+'</td></tr>';return;}
  const byId=new Map((drivers||[]).map(d=>[d.user_id,d]));
- appsBody.innerHTML=apps.map(a=>{
+ async function documentLink(path,label){
+  if(!path)return '<span class="badge-pill warning">'+label+': haipo</span>';
+  const {data,error}=await db.storage.from('zune-driver-documents').createSignedUrl(path,600);
+  if(error||!data?.signedUrl)return '<span class="badge-pill danger">'+label+': haijafunguka</span>';
+  return '<a class="secondary-btn" target="_blank" rel="noopener" href="'+esc(data.signedUrl)+'">'+label+' ↗</a>';
+ }
+ const rowsHtml=await Promise.all(apps.map(async a=>{
   const d=byId.get(a.user_id)||{};
   const contact=[d.phone_number,d.email].filter(Boolean).map(esc).join('<br>');
   const vehicle=[d.vehicle_type,d.vehicle_registration,d.license_number].filter(Boolean).map(esc).join(' · ');
-  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+(contact||'—')+'</td><td>'+(vehicle||'—')+'</td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(a.submitted_at?new Date(a.submitted_at).toLocaleString('sw-TZ'):'—')+'</td><td><div class="action-row"><button class="primary-btn" type="button" data-driver-review="approved" data-application-id="'+esc(a.id)+'">Idhinisha</button><button class="danger-btn" type="button" data-driver-review="rejected" data-application-id="'+esc(a.id)+'">Kataa</button></div></td></tr>';
- }).join('');
+  const docs=await Promise.all([
+   documentLink(d.national_id_photo_path,'Kitambulisho'),
+   documentLink(d.license_photo_path,'Leseni'),
+   documentLink(d.vehicle_photo_path,'Chombo')
+  ]);
+  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+(contact||'—')+'</td><td>'+(vehicle||'—')+'</td><td><div class="action-row">'+docs.join(' ')+'</div></td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(a.submitted_at?new Date(a.submitted_at).toLocaleString('sw-TZ'):'—')+'</td><td><div class="action-row"><button class="primary-btn" type="button" data-driver-review="approved" data-application-id="'+esc(a.id)+'">Idhinisha</button><button class="danger-btn" type="button" data-driver-review="rejected" data-application-id="'+esc(a.id)+'">Kataa</button></div></td></tr>';
+ }));
+ appsBody.innerHTML=rowsHtml.join('');
 }
 async function reviewDriverApplication(id,decision,button){
  const reason=window.prompt(decision==='approved'?'Andika sababu ya kuidhinisha dereva:':'Andika sababu ya kukataa ombi:');
