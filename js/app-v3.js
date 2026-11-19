@@ -48,7 +48,7 @@ function metric(label,val,sub='Takwimu za database'){return `<article class="met
 async function rpc(name,args={}){const {data,error}=await db().rpc(name,args);if(error)throw error;return data}
 async function loadDashboard(){const d=await rpc('admin_dashboard_overview');const cards=[['Watumiaji',d.users_total],['Buyers',d.buyers_total],['Sellers',d.sellers_total],['Seller applications pending',d.seller_applications_pending],['Bidhaa',d.products_total],['Orders pending',d.orders_pending],['Orders completed',d.orders_completed],['Payments pending',d.payments_pending],['Gross completed orders',`TZS ${Number(d.gross_completed_orders_tzs||0).toLocaleString()}`],['Commission earned',`TZS ${Number(d.commission_completed_tzs||0).toLocaleString()}`],['Wallet liabilities',`TZS ${Number(d.wallet_balances_tzs||0).toLocaleString()}`],['Withdrawals pending',d.withdrawals_pending],['Open disputes',d.disputes_open],['Open support tickets',d.support_open],['Verified individuals',d.verified_individuals_total],['Verified stores',d.verified_stores_total]];$('pageContent').innerHTML=head('Dashboard','Muhtasari wa ZUNE Marketplace kutoka database halisi.')+`<div class="metrics">${cards.map(x=>metric(...x)).join('')}</div><div class="grid2"><div class="panel"><h3>Hali ya mfumo</h3><p class="status-line"><span class="live-dot"></span> Supabase session imethibitishwa.</p><p class="muted">Takwimu zimetolewa: ${esc(fmt(d.generated_at))}</p><p class="muted">Commission rate ya sasa: ${d.commission_rate_global==null?'Haijawekwa':(Number(d.commission_rate_global)*100)+'%'}</p></div><div class="panel"><h3>Vitu vinavyohitaji uangalizi</h3><p>Maombi ya seller: <b>${esc(d.seller_applications_pending)}</b></p><p>Malipo yanayosubiri: <b>${esc(d.payments_pending)}</b></p><p>Withdrawals: <b>${esc(d.withdrawals_pending)}</b></p><p>Disputes: <b>${esc(d.disputes_open)}</b></p></div></div>`;}
 function getRows(data,key){if(Array.isArray(data))return data;if(key&&Array.isArray(data?.[key]))return data[key];if(Array.isArray(data?.data))return data.data;return data&&typeof data==='object'?[data]:[]}
-async function loadModule(id){const m=modules[id];if(!m)return;if(m.report){await loadReports();return}if(m.settings){await loadSettings();return}if(m.account){loadAccount();return}
+async function loadModule(id){const m=modules[id];if(!m)return;if(id==='announcements'){await loadAnnouncements();return}if(m.report){await loadReports();return}if(m.settings){await loadSettings();return}if(m.account){loadAccount();return}
 let data;if(m.rpc){data=await rpc(m.rpc,m.rpcArgs());rows=getRows(data,m.unwrap)}else{const {data:d,error}=await db().from(m.table).select('*').order(m.cols.includes('created_at')?'created_at':m.cols[m.cols.length-1],{ascending:false}).limit(250);if(error)throw error;rows=d||[]}
 page=0;renderTable(id,m,rows);
 }
@@ -61,6 +61,83 @@ function closeModal(){ $('modal').hidden=true;$('modalReason').parentElement.hid
 function action(kind,r){pendingAction={kind,row:r};$('modalTitle').textContent='Thibitisha kitendo cha Admin Mkuu';$('modalText').textContent=({ 'user-suspend':'Akaunti itasimamishwa kupitia RPC ya backend.','user-active':'Akaunti itarejeshwa kuwa active kupitia RPC ya backend.','seller-approve':'Maombi yataidhinishwa na role kubadilishwa na backend.','verification-approve':'Uthibitisho utaidhinishwa kupitia RPC ya backend.','verification-reject':'Maombi ya verification yatakataliwa kupitia RPC ya backend.','withdrawal-review':'Chagua hatua ya withdrawal kwenye sehemu ya ziada.'})[kind]||'Thibitisha kitendo.';$('modalReason').value='';$('modalExtraLabel').hidden=kind!=='withdrawal-review';$('modalExtraLabel').querySelector('input').value=kind==='withdrawal-review'?'under_review':'';$('modalExtraLabel').querySelector('input').placeholder='under_review / approved / processing / paid / rejected';$('modal').hidden=false}
 async function confirmAction(){const a=pendingAction;if(!a)return;const reason=$('modalReason').value.trim();if(reason.length<5){notify('Andika sababu yenye angalau herufi 5.');return}const r=a.row;let result;try{if(a.kind==='user-suspend'||a.kind==='user-active')result=await rpc('admin_set_user_status',{target_user_id:r.id,new_status:a.kind==='user-suspend'?'suspended':'active',action_reason:reason});else if(a.kind==='seller-approve')result=await rpc('approve_seller_application',{p_application_id:r.id});else if(a.kind.startsWith('verification-'))result=await rpc('admin_review_verification_application',{p_application_id:r.id,p_source:r.source||'application',p_decision:a.kind.endsWith('approve')?'approved':'rejected',p_reason:reason});else if(a.kind==='withdrawal-review'){const status=$('modalExtra').value.trim();if(!['under_review','approved','processing','paid','rejected'].includes(status)){notify('Status haikubaliki.');return}const ref=prompt('Weka payout reference ikiwa hatua ni paid (acha wazi kama haipo):')||null;result=await rpc('admin_review_withdrawal',{p_withdrawal_id:r.id,p_new_status:status,p_reason:reason,p_payout_reference:ref})}closeModal();notify('Kitendo kimekubaliwa na backend.');await render()}catch(e){notify('Imeshindikana: '+(e.message||e));}}
 function exportCsv(data,title){if(!data.length){notify('Hakuna data ya kupakua.');return}const keys=Object.keys(data[0]),csv=[keys.join(','),...data.map(r=>keys.map(k=>'"'+String(typeof r[k]==='object'?JSON.stringify(r[k]):r[k]??'').replaceAll('"','""')+'"').join(','))].join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download=`zune-${title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.csv`;a.click();URL.revokeObjectURL(a.href)}
+
+async function loadAnnouncements(){
+  let history=[];
+  const {data,error}=await db().from('admin_announcements').select('id,title,message,audience,display_type,priority,status,created_at,expires_at').eq('display_type','notification').order('created_at',{ascending:false}).limit(100);
+  if(error)throw error;
+  history=data||[];
+  const audienceLabel=v=>v==='buyers'?'Wateja':v==='vendors'?'Wauzaji':'Wote';
+  const priorityLabel=v=>({low:'Chini',normal:'Kawaida',high:'Juu',urgent:'Dharura'}[v]||v);
+  const rowsHtml=history.map(a=>`<tr><td><b>${esc(a.title)}</b><div class="muted small">${esc(a.message)}</div></td><td>${esc(audienceLabel(a.audience))}</td><td>${esc(priorityLabel(a.priority))}</td><td>${pill(a.status)}</td><td>${esc(fmt(a.created_at))}</td><td>${esc(a.expires_at?fmt(a.expires_at):'Hakuna')}</td></tr>`).join('');
+  $('pageContent').innerHTML=head('Matangazo kwa Watumiaji','Tuma taarifa rasmi kupitia kengele ya Notification. Mfumo huu ni wa matangazo ya notification pekee.')+
+  `<div class="grid2">
+    <div class="panel">
+      <h3>Tuma tangazo jipya</h3>
+      <p class="muted">Chagua kundi la wapokeaji. Kila akaunti hai itapokea notification yake binafsi.</p>
+      <form id="announcementForm">
+        <label class="field">Walengwa
+          <select name="audience" required>
+            <option value="all">Wote — Wauzaji na Wateja</option>
+            <option value="vendors">Wauzaji pekee</option>
+            <option value="buyers">Wateja pekee</option>
+          </select>
+        </label>
+        <div class="grid2">
+          <label class="field">Kichwa (Kiswahili)<input name="title_sw" maxlength="160" required></label>
+          <label class="field">Title (English)<input name="title_en" maxlength="160" placeholder="Optional — Kiswahili will be used if blank"></label>
+        </div>
+        <label class="field">Ujumbe (Kiswahili)<textarea name="body_sw" rows="4" maxlength="3000" required></textarea></label>
+        <label class="field">Message (English)<textarea name="body_en" rows="3" maxlength="3000" placeholder="Optional — Kiswahili will be used if blank"></textarea></label>
+        <div class="grid2">
+          <label class="field">Kipaumbele
+            <select name="priority"><option value="normal">Kawaida</option><option value="low">Chini</option><option value="high">Juu</option><option value="urgent">Dharura</option></select>
+          </label>
+          <label class="field">Tangazo liishe lini (hiari)<input type="datetime-local" name="expires_at"></label>
+        </div>
+        <label class="field">Kiungo cha kufungua (hiari)<input name="action_url" type="url" maxlength="1000" placeholder="https://..."></label>
+        <div class="toolbar"><button class="btn primary" id="sendAnnouncement" type="submit">Tuma Notification</button><button class="btn ghost" type="reset">Futa fomu</button></div>
+        <p class="muted small">Tangazo litaonekana ndani ya Notifications. Halitawekwa kwenye Sponsored Ads wala promotional slides.</p>
+      </form>
+    </div>
+    <div class="panel">
+      <h3>Namna ya usambazaji</h3>
+      <p><b>Wateja:</b> akaunti zenye role ya buyer.</p>
+      <p><b>Wauzaji:</b> akaunti zenye role ya vendor.</p>
+      <p><b>Wote:</b> buyer na vendor wote wenye akaunti hai.</p>
+      <p><b>Usalama:</b> ruhusa ya kutuma inathibitishwa na Supabase; Admin Mkuu pekee ndiye anayeruhusiwa.</p>
+      <p class="muted">Kila notification ina hali yake ya kusomwa na muda wake wa kutumwa.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="page-head"><div><h3>Historia ya matangazo</h3><p>Matangazo ya notification pekee — Sponsored Ads hazijumuishwi.</p></div><button class="btn ghost" id="refreshAnnouncements">Refresh</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Kichwa na ujumbe</th><th>Walengwa</th><th>Kipaumbele</th><th>Hali</th><th>Tarehe</th><th>Inaisha</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="6" class="empty">Bado hakuna tangazo lililotumwa.</td></tr>'}</tbody></table></div>
+    <p class="muted small">${history.length} matangazo ya mwisho (kiwango cha juu 100).</p>
+  </div>`;
+  $('refreshAnnouncements').onclick=()=>render();
+  $('announcementForm').onsubmit=async e=>{
+    e.preventDefault();
+    const form=e.currentTarget,button=$('sendAnnouncement'),fd=new FormData(form);
+    button.disabled=true;button.textContent='Inatuma…';
+    try{
+      const expiry=fd.get('expires_at');
+      const result=await rpc('admin_publish_announcement',{
+        p_title_sw:String(fd.get('title_sw')||'').trim(),
+        p_body_sw:String(fd.get('body_sw')||'').trim(),
+        p_audience:fd.get('audience'),
+        p_title_en:String(fd.get('title_en')||'').trim()||null,
+        p_body_en:String(fd.get('body_en')||'').trim()||null,
+        p_priority:fd.get('priority'),
+        p_expires_at:expiry?new Date(expiry).toISOString():null,
+        p_action_url:String(fd.get('action_url')||'').trim()||null
+      });
+      notify(`Tangazo limetumwa kwa akaunti ${Number(result?.recipients||0).toLocaleString()}.`);
+      form.reset();await loadAnnouncements();
+    }catch(err){notify('Tangazo halikutumwa: '+(err.message||err));}
+    finally{const b=$('sendAnnouncement');if(b){b.disabled=false;b.textContent='Tuma Notification';}}
+  };
+}
+
 async function loadReports(){const d=await rpc('admin_dashboard_overview');const k=[['Users',d.users_total],['Sellers',d.sellers_total],['Products',d.products_total],['Orders',d.orders_total],['Completed sales (TZS)',Number(d.gross_completed_orders_tzs||0).toLocaleString()],['Commission (TZS)',Number(d.commission_completed_tzs||0).toLocaleString()],['Wallet balances (TZS)',Number(d.wallet_balances_tzs||0).toLocaleString()],['Verification revenue (TZS)',Number(d.verification_payments_paid_tzs||0).toLocaleString()]];$('pageContent').innerHTML=head('Reports & Analytics','Ripoti ya msingi kutoka dashboard RPC.')+`<div class="metrics">${k.map(x=>metric(...x)).join('')}</div><div class="panel"><h3>Export</h3><p class="muted">Pakua CSV za modules husika kupitia kurasa zao. PDF report builder haijaunganishwa kwenye backend hii.</p><button class="btn secondary" id="reportUsers">Export users CSV</button> <button class="btn secondary" id="reportOrders">Export orders CSV</button></div>`;$('reportUsers').onclick=()=>exportTable('profiles',['id','full_name','email','role','account_status','created_at']);$('reportOrders').onclick=()=>exportTable('orders',['id','buyer_id','total_price','commission_fee','status','payment_status','created_at'])}
 async function exportTable(t,cols){try{const {data,error}=await db().from(t).select(cols.join(',')).limit(1000);if(error)throw error;exportCsv(data||[],t)}catch(e){notify(e.message)}}
 async function loadSettings(){let d=await rpc('admin_get_settings');const list=Array.isArray(d)?d:(d?.settings||Object.entries(d||{}).map(([setting_key,setting_value])=>({setting_key,setting_value})));$('pageContent').innerHTML=head('Marketplace Settings','Mipangilio ya admin; mabadiliko yanatumia RPC na audit trail.')+`<div class="grid2"><div class="panel"><h3>Mipangilio iliyopo</h3>${list.length?list.map(x=>`<p><b>${esc(x.setting_key)}</b><br><span class="muted">${esc(fmt(x.setting_value))}</span></p>`).join(''):'<p class="muted">Hakuna settings zilizorejeshwa.</p>'}</div><div class="panel"><h3>Badilisha setting</h3><form id="settingForm"><label class="field">Setting key<input name="key" required pattern="[a-z][a-z0-9_.-]{1,119}" placeholder="marketplace.name"></label><label class="field">Value (JSON)<textarea name="value" required rows="4" placeholder='"ZUNE Marketplace"'></textarea></label><label class="field">Sababu<input name="reason" required minlength="5"></label><button class="btn primary">Hifadhi kupitia RPC</button></form></div></div>`;$('settingForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{const val=JSON.parse(f.get('value'));await rpc('admin_update_setting',{p_key:f.get('key'),p_value:val,p_reason:f.get('reason')});notify('Setting imehifadhiwa na audit trail.');await render()}catch(err){notify('Imeshindikana: '+err.message)}}}
