@@ -27,7 +27,7 @@ async function load(){
   const [a,b,c]=await Promise.all([
    client.from('order_deliveries').select('id,assigned_driver_id,status,delivery_fee,driver_payout_amount,payout_status,buyer_confirmed_at,created_at').eq('status','completed').not('assigned_driver_id','is',null).not('buyer_confirmed_at','is',null).order('created_at',{ascending:false}).limit(250),
    client.from('zune_driver_payment_records').select('id,driver_id,delivery_id,amount,deduction,net_amount,payment_method,payment_phone,transaction_reference,status,admin_note,created_at,paid_at').order('created_at',{ascending:false}).limit(250),
-   client.from('delivery_driver_profiles').select('user_id,full_name,phone_number,status').eq('status','active').limit(500)
+   client.from('delivery_driver_profiles').select('user_id,full_name,phone_number,status').limit(500)
   ]);
   if(a.error)throw a.error;if(b.error)throw b.error;if(c.error)throw c.error;
   deliveries=a.data||[];payments=b.data||[];drivers=c.data||[];render();$('zdpNotice').hidden=true;
