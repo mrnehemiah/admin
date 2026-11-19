@@ -121,6 +121,13 @@
       form.reset(); await load(); alert('Ad Package imehifadhiwa.');
     });
   }
+  document.addEventListener('click',event=>{
+    const tab=event.target.closest('[data-ads-tab]');
+    if(!tab)return;
+    const key=tab.dataset.adsTab;
+    document.querySelectorAll('[data-ads-tab]').forEach(x=>x.classList.toggle('active',x===tab));
+    document.querySelectorAll('#adsPage .seller-tab-content').forEach(x=>x.classList.toggle('active',x.id==='ads'+key[0].toUpperCase()+key.slice(1)+'Tab'));
+  });
   document.addEventListener('click',async event=>{
     const review=event.target.closest('.ads-review');
     const deposit=event.target.closest('.ads-deposit');
