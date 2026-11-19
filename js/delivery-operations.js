@@ -33,7 +33,7 @@ async function reviewDriverApplication(id,decision,button){
  if(error){window.alert(error.message);return;}
  if(!data?.ok){window.alert('Admin haikuthibitisha mabadiliko.');return;}
  window.alert(decision==='approved'?'Dereva ameidhinishwa na sasa anaweza kupangiwa delivery.':'Ombi la dereva limekataliwa.');
- await loadDriverApplications();
+ await loadDriverApplications();\n await Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
 }
 
 let directoryRows=[],documentRows=[];
