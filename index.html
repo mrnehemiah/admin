@@ -266,7 +266,17 @@
 
       <section class="page-section" id="delivery-pricingPage" data-section="delivery-pricing"><div class="section-intro"><div><h2>Delivery & Pricing</h2><p>Simamia maeneo, gharama na masharti ya delivery.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Eneo</th><th>Aina ya delivery</th><th>Bei</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="deliveryPricingBody"><tr><td colspan="5" class="empty-state">Inasubiri delivery pricing...</td></tr></tbody></table></div></div></section>
 <section class="page-section" id="driver-applicationsPage" data-section="driver-applications">
-  <div class="section-intro"><div><h2>Maombi ya Dereva</h2><p>Kagua maombi mapya, taarifa za mwombaji na uamuzi wa kuidhinisha au kukataa.</p></div><button class="secondary-btn" id="refreshDriverApplications" type="button">↻ Refresh</button></div>
+  <div class="section-intro"><div><h2>Maombi ya Dereva</h2><p>Maombi ya kujisajili na walioalikwa na Admin. Hali ya akaunti hubaki Buyer mpaka idhini ya mwisho.</p></div><button class="secondary-btn" id="refreshDriverApplications" type="button">↻ Refresh</button></div>
+  <div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h3>Alika Driver</h3><p>Tengeneza code ya mwaliko ya matumizi mara moja. Code huisha kulingana na muda ulioweka.</p></div></div>
+    <form id="driverInviteForm" class="form-grid">
+      <div class="form-field"><label for="driverInvitePhone">Namba ya simu (hiari kama email ipo)</label><input id="driverInvitePhone" type="tel" placeholder="+255..." autocomplete="tel"></div>
+      <div class="form-field"><label for="driverInviteEmail">Email (hiari kama simu ipo)</label><input id="driverInviteEmail" type="email" placeholder="driver@example.com" autocomplete="email"></div>
+      <div class="form-field"><label for="driverInviteExpiry">Muda wa code</label><select id="driverInviteExpiry"><option value="24">Saa 24</option><option value="72" selected>Saa 72</option><option value="168">Siku 7</option><option value="720">Siku 30</option></select></div>
+      <div class="form-field"><label for="driverInviteReason">Sababu ya mwaliko</label><input id="driverInviteReason" minlength="5" required placeholder="Kwa nini unamwalika dereva huyu?"></div>
+      <div class="full-width"><button class="primary-btn" type="submit" id="createDriverInviteBtn">Tengeneza mwaliko</button><div id="driverInviteResult" class="notice-box" hidden style="margin-top:12px"></div></div>
+    </form>
+  </div>
+  <div class="table-toolbar"><input id="driverApplicationSearch" class="table-search" type="search" placeholder="Tafuta jina, simu, email..."><select id="driverApplicationFilter" class="table-search"><option value="all">Maombi yote</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
   <div class="panel"><div class="panel-head"><div><h3>Maombi ya madereva</h3><p>Dereva hawezi kuidhinishwa mpaka nyaraka zote za lazima ziidhinishwe.</p></div></div><div class="table-wrap"><table><thead><tr><th>Dereva</th><th>Mawasiliano</th><th>Usafiri</th><th>Aina ya ombi</th><th>Tarehe</th><th>Uamuzi</th></tr></thead><tbody id="driverApplicationsBody"><tr><td colspan="6" class="empty-state">Inapakia maombi ya madereva...</td></tr></tbody></table></div></div>
 </section>
 <section class="page-section" id="driver-listPage" data-section="driver-list">
@@ -478,7 +488,7 @@
 <script src="js/zune-payment-center.js?v=1"></script>
 <script src="js/disputes.js"></script>
 <script src="js/delivery-pricing.js"></script>
-<script src="js/delivery-operations.js?v=5"></script>
+<script src="js/delivery-operations.js?v=6"></script>
 <script src="js/operations.js"></script>
 <script src="js/promotions.js?v=1"></script>
 <script src="js/reports.js"></script>
