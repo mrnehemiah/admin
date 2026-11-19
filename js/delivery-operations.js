@@ -33,8 +33,7 @@ async function reviewDriverApplication(id,decision,button){
  if(error){window.alert(error.message);return;}
  if(!data?.ok){window.alert('Admin haikuthibitisha mabadiliko.');return;}
  window.alert(decision==='approved'?'Dereva ameidhinishwa na sasa anaweza kupangiwa delivery.':'Ombi la dereva limekataliwa.');
- await loadDriverApplications();
- await Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+
 }
 
 let directoryRows=[],documentRows=[];
@@ -125,13 +124,22 @@ async function loadEvents(id){
 }
 document.addEventListener('DOMContentLoaded',()=>{
  $('#refreshDeliveryOps')?.addEventListener('click',()=>load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>'));
+ $('#refreshDriverApplications')?.addEventListener('click',()=>loadDriverApplications());
+ $('#refreshDriverDirectory')?.addEventListener('click',()=>Promise.all([loadDriverDirectory(),loadDriverDocuments()]));
  $('#driverApplicationsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-review]');if(b)reviewDriverApplication(b.dataset.applicationId,b.dataset.driverReview,b).catch(err=>window.alert(err.message));});
  $('#driverDirectoryBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-status]');if(b)setDriverStatus(b.dataset.driverId,b.dataset.driverStatus,b).catch(err=>window.alert(err.message));});
  $('#driverDocumentsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-doc-review]');if(b)reviewDriverDocument(b.dataset.docId,b.dataset.docReview,b).catch(err=>window.alert(err.message));});
  $('#driverDirectorySearch')?.addEventListener('input',renderDriverDirectory);$('#driverDirectoryFilter')?.addEventListener('change',renderDriverDirectory);
- load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>');
+ const initial=location.hash.slice(1);
+ if(initial==='driver-applications')loadDriverApplications();
+ else if(initial==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+ else if(initial==='delivery-operations'||!initial)load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>');
 });
-document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='delivery-operations')load().catch(err=>body.innerHTML='<tr><td colspan="9">'+esc(err.message)+'</td></tr>');});
+document.addEventListener('zune:page-changed',e=>{
+ if(e.detail.page==='driver-applications')loadDriverApplications();
+ else if(e.detail.page==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+ else if(e.detail.page==='delivery-operations')load().catch(err=>body.innerHTML='<tr><td colspan="9">'+esc(err.message)+'</td></tr>');
+});
 setInterval(()=>{if(!document.hidden&&location.hash==='#delivery-operations')load().catch(err=>console.warn('Delivery auto-refresh:',err));},20000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&location.hash==='#delivery-operations')load().catch(err=>console.warn('Delivery refresh:',err));});
 })();
