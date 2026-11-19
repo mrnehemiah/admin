@@ -12,7 +12,7 @@ async function load(){
  try{
   const [payments,allocations,events]=await Promise.all([
    read('zune_order_payment_transactions','id,checkout_id,buyer_id,provider_code,provider_reference,amount,currency,network_code,status,created_at,paid_at',150),
-   read('zune_payment_allocations','id,order_id,seller_id,gross_amount,discount_amount,delivery_amount,commission_amount,seller_net_amount,payout_status,created_at',150),
+   read('zune_seller_earnings_ledger','id,order_id,seller_id,gross_amount,commission_rate,commission_amount,net_amount,status,created_at',150),
    read('zune_payment_provider_events','id,provider_code,provider_event_id,payment_reference,processing_status,received_at,error_message',100,'received_at')
   ]);
   const succeeded=payments.filter(x=>x.status==='succeeded');
@@ -20,10 +20,10 @@ async function load(){
   $('zpmPaid').textContent=money(sum(succeeded,'amount'));
   $('zpmPending').textContent=payments.filter(x=>['created','pending'].includes(x.status)).length;
   $('zpmFailed').textContent=payments.filter(x=>['failed','cancelled'].includes(x.status)).length;
-  $('zpmSellerNet').textContent=money(sum(allocations,'seller_net_amount'));
+  $('zpmSellerNet').textContent=money(sum(allocations,'net_amount'));
   $('zpmCommission').textContent=money(sum(allocations,'commission_amount'));
   $('zpmTransactions').innerHTML=payments.length?payments.map(x=>'<tr>'+cell(x.provider_reference||x.id)+cell(String(x.buyer_id||'').slice(0,8)+'…')+cell(money(x.amount)) +cell(x.provider_code)+cell(x.network_code)+cell(x.status)+cell(date(x.paid_at||x.created_at))+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Hakuna order payments bado.</td></tr>';
-  $('zpmAllocations').innerHTML=allocations.length?allocations.map(x=>'<tr>'+cell(String(x.order_id||'').slice(0,8)+'…')+cell(String(x.seller_id||'').slice(0,8)+'…')+cell(money(x.gross_amount))+cell(money(x.discount_amount))+cell(money(x.delivery_amount))+cell(money(x.commission_amount))+cell(money(x.seller_net_amount))+cell(x.payout_status)+'</tr>').join(''):'<tr><td colspan="8" class="empty-state">Hakuna payment allocations bado.</td></tr>';
+  $('zpmAllocations').innerHTML=allocations.length?allocations.map(x=>'<tr>'+cell(String(x.order_id||'').slice(0,8)+'…')+cell(String(x.seller_id||'').slice(0,8)+'…')+cell(money(x.gross_amount))+cell((Number(x.commission_rate||0)*100).toFixed(2)+'%')+cell(money(x.commission_amount))+cell(money(x.net_amount))+cell(x.status)+'</tr>').join(''):'<tr><td colspan="8" class="empty-state">Hakuna payment allocations bado.</td></tr>';
   $('zpmEvents').innerHTML=events.length?events.map(x=>'<tr>'+cell(x.provider_code)+cell(x.provider_event_id)+cell(x.payment_reference)+cell(x.processing_status)+cell(date(x.received_at||x.created_at))+cell(x.error_message||'—')+'</tr>').join(''):'<tr><td colspan="6" class="empty-state">Hakuna gateway events bado.</td></tr>';
  }catch(e){console.error('ZUNE payment center',e);['zpmTransactions','zpmAllocations','zpmEvents'].forEach((id,i)=>empty(id,[7,8,6][i],'Imeshindikana kusoma taarifa: '+(e.message||'Unknown error')));}
  finally{if(btn){btn.disabled=false;btn.textContent='↻ Refresh';}}
