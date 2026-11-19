@@ -24,7 +24,7 @@ begin
  on conflict(delivery_id) do update set driver_id=excluded.driver_id,amount=excluded.amount,deduction=excluded.deduction,net_amount=excluded.net_amount,
  payment_method=excluded.payment_method,payment_phone=excluded.payment_phone,transaction_reference=excluded.transaction_reference,
  status=excluded.status,admin_note=excluded.admin_note,created_by=excluded.created_by,paid_at=excluded.paid_at returning id into v_payment_id;
- update public.order_deliveries set driver_payout_amount=p_amount,payout_status=case when p_status='paid' then 'paid' else 'awaiting_payout' end where id=p_delivery_id;
+ update public.order_deliveries set driver_payout_amount=p_amount,payout_status=case p_status when 'paid' then 'paid' when 'processing' then 'processing' when 'rejected' then 'rejected' else 'awaiting_payout' end where id=p_delivery_id;
  insert into public.delivery_driver_audit_logs(driver_user_id,performed_by,action,reason)
  values(v_driver_id,v_admin,case when v_old_status is null then 'payment_recorded' else 'payment_updated' end,btrim(p_admin_reason));
  return jsonb_build_object('ok',true,'payment_id',v_payment_id,'driver_id',v_driver_id,'delivery_id',p_delivery_id,'amount',p_amount,'deduction',coalesce(p_deduction,0),'net_amount',v_net,'status',p_status);
