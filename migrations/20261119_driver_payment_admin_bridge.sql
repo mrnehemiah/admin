@@ -13,9 +13,9 @@ begin
  if p_payment_method not in ('mpesa','airtel_money','mixx_by_yas','halopesa','bank','cash','manual') then raise exception 'Njia ya malipo haijaruhusiwa.';end if;
  select d.assigned_driver_id into v_driver_id from public.order_deliveries d
  join public.delivery_driver_profiles dp on dp.user_id=d.assigned_driver_id
- where d.id=p_delivery_id and d.status='completed' and d.buyer_confirmed_at is not null and dp.status='active'
+ where d.id=p_delivery_id and d.status='completed' and d.buyer_confirmed_at is not null
  for update of d;
- if v_driver_id is null then raise exception 'Delivery haijakamilika, haijathibitishwa, au dereva si active.';end if;
+ if v_driver_id is null then raise exception 'Delivery haijakamilika, haijathibitishwa, au dereva hajapatikana.';end if;
  select status into v_old_status from public.zune_driver_payment_records where delivery_id=p_delivery_id;
  v_net:=p_amount-coalesce(p_deduction,0);
  insert into public.zune_driver_payment_records(driver_id,delivery_id,amount,deduction,net_amount,payment_method,payment_phone,transaction_reference,status,admin_note,created_by,paid_at)
