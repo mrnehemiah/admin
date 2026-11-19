@@ -27,6 +27,7 @@
     loading=true;
     try {
       if(window.ZUNE_AUTH_READY) await window.ZUNE_AUTH_READY; else if(window.ZUNE_SECURITY?.requireAdmin) await window.ZUNE_SECURITY.requireAdmin();
+      try { await db().rpc('zune_admin_expire_ad_campaigns'); } catch(error) { console.warn('Sponsored Ads expiry sweep:',error.message); }
       const [campaigns,packages,wallets,transactions,events,reports,profiles,stores,bids,settingsRows]=await Promise.all([
         query('ad_campaigns'),query('ad_packages'),query('ads_wallets'),query('ads_wallet_transactions'),
         query('ad_events'),query('ad_reports'),query('profiles','id,full_name'),query('stores','id,store_name,owner_id'),query('ad_auction_bids'),query('ad_system_settings')
