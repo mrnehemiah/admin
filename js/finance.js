@@ -1,2 +1,33 @@
-import {rpc} from './api.js';import {escapeHtml} from './ui.js';
-export async function render(el){el.innerHTML='<div class="empty">Inasoma payment settings…</div>';let data=null,error=null;try{data=await rpc('zune_admin_payment_get_settings')}catch(e){error=e.message}el.innerHTML=`<div class="page-head"><div><h2>Financial Control</h2><p>Verification fees na payment network settings kupitia RPC zilizopo.</p></div></div>${error?`<div class="notice error">${escapeHtml(error)}</div>`:`<div class="card"><h3 class="card-title">ZUNE payment settings</h3><pre style="white-space:pre-wrap;font-size:11px">${escapeHtml(JSON.stringify(data,null,2))}</pre></div>`}<div class="notice warn">Wallet balances na payouts ni read-only kwenye build hii mpaka ledger adjustment / payout RPC zihakikiwe. Hatutabadilisha salio moja kwa moja.</div>`;}
+import {rpc} from './api.js';
+import {escapeHtml} from './ui.js';
+
+const money=value=>'TSh '+Number(value||0).toLocaleString('en-TZ',{maximumFractionDigits:2});
+
+export async function render(el){
+  el.innerHTML='<div class="empty">Inasoma muhtasari wa fedha…</div>';
+  const [settingsResult,walletResult]=await Promise.allSettled([
+    rpc('zune_admin_payment_get_settings'),
+    rpc('zune_admin_finance_dashboard')
+  ]);
+  const settings=settingsResult.status==='fulfilled'?settingsResult.value:null;
+  const wallet=walletResult.status==='fulfilled'?walletResult.value:null;
+  const errors=[];
+  if(settingsResult.status==='rejected')errors.push('Payment settings: '+settingsResult.reason.message);
+  if(walletResult.status==='rejected')errors.push('Admin wallet: '+walletResult.reason.message);
+  const networks=Array.isArray(settings?.networks)?settings.networks:[];
+  el.innerHTML=`
+    <div class="page-head"><div><h2>Financial Control</h2><p>Muhtasari wa mapato ya ZUNE, commission, salio na hali ya mitandao ya malipo.</p></div></div>
+    ${errors.length?`<div class="notice error">${escapeHtml(errors.join(' · '))}</div>`:''}
+    <div class="metrics-grid compact-metrics">
+      <article class="metric-card"><span>Admin Net Wallet Balance</span><strong>${money(wallet?.available_balance)}</strong></article>
+      <article class="metric-card"><span>Jumla ya credits</span><strong>${money(wallet?.total_credits)}</strong></article>
+      <article class="metric-card"><span>Jumla ya debits</span><strong>${money(wallet?.total_debits)}</strong></article>
+    </div>
+    <div class="card"><h3 class="card-title">Payment network readiness</h3>
+      ${networks.length?`<div class="table-wrap"><table><thead><tr><th>Mtandao</th><th>Umewezeshwa</th><th>Namba ya biashara</th><th>Merchant/API</th><th>Collection</th><th>Disbursement</th></tr></thead><tbody>
+      ${networks.map(n=>'<tr><td>'+escapeHtml(n.display_name||n.code)+'</td><td>'+((n.is_enabled===true)?'Enabled':'Disabled')+'</td><td>'+escapeHtml(n.number_status||'—')+'</td><td>'+escapeHtml(n.merchant_status||'—')+'</td><td>'+((n.collection_enabled===true)?'Ready':'Not ready')+'</td><td>'+((n.disbursement_enabled===true)?'Ready':'Not ready')+'</td></tr>').join('')}
+      </tbody></table></div>`:'<div class="notice warn">Hakuna payment provider iliyosanidiwa bado. Weka namba rasmi za biashara na merchant API credentials kabla ya kuwezesha malipo ya simu.</div>'}
+    </div>
+    <div class="notice warn">Dashboard hii inaonyesha salio kutoka financial ledger. Mfumo haupaswi kuweka malipo kuwa “Imelipwa” mpaka uthibitisho wa muamala au transaction reference uwepo. Usitumie service-role key kwenye browser.</div>
+  `;
+}
