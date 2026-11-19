@@ -27,9 +27,9 @@
     loading=true;
     try {
       if(window.ZUNE_AUTH_READY) await window.ZUNE_AUTH_READY; else if(window.ZUNE_SECURITY?.requireAdmin) await window.ZUNE_SECURITY.requireAdmin();
-      const [campaigns,packages,wallets,transactions,events,reports,profiles,stores]=await Promise.all([
+      const [campaigns,packages,wallets,transactions,events,reports,profiles,stores,bids,settingsRows]=await Promise.all([
         query('ad_campaigns'),query('ad_packages'),query('ads_wallets'),query('ads_wallet_transactions'),
-        query('ad_events'),query('ad_reports'),query('profiles','id,full_name'),query('stores','id,store_name,owner_id')
+        query('ad_events'),query('ad_reports'),query('profiles','id,full_name'),query('stores','id,store_name,owner_id'),query('ad_auction_bids'),query('ad_system_settings')
       ]);
       const signedTransactions=await Promise.all(transactions.map(async tx=>{if(!tx.receipt_path)return tx;const {data}=await db().storage.from('ads-payment-receipts').createSignedUrl(tx.receipt_path,300);return {...tx,receipt_url:data?.signedUrl||null};}));
       const names=new Map(profiles.map(p=>[p.id,p.full_name||'—']));
@@ -76,6 +76,25 @@
       const ctr=counts.impression ? (counts.click/counts.impression*100).toFixed(2)+'%' : '0%';
       metric('impressions',String(counts.impression)); metric('clicks',String(counts.click));
       metric('ctr',ctr); metric('conversions',String(counts.attributed_order));
+      body('adsAuctionRows',bids.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
+        x=>'<strong>'+esc(x.campaign_id.slice(0,8))+'</strong>',
+        x=>esc(names.get(x.seller_id)),x=>status(x.bid_type),x=>money(x.bid_amount_tzs),
+        x=>money(x.daily_budget_tzs),x=>'<span class="badge-pill">'+status(x.status)+'</span>',
+        x=>x.status==='submitted'
+          ? '<button class="secondary-btn ads-bid-review" data-id="'+esc(x.id)+'" data-decision="accepted">Accept</button> <button class="warning-btn ads-bid-review" data-id="'+esc(x.id)+'" data-decision="rejected">Reject</button>' : '—'
+      ],'Hakuna zabuni zinazosubiri review.');
+      const settings=settingsRows[0];
+      const settingsForm=$('#adsSettingsForm');
+      if(settings && settingsForm && !settingsForm.dataset.loaded){
+        settingsForm.elements.commission.value=settings.default_commission_rate;
+        settingsForm.elements.slots.value=settings.max_ads_per_placement;
+        settingsForm.elements.attribution.value=settings.attribution_window_days;
+        settingsForm.elements.auction.checked=settings.auction_enabled;
+        settingsForm.elements.cpc.checked=settings.cpc_enabled;
+        settingsForm.elements.cpm.checked=settings.cpm_enabled;
+        settingsForm.elements.checkout.checked=settings.checkout_ads_enabled;
+        settingsForm.dataset.loaded='1';
+      }
       body('adsReportRows',reports.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),[
         x=>esc(x.id.slice(0,8)),x=>esc(x.campaign_id.slice(0,8)),x=>status(x.reason),
         x=>'<span class="badge-pill">'+status(x.severity)+'</span>',x=>status(x.status),
@@ -91,12 +110,12 @@
   function addPackageForm() {
     const host=$('#adsPackagesTab .panel'); if(!host || $('#adsPackageForm')) return;
     const form=document.createElement('form'); form.id='adsPackageForm'; form.className='panel';
-    form.innerHTML='<h3>Tengeneza Ad Package</h3><div class="settings-grid"><label>Jina<input class="field-input" name="name" maxlength="100" required></label><label>Aina<select class="field-input" name="campaign_type"><option value="sponsored_store">Sponsored Stores</option><option value="sponsored_product">Sponsored Products</option><option value="combo">Combo</option></select></label><label>Muda (siku)<input class="field-input" name="duration_days" type="number" min="1" required></label><label>Bei (TZS)<input class="field-input" name="price_tzs" type="number" min="0" step="1" required></label><label>Placements (tenganisha kwa koma)<input class="field-input" name="placements" placeholder="home,search,category"></label></div><button class="primary-btn" type="submit">Hifadhi Package</button>';
+    form.innerHTML='<h3>Tengeneza Ad Package</h3><div class="settings-grid"><label>Jina<input class="field-input" name="name" maxlength="100" required></label><label>Aina<select class="field-input" name="campaign_type"><option value="sponsored_store">Sponsored Stores</option><option value="sponsored_product">Sponsored Products</option><option value="combo">Combo</option></select></label><label>Muda (siku)<input class="field-input" name="duration_days" type="number" min="1" required></label><label>Bei ya package (TZS)<input class="field-input" name="price_tzs" type="number" min="0" step="1" required></label><label>Pricing model<select class="field-input" name="pricing_model"><option value="fixed">Fixed</option><option value="auction">Auction</option><option value="hybrid">Hybrid CPC + CPM</option></select></label><label>Commission (%)<input class="field-input" name="commission_rate" type="number" min="0" max="30" step="0.01" value="0"></label><label>CPC floor (TZS)<input class="field-input" name="cpc_floor_tzs" type="number" min="0" step="1" value="0"></label><label>CPM floor (TZS)<input class="field-input" name="cpm_floor_tzs" type="number" min="0" step="1" value="0"></label><label>Max slots<input class="field-input" name="max_slots" type="number" min="1" max="20" value="1"></label><label>Placements (tenganisha kwa koma)<input class="field-input" name="placements" placeholder="home,search,category,recommendations,store_page,checkout"></label></div><button class="primary-btn" type="submit">Hifadhi Package</button>';
     host.prepend(form);
     form.addEventListener('submit',async e=>{
       e.preventDefault(); const data=new FormData(form);
       const placements=String(data.get('placements')||'').split(',').map(x=>x.trim()).filter(Boolean);
-      const payload={name:String(data.get('name')).trim(),campaign_type:data.get('campaign_type'),duration_days:Number(data.get('duration_days')),price_tzs:Number(data.get('price_tzs')),placements,is_active:true,created_by:window.ZUNE_CURRENT_USER?.id||null};
+      const payload={name:String(data.get('name')).trim(),campaign_type:data.get('campaign_type'),duration_days:Number(data.get('duration_days')),price_tzs:Number(data.get('price_tzs')),placements,is_active:true,created_by:window.ZUNE_CURRENT_USER?.id||null,pricing_model:data.get('pricing_model'),commission_rate:Number(data.get('commission_rate')||0),cpc_floor_tzs:Number(data.get('cpc_floor_tzs')||0),cpm_floor_tzs:Number(data.get('cpm_floor_tzs')||0),max_slots:Number(data.get('max_slots')||1),currency:'TZS'};
       const {error}=await db().from('ad_packages').insert(payload);
       if(error){alert('Package haijahifadhiwa: '+error.message);return;}
       form.reset(); await load(); alert('Ad Package imehifadhiwa.');
@@ -107,6 +126,7 @@
     const deposit=event.target.closest('.ads-deposit');
     const toggle=event.target.closest('.ads-package-toggle');
     const report=event.target.closest('.ads-report-status');
+    const bid=event.target.closest('.ads-bid-review');
     try {
       if(review){
         const reason=prompt('Andika sababu ya uamuzi (angalau herufi 5):'); if(!reason || reason.trim().length<5)return;
@@ -119,12 +139,39 @@
       } else if(toggle){
         const {error}=await db().from('ad_packages').update({is_active:toggle.dataset.active==='true',updated_at:new Date().toISOString()}).eq('id',toggle.dataset.id);
         if(error)throw error; await load();
+      } else if(bid){
+        const reason=prompt('Andika sababu ya uamuzi wa zabuni (angalau herufi 5):'); if(!reason || reason.trim().length<5)return;
+        const {error}=await db().rpc('zune_admin_review_ad_bid',{p_bid_id:bid.dataset.id,p_decision:bid.dataset.decision,p_reason:reason.trim()});
+        if(error)throw error; await load();
       } else if(report){
         const reason=prompt('Andika maelezo ya Admin (angalau herufi 5):'); if(!reason || reason.trim().length<5)return;
         const {error}=await db().from('ad_reports').update({status:report.dataset.status,admin_note:reason,reviewed_by:window.ZUNE_CURRENT_USER?.id,reviewed_at:new Date().toISOString()}).eq('id',report.dataset.id);
         if(error)throw error; await load();
       }
     } catch(error){alert('Kitendo kimeshindwa: '+(error.message||error));}
+  });
+  document.addEventListener('submit',async event=>{
+    if(event.target?.id!=='adsSettingsForm')return;
+    event.preventDefault();
+    const form=event.target, data=new FormData(form), button=form.querySelector('button[type="submit"]');
+    button.disabled=true;
+    try{
+      const {error}=await db().rpc('zune_admin_update_ad_system_settings',{
+        p_default_commission_rate:Number(data.get('commission')),
+        p_max_ads_per_placement:Number(data.get('slots')),
+        p_attribution_window_days:Number(data.get('attribution')),
+        p_auction_enabled:form.elements.auction.checked,
+        p_cpc_enabled:form.elements.cpc.checked,
+        p_cpm_enabled:form.elements.cpm.checked,
+        p_checkout_ads_enabled:form.elements.checkout.checked,
+        p_reason:String(data.get('reason')||'').trim()
+      });
+      if(error)throw error;
+      form.dataset.loaded='1';form.elements.reason.value='';
+      alert('Sponsored Ads settings zimehifadhiwa.');
+      await load();
+    }catch(error){alert('Settings hazijahifadhiwa: '+(error.message||error));}
+    finally{button.disabled=false;}
   });
   document.addEventListener('DOMContentLoaded',()=>{addPackageForm();load();});
   document.addEventListener('zune:page-changed',event=>{if(event.detail?.page==='ads'){addPackageForm();load();}});
