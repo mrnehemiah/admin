@@ -45,6 +45,10 @@ async function loadDriverDirectory(){
  const {data,error}=await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,status,created_at').order('created_at',{ascending:false});
  if(error){body.innerHTML='<tr><td colspan="6">'+esc(error.message)+'</td></tr>';return;}
  directoryRows=data||[];
+ const {data:docRows, error:docError}=await db.from('delivery_driver_documents').select('user_id,document_type,status');
+ if(docError)console.warn('Driver document summary:',docError.message);
+ const docMap=new Map();(docRows||[]).forEach(x=>{const v=docMap.get(x.user_id)||{approved:new Set(),total:0};v.total++;if(x.status==='approved')v.approved.add(x.document_type);docMap.set(x.user_id,v);});
+ directoryRows=directoryRows.map(d=>({...d,docsApproved:docMap.get(d.user_id)?.approved.size||0,docsTotal:docMap.get(d.user_id)?.total||0}));
  $('#driverCountAll').textContent=directoryRows.length;
  $('#driverCountActive').textContent=directoryRows.filter(x=>x.status==='active').length;
  $('#driverCountPending').textContent=directoryRows.filter(x=>x.status==='pending').length;
@@ -58,8 +62,9 @@ function renderDriverDirectory(){
  body.innerHTML=list.length?list.map(d=>{
   const status=d.status==='active'?'success':d.status==='suspended'||d.status==='rejected'?'danger':'warning';
   const action=d.status==='active'?'<button class="danger-btn" data-driver-status="suspended" data-driver-id="'+esc(d.user_id)+'">Simamisha</button>':d.status==='suspended'?'<button class="primary-btn" data-driver-status="active" data-driver-id="'+esc(d.user_id)+'">Rejesha</button>':'—';
-  return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc(d.user_id)+'</small></td><td>'+esc(d.phone_number)+'<br><small>'+esc(d.email||'')+'</small></td><td>'+esc(d.vehicle_type)+'<br><small>'+esc(d.vehicle_registration||'—')+'</small></td><td><span class="badge-pill '+status+'">'+esc(d.status)+'</span></td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleDateString('sw-TZ'):'—')+'</td><td><div class="action-row">'+action+'</div></td></tr>';
- }).join(''):'<tr><td colspan="6" class="empty-state">Hakuna dereva anayelingana na utafutaji.</td></tr>';
+  const compliance=d.docsApproved>=5?'<span class="badge-pill success">5/5 zimeidhinishwa</span>':'<span class="badge-pill warning">'+d.docsApproved+'/5 zimeidhinishwa</span>';
+  return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc(d.user_id)+'</small></td><td>'+esc(d.phone_number)+'<br><small>'+esc(d.email||'')+'</small></td><td>'+esc(d.vehicle_type)+'<br><small>'+esc(d.vehicle_registration||'—')+'</small></td><td>'+compliance+'</td><td><span class="badge-pill '+status+'">'+esc(d.status)+'</span></td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleDateString('sw-TZ'):'—')+'</td><td><div class="action-row">'+action+'</div></td></tr>';
+ }).join(''):'<tr><td colspan="7" class="empty-state">Hakuna dereva anayelingana na utafutaji.</td></tr>';
 }
 async function setDriverStatus(id,status,button){
  const reason=window.prompt(status==='suspended'?'Sababu ya kusimamisha dereva:':'Sababu ya kurejesha dereva:');
