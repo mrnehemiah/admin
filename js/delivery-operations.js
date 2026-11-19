@@ -33,7 +33,8 @@ async function reviewDriverApplication(id,decision,button){
  if(error){window.alert(error.message);return;}
  if(!data?.ok){window.alert('Admin haikuthibitisha mabadiliko.');return;}
  window.alert(decision==='approved'?'Dereva ameidhinishwa na sasa anaweza kupangiwa delivery.':'Ombi la dereva limekataliwa.');
- await loadDriverApplications();\n await Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+ await loadDriverApplications();
+ await Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
 }
 
 let directoryRows=[],documentRows=[];
@@ -107,6 +108,7 @@ async function load(){
  trackingRows=trackResult.error?[]:(trackResult.data||[]);activeDrivers=driverResult.error?[]:(driverResult.data||[]);
  if(trackResult.error)console.warn('Delivery tracking:',trackResult.error.message);if(driverResult.error)console.warn('Active drivers:',driverResult.error.message);
  await loadDriverApplications();
+ await Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
  body.innerHTML=rows.length?rows.map(d=>{const track=trackingRows.find(x=>x.delivery_id===d.delivery_id)||{};const driver=activeDrivers.find(x=>x.driver_id===d.assigned_driver_id);const lat=track.last_latitude,lng=track.last_longitude,dlat=d.latitude,dlng=d.longitude;const valid=(a,b)=>a!=null&&b!=null&&Number.isFinite(Number(a))&&Number.isFinite(Number(b));const driverMap=valid(lat,lng)?'<a class="secondary-btn" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat='+Number(lat)+'&mlon='+Number(lng)+'#map=16/'+Number(lat)+'/'+Number(lng)+'">Dereva</a>':'';const buyerMap=valid(dlat,dlng)?'<a class="secondary-btn" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat='+Number(dlat)+'&mlon='+Number(dlng)+'#map=16/'+Number(dlat)+'/'+Number(dlng)+'">Mnunuzi</a>':'';const updated=track.last_location_at?'<small>GPS: '+esc(new Date(track.last_location_at).toLocaleString('sw-TZ'))+'</small>':'';return '<tr><td><button class="secondary-btn" data-events="'+esc(d.delivery_id)+'">'+esc(d.delivery_id.slice(0,8))+'</button></td><td>'+esc(d.vendor_id)+'</td><td>'+esc(d.recipient_name)+'<br><small>'+esc(d.recipient_phone)+'</small></td><td>'+esc(driver?.full_name||(d.assigned_driver_id||'Hajapangiwa'))+(driver?.phone_number?'<br><small>'+esc(driver.phone_number)+'</small>':'')+'</td><td><span class="badge-pill '+(d.delivery_status==='completed'?'success':'warning')+'">'+esc(labels[d.delivery_status]||d.delivery_status)+'</span></td><td>'+money(d.delivery_fee)+'</td><td>'+esc(d.payout_status||'awaiting_confirmation')+'</td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleString('sw-TZ'):'—')+'</td><td><div class="action-row">'+(driverMap||'')+(buyerMap||'')+'</div>'+updated+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">Hakuna delivery zilizorekodiwa bado.</td></tr>';
  body.querySelectorAll('[data-events]').forEach(b=>b.onclick=()=>loadEvents(b.dataset.events));
 }
@@ -118,7 +120,10 @@ async function loadEvents(id){
 }
 document.addEventListener('DOMContentLoaded',()=>{
  $('#refreshDeliveryOps')?.addEventListener('click',()=>load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>'));
- $('#driverApplicationsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-review]');if(b)reviewDriverApplication(b.dataset.applicationId,b.dataset.driverReview,b).catch(err=>window.alert(err.message));});\n $('#driverDirectoryBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-status]');if(b)setDriverStatus(b.dataset.driverId,b.dataset.driverStatus,b).catch(err=>window.alert(err.message));});\n $('#driverDocumentsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-doc-review]');if(b)reviewDriverDocument(b.dataset.docId,b.dataset.docReview,b).catch(err=>window.alert(err.message));});\n $('#driverDirectorySearch')?.addEventListener('input',renderDriverDirectory);$('#driverDirectoryFilter')?.addEventListener('change',renderDriverDirectory);
+ $('#driverApplicationsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-review]');if(b)reviewDriverApplication(b.dataset.applicationId,b.dataset.driverReview,b).catch(err=>window.alert(err.message));});
+ $('#driverDirectoryBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-status]');if(b)setDriverStatus(b.dataset.driverId,b.dataset.driverStatus,b).catch(err=>window.alert(err.message));});
+ $('#driverDocumentsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-doc-review]');if(b)reviewDriverDocument(b.dataset.docId,b.dataset.docReview,b).catch(err=>window.alert(err.message));});
+ $('#driverDirectorySearch')?.addEventListener('input',renderDriverDirectory);$('#driverDirectoryFilter')?.addEventListener('change',renderDriverDirectory);
  load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>');
 });
 document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='delivery-operations')load().catch(err=>body.innerHTML='<tr><td colspan="9">'+esc(err.message)+'</td></tr>');});
