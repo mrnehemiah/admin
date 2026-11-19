@@ -17,7 +17,7 @@ function render(){
   {html:x=>'<strong>#'+esc(shortId(x.id))+'</strong><small>'+esc(x.product_summary||'Bidhaa haijaorodheshwa')+'</small><small>Oda kamili: '+esc(x.id)+'</small>'},
   {html:x=>'<strong>'+esc(x.recipient_name||x.buyer_name||'Mteja hajatajwa')+'</strong><small>'+esc(x.recipient_phone||x.buyer_phone||'Simu haipo')+'</small><small>'+esc(x.buyer_email||'')+'</small>'},
   {html:x=>'<strong>'+esc(x.store_name||'Duka halijatambuliwa')+'</strong><small>'+esc(x.seller_name||'')+'</small>'},
-  {html:x=>'<strong>'+money(x.checkout_total??x.total_price??0)+'</strong><small>Bidhaa: '+money(x.total_price||0)+'</small>'},
+  {html:x=>'<strong>'+money(x.store_order_total??x.total_price??0)+'</strong><small>Bidhaa: '+money(x.total_price||0)+'</small><small>Sehemu ya delivery: '+money(x.order_delivery_share||0)+'</small>'},
   {html:x=>Number(x.discount_total)>0?'<strong>-'+money(x.discount_total)+'</strong>':'—'},
   {html:x=>'<span class="badge-pill">'+esc(statusLabel(x.status))+'</span>'},
   {html:x=>'<strong>'+esc(paymentLabel(x.payment_status))+'</strong><small>'+esc(x.payment_method||'Njia haijaainishwa')+'</small>'+(x.payment_reference?'<small>Ref: '+esc(x.payment_reference)+'</small>':'')},
@@ -35,16 +35,18 @@ async function load(){
   const buyerIds=[...new Set(allOrders.map(x=>x.buyer_id).filter(Boolean))];
   const productIds=[...new Set(allOrders.map(x=>x.product_id).filter(Boolean))];
   const checkoutIds=[...new Set(allOrders.map(x=>x.checkout_id).filter(Boolean))];
-  const [profilesRes,productsRes,itemsRes,checkoutRes]=await Promise.all([
+  const [profilesRes,productsRes,itemsRes,checkoutRes,deliveriesRes]=await Promise.all([
    buyerIds.length?db().from('profiles').select('id,full_name,phone_number,email').in('id',buyerIds):Promise.resolve({data:[],error:null}),
    productIds.length?db().from('products').select('id,title,vendor_id').in('id',productIds):Promise.resolve({data:[],error:null}),
    db().from('order_items').select('order_id,product_name,quantity,seller_id').in('order_id',allOrders.map(x=>x.id)),
-   checkoutIds.length?db().from('order_checkouts').select('id,grand_total,discount_total,payment_method,recipient_name,recipient_phone,recipient_email,country,region,district,ward,delivery_address,latitude,longitude').in('id',checkoutIds):Promise.resolve({data:[],error:null})
+   checkoutIds.length?db().from('order_checkouts').select('id,subtotal,delivery_total,grand_total,discount_total,payment_method,recipient_name,recipient_phone,recipient_email,country,region,district,ward,delivery_address,latitude,longitude').in('id',checkoutIds):Promise.resolve({data:[],error:null}),
+   checkoutIds.length?db().from('order_deliveries').select('checkout_id,vendor_id,delivery_fee').in('checkout_id',checkoutIds):Promise.resolve({data:[],error:null})
   ]);
-  for(const r of [profilesRes,productsRes,itemsRes,checkoutRes])if(r.error)console.warn('Order enrichment:',r.error.message);
+  for(const r of [profilesRes,productsRes,itemsRes,checkoutRes,deliveriesRes])if(r.error)console.warn('Order enrichment:',r.error.message);
   const profiles=new Map((profilesRes.data||[]).map(x=>[x.id,x]));
   const products=new Map((productsRes.data||[]).map(x=>[x.id,x]));
   const checkouts=new Map((checkoutRes.data||[]).map(x=>[x.id,x]));
+  const deliveryFees=new Map((deliveriesRes.data||[]).map(x=>[x.checkout_id+'|'+x.vendor_id,Number(x.delivery_fee||0)]));
   const sellerIds=[...new Set([...(productsRes.data||[]).map(x=>x.vendor_id),...(itemsRes.data||[]).map(x=>x.seller_id)].filter(Boolean))];
   const [sellerProfiles,storesRes]=await Promise.all([
    sellerIds.length?db().from('profiles').select('id,full_name').in('id',sellerIds):Promise.resolve({data:[],error:null}),
@@ -54,17 +56,21 @@ async function load(){
   if(storesRes.error)console.warn('Store names:',storesRes.error.message);
   const sellerNames=new Map((sellerProfiles.data||[]).map(x=>[x.id,x.full_name]));
   const storeNames=new Map((storesRes.data||[]).map(x=>[x.owner_id,x.store_name]));
-  const itemsByOrder=new Map();
-  (itemsRes.data||[]).forEach(it=>{const list=itemsByOrder.get(it.order_id)||[];list.push(it);itemsByOrder.set(it.order_id,list);});
+  const itemsByOrder=new Map(),sellerSubtotals=new Map();
+  (itemsRes.data||[]).forEach(it=>{const list=itemsByOrder.get(it.order_id)||[];list.push(it);itemsByOrder.set(it.order_id,list);const k=it.order_id;});
+  allOrders.forEach(o=>{const its=itemsByOrder.get(o.id)||[];const sid=its[0]?.seller_id||products.get(o.product_id)?.vendor_id;if(sid){const key=o.checkout_id+'|'+sid;sellerSubtotals.set(key,(sellerSubtotals.get(key)||0)+Number(o.total_price||0));}});
   allOrders=allOrders.map(o=>{
    const buyer=profiles.get(o.buyer_id)||{},checkout=checkouts.get(o.checkout_id)||{},items=itemsByOrder.get(o.id)||[];
    const product=products.get(o.product_id)||{},sellerId=items[0]?.seller_id||product.vendor_id;
+   const sellerKey=o.checkout_id+'|'+sellerId,sellerSubtotal=sellerSubtotals.get(sellerKey)||Number(o.total_price||0),sellerDelivery=deliveryFees.get(sellerKey)||0;
+   const orderValue=Number(o.total_price||0),checkoutSubtotal=Number(checkout.subtotal||0),discountShare=checkoutSubtotal>0?Number(checkout.discount_total||0)*(orderValue/checkoutSubtotal):0,deliveryShare=sellerSubtotal>0?sellerDelivery*(orderValue/sellerSubtotal):0;
    const productSummary=items.length?items.map(it=>(it.product_name||'Bidhaa')+' × '+(it.quantity||1)).join(', '):((product.title||'Bidhaa')+(o.quantity?' × '+o.quantity:''));
    return {...o,buyer_name:buyer.full_name,buyer_phone:buyer.phone_number,buyer_email:buyer.email,
     recipient_name:o.recipient_name||checkout.recipient_name,recipient_phone:o.recipient_phone||checkout.recipient_phone,
     buyer_email:buyer.email||checkout.recipient_email,store_name:storeNames.get(sellerId),seller_name:sellerNames.get(sellerId),
     product_summary:productSummary,checkout_total:checkout.grand_total??o.total_price,
-    discount_total:checkout.discount_total??0,payment_method:o.payment_method||checkout.payment_method,
+    order_delivery_share:deliveryShare,store_order_total:Math.max(0,orderValue+deliveryShare-discountShare),
+    discount_total:discountShare,payment_method:o.payment_method||checkout.payment_method,
     delivery_address:o.delivery_address||checkout.delivery_address,delivery_ward:o.delivery_ward||checkout.ward,
     delivery_district:o.delivery_district||checkout.district,delivery_region:o.delivery_region||checkout.region,
     delivery_country:o.delivery_country||checkout.country,delivery_latitude:o.delivery_latitude??checkout.latitude,
