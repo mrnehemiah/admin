@@ -56,7 +56,7 @@ async function loadEvents(id){
 document.addEventListener('DOMContentLoaded',()=>{
  $('#refreshDeliveryOps')?.addEventListener('click',()=>load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>'));
  $('#driverApplicationsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-review]');if(b)reviewDriverApplication(b.dataset.applicationId,b.dataset.driverReview,b).catch(err=>window.alert(err.message));});
- load().catch(e=>body.innerHTML='<tr><td colspan="8">'+esc(e.message)+'</td></tr>');
+ load().catch(e=>body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>');
 });
 document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='delivery-operations')load().catch(err=>body.innerHTML='<tr><td colspan="9">'+esc(err.message)+'</td></tr>');});
 setInterval(()=>{if(!document.hidden&&location.hash==='#delivery-operations')load().catch(err=>console.warn('Delivery auto-refresh:',err));},20000);
