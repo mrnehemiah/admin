@@ -59,7 +59,7 @@
     @media(max-width:760px){.section-intro{align-items:flex-start}.form-grid,.audit-checklist,.detail-grid{grid-template-columns:1fr}.table-toolbar{justify-content:stretch}.table-search{min-width:0;flex:1;width:100%}}
   </style>
   <link rel="stylesheet" href="css/premium-v2.css">\n  <link rel="stylesheet" href="css/product-management.css">
-  <link rel="stylesheet" href="css/supabase-management.css">
+  <link rel="stylesheet" href="css/supabase-management.css">\n  <link rel="stylesheet" href="css/driver-payments-admin.css?v=1">
 </head>
 <body>
 <div class="app-shell">
@@ -374,7 +374,26 @@
 <div class="panel"><div class="panel-heading"><div><p class="eyebrow">ORDER PAYMENTS</p><h3>Miamala ya malipo ya oda</h3></div></div><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Mteja</th><th>Kiasi</th><th>Provider</th><th>Mtandao</th><th>Status</th><th>Tarehe</th></tr></thead><tbody id="zpmTransactions"><tr><td colspan="7" class="empty-state">Inapakia...</td></tr></tbody></table></div></div>
 <div class="panel"><div class="panel-heading"><div><p class="eyebrow">SELLER ALLOCATIONS</p><h3>Mgao wa malipo kwa wauzaji</h3></div></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Seller</th><th>Mauzo</th><th>Punguzo</th><th>Delivery</th><th>Commission</th><th>Seller Net</th><th>Payout status</th></tr></thead><tbody id="zpmAllocations"><tr><td colspan="8" class="empty-state">Inapakia...</td></tr></tbody></table></div></div>
 <div class="panel"><div class="panel-heading"><div><p class="eyebrow">PAYMENT AUDIT</p><h3>Matukio ya gateway</h3></div></div><div class="table-wrap"><table><thead><tr><th>Provider</th><th>Event ID</th><th>Payment Ref</th><th>Status</th><th>Received</th><th>Error</th></tr></thead><tbody id="zpmEvents"><tr><td colspan="6" class="empty-state">Inapakia...</td></tr></tbody></table></div></div>
-<div class="notice-box">Taarifa hizi ni za kusoma tu. Refund, payout na kubadilisha payment status vitafanywa kupitia backend yenye uthibitisho wa provider, audit trail na idempotency. Usifanye malipo ya wauzaji kwa mkono ukitegemea jedwali hili pekee.</div></section>
+<section class="panel driver-payments-admin" id="driverPaymentsAdmin">
+<div class="panel-heading"><div><p class="eyebrow">ZUNE DELIVERY · DRIVER PAYOUTS</p><h3>Malipo ya Madereva</h3><p class="muted">Weka mapato ya dereva kwa delivery iliyothibitishwa, rekodi makato na fuatilia malipo.</p></div><button class="secondary-btn" id="refreshDriverPayments" type="button">↻ Refresh</button></div>
+<div class="metrics-grid compact-metrics"><article class="metric-card"><span>Jumla ya mapato yaliyotengwa</span><strong id="zdpEarned">TSh —</strong></article><article class="metric-card"><span>Yamelipwa (net)</span><strong id="zdpPaid">TSh —</strong></article><article class="metric-card"><span>Yanasubiri</span><strong id="zdpPending">TSh —</strong></article><article class="metric-card"><span>Madereva wenye delivery</span><strong id="zdpDrivers">—</strong></article></div>
+<div id="zdpNotice" class="notice-box" hidden></div><p class="zdp-muted" id="zdpUpdated">Data itasasishwa baada ya kufungua sehemu hii.</p>
+<div class="table-wrap"><table><thead><tr><th>Delivery</th><th>Dereva</th><th>Ada ya delivery</th><th>Mapato ya dereva</th><th>Net payout</th><th>Njia</th><th>Status</th><th>Transaction ID</th><th>Kitendo</th></tr></thead><tbody id="zdpDeliveryRows"><tr><td colspan="9" class="empty-state">Inasubiri taarifa...</td></tr></tbody></table></div>
+<h3 style="margin:22px 0 10px">Historia ya malipo ya madereva</h3><div class="table-wrap"><table><thead><tr><th>Delivery</th><th>Dereva</th><th>Kiasi</th><th>Makato</th><th>Net</th><th>Njia</th><th>Status</th><th>Transaction ID</th><th>Tarehe</th></tr></thead><tbody id="zdpHistoryRows"><tr><td colspan="9" class="empty-state">Inasubiri taarifa...</td></tr></tbody></table></div>
+<p class="zdp-muted">Kuweka status ya “Imelipwa” ni uthibitisho wa Admin kuwa fedha zimetumwa tayari. Mfumo huu hauanzi kutuma pesa moja kwa moja; malipo ya simu yanahitaji API ya mtoa huduma.</p>
+</section>
+<div class="zdp-modal" id="zdpModal" hidden><div class="zdp-card" role="dialog" aria-modal="true" aria-labelledby="zdpModalTitle"><div class="panel-heading"><div><h3 id="zdpModalTitle">Rekodi malipo ya dereva</h3><p id="zdpModalDelivery"></p></div><button class="secondary-btn" id="zdpClose" type="button">✕</button></div>
+<form id="zdpForm"><div class="zdp-grid">
+<div class="zdp-field"><label for="zdpAmount">Kiasi cha dereva (TZS)</label><input id="zdpAmount" type="number" min="1" step="0.01" required></div>
+<div class="zdp-field"><label for="zdpDeduction">Makato (TZS)</label><input id="zdpDeduction" type="number" min="0" step="0.01" value="0" required></div>
+<div class="zdp-field"><label for="zdpMethod">Njia ya malipo</label><select id="zdpMethod" required><option value="manual">Manual / Cash</option><option value="mpesa">M-Pesa</option><option value="airtel_money">Airtel Money</option><option value="mixx_by_yas">Mixx by Yas</option><option value="halopesa">HaloPesa</option><option value="bank">Benki</option><option value="cash">Cash</option></select></div>
+<div class="zdp-field"><label for="zdpPhone">Namba ya malipo</label><input id="zdpPhone" type="tel" maxlength="30" placeholder="07..."></div>
+<div class="zdp-field"><label for="zdpReference">Transaction ID / Reference</label><input id="zdpReference" maxlength="120" placeholder="Namba ya muamala"></div>
+<div class="zdp-field"><label for="zdpStatus">Hali ya malipo</label><select id="zdpStatus" required><option value="pending">Inasubiri</option><option value="processing">Inachakatwa</option><option value="paid">Imelipwa</option><option value="rejected">Imekataliwa</option></select></div>
+<div class="zdp-field full" id="zdpPaidConfirmWrap" hidden><label class="zdp-check"><input id="zdpPaidConfirm" type="checkbox"> Nimehakikisha fedha zimetumwa kwa dereva nje ya mfumo; si kuweka tu status.</label></div>
+<div class="zdp-field full"><label for="zdpReason">Sababu / Maelezo ya Admin (lazima)</label><textarea id="zdpReason" minlength="5" maxlength="500" required placeholder="Eleza sababu ya kuweka au kusahihisha rekodi hii..."></textarea></div>
+</div><div class="zdp-actions"><button class="secondary-btn" id="zdpCancel" type="button">Ghairi</button><button class="primary-btn" id="zdpSave" type="submit">Hifadhi malipo</button></div></form></div></div>
+<div class="notice-box">Taarifa za order payments na seller allocations zinaendelea kusomwa kama zilivyo. Driver payouts zina mfumo tofauti wenye uthibitisho wa Admin na audit trail.</div></section>
 
       <section class="page-section" id="walletPage" data-section="wallet"><div class="section-intro"><div><h2>Wallet & Transactions</h2><p>Salio, miamala, withdrawals na ledger.</p></div></div><div class="metrics-grid compact-metrics"><article class="metric-card"><span>Wallet balances</span><strong id="walletTotalBalance">TZS —</strong></article><article class="metric-card"><span>Withdrawals pending</span><strong id="pendingWithdrawals">—</strong></article><article class="metric-card"><span>Transactions</span><strong id="walletTransactionCount">—</strong></article></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Mtumiaji</th><th>Aina</th><th>Kiasi</th><th>Status</th><th>Tarehe</th></tr></thead><tbody id="walletTransactionsBody"><tr><td colspan="6" class="empty-state">Inasubiri wallet transactions...</td></tr></tbody></table></div></div></section>
 
@@ -501,7 +520,7 @@
 <script src="js/orders.js"></script>
 <script src="js/wallet.js"></script>
 <script src="js/transactions.js"></script>
-<script src="js/zune-payment-center.js?v=1"></script>
+<script src="js/zune-payment-center.js?v=1"></script>\n<script src="js/driver-payments-admin.js?v=1"></script>
 <script src="js/disputes.js"></script>
 <script src="js/delivery-pricing.js"></script>
 <script src="js/delivery-operations.js?v=6"></script>
