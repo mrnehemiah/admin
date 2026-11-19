@@ -24,8 +24,8 @@ export async function render(el){
       <article class="metric-card"><span>Jumla ya debits</span><strong>${money(wallet?.total_debits)}</strong></article>
     </div>
     <div class="card"><h3 class="card-title">Payment network readiness</h3>
-      ${networks.length?`<div class="table-wrap"><table><thead><tr><th>Mtandao</th><th>Umewezeshwa</th><th>Namba ya biashara</th><th>Merchant/API</th><th>Collection</th><th>Disbursement</th></tr></thead><tbody>
-      ${networks.map(n=>'<tr><td>'+escapeHtml(n.display_name||n.code)+'</td><td>'+((n.is_enabled===true)?'Enabled':'Disabled')+'</td><td>'+escapeHtml(n.number_status||'—')+'</td><td>'+escapeHtml(n.merchant_status||'—')+'</td><td>'+((n.collection_enabled===true)?'Ready':'Not ready')+'</td><td>'+((n.disbursement_enabled===true)?'Ready':'Not ready')+'</td></tr>').join('')}
+      ${networks.length?`<div class="table-wrap"><table><thead><tr><th>Mtandao</th><th>Umewezeshwa</th><th>Namba ya biashara</th><th>Merchant/API</th></tr></thead><tbody>
+      ${networks.map(n=>'<tr><td>'+escapeHtml(n.display_name||n.code)+'</td><td>'+((n.is_enabled===true)?'Enabled':'Disabled')+'</td><td>'+(n.pay_to_number?'Imewekwa':'Haijawekwa')+'</td><td>'+escapeHtml(n.merchant_status||'—')+'</td></tr>').join('')}
       </tbody></table></div>`:'<div class="notice warn">Hakuna payment provider iliyosanidiwa bado. Weka namba rasmi za biashara na merchant API credentials kabla ya kuwezesha malipo ya simu.</div>'}
     </div>
     <div class="notice warn">Dashboard hii inaonyesha salio kutoka financial ledger. Mfumo haupaswi kuweka malipo kuwa “Imelipwa” mpaka uthibitisho wa muamala au transaction reference uwepo. Usitumie service-role key kwenye browser.</div>
