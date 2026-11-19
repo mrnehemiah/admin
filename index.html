@@ -280,9 +280,42 @@
   <div class="panel"><h3>Historia ya delivery</h3><div id="deliveryOpsEvents" class="notice-box">Chagua delivery baada ya data kupakia ili kuona historia.</div></div>
 </section>
 
-      <section class="page-section" id="couponsPage" data-section="coupons"><div class="section-intro"><div><h2>Coupons & Promotions</h2><p>Simamia coupons za Marketplace na idhinisha promotions za Seller kabla hazijaonekana kwa wateja.</p></div></div><div class="panel"><h3>Coupons za Marketplace</h3><p class="muted">Coupons zilizopo kwenye mfumo.</p><div class="table-wrap"><table><thead><tr><th>Code</th><th>Punguzo</th><th>Muda</th><th>Matumizi</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="couponsTableBody"><tr><td colspan="6" class="empty-state">Inasubiri coupons...</td></tr></tbody></table></div></div><div class="panel" style="margin-top:18px"><div class="section-intro"><div><h3>Maombi ya Promotions za Seller</h3><p>Idhinisha, kataa au omba marekebisho. Promotion iliyo pending haionekani Marketplace.</p></div><button class="secondary-btn" id="refreshSellerPromotions" type="button">Refresh</button></div><div class="table-wrap"><table><thead><tr><th>Duka</th><th>Promotion</th><th>Punguzo</th><th>Muda</th><th>Hali</th><th>Uamuzi</th></tr></thead><tbody id="sellerPromotionsBody"><tr><td colspan="6" class="empty-state">Inasubiri maombi...</td></tr></tbody></table></div></div></section>
+      <section class="page-section" id="couponsPage" data-section="coupons">
+ <div class="section-intro"><div><h2>Coupons & Promotions</h2><p>Tengeneza coupon zinazofadhiliwa na commission ya ZUNE, chagua maduka au bidhaa, na simamia maombi ya promotions za Seller.</p></div><button class="secondary-btn" id="refreshSellerPromotions" type="button">Refresh</button></div>
+ <div class="metrics-grid">
+  <article class="metric-card"><div class="metric-top"><span>Salio la ZUNE Marketing Wallet</span><b class="metric-icon">◈</b></div><strong id="marketingWalletBalance">TZS —</strong><small>Commission iliyopo kwa ufadhili wa coupon</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Commission iliyokusanywa</span><b class="metric-icon">％</b></div><strong id="marketingCommissionTotal">TZS —</strong><small>Jumla ya commission iliyoingia</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Coupon zilizofadhiliwa</span><b class="metric-icon">▣</b></div><strong id="marketingCouponSpent">TZS —</strong><small>Punguzo lililotumika baada ya kurejesha zilizofutwa</small></article>
+  <article class="metric-card"><div class="metric-top"><span>Campaign hai</span><b class="metric-icon">✓</b></div><strong id="marketingActiveCampaigns">—</strong><small>Coupon za ZUNE zilizo active</small></article>
+ </div>
+ <div class="panel" style="margin-bottom:18px">
+  <div class="panel-heading"><div><p class="eyebrow">ZUNE SPONSORED COUPONS</p><h3>Tengeneza coupon mpya</h3><p class="muted">Punguzo litalipwa na ZUNE Marketing Wallet; mapato ya bidhaa ya Seller hayapunguzwi na coupon hii.</p></div></div>
+  <form id="zuneCouponForm">
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px">
+    <label class="field"><span>Coupon code</span><input id="zuneCouponCode" required maxlength="40" pattern="[A-Za-z0-9_-]{3,40}" placeholder="ZUNEWEEKEND"></label>
+    <label class="field"><span>Aina ya punguzo</span><select id="zuneCouponType"><option value="percentage">Asilimia (%)</option><option value="fixed">Kiasi maalumu (TSh)</option></select></label>
+    <label class="field"><span>Kiasi cha punguzo</span><input id="zuneCouponValue" type="number" min="1" step="0.01" required></label>
+    <label class="field"><span>Manunuzi ya chini (TSh)</span><input id="zuneCouponMinimum" type="number" min="0" step="0.01" value="0"></label>
+    <label class="field"><span>Punguzo la juu (hiari, TSh)</span><input id="zuneCouponMaximum" type="number" min="1" step="0.01"></label>
+    <label class="field"><span>Bajeti ya campaign (TSh)</span><input id="zuneCouponBudget" type="number" min="1" step="0.01" required></label>
+    <label class="field"><span>Matumizi yote (hiari)</span><input id="zuneCouponUsageLimit" type="number" min="1" step="1" placeholder="Bila kikomo"></label>
+    <label class="field"><span>Matumizi kwa mteja (hiari)</span><input id="zuneCouponBuyerLimit" type="number" min="1" step="1" placeholder="Bila kikomo"></label>
+    <label class="field"><span>Itatumika kuanzia</span><input id="zuneCouponStarts" type="datetime-local" required></label>
+    <label class="field"><span>Inaisha (hiari)</span><input id="zuneCouponExpires" type="datetime-local"></label>
+   </div>
+   <label class="field" style="display:block;margin-top:14px"><span>Maelezo ya coupon (hiari)</span><input id="zuneCouponDescription" maxlength="250" placeholder="Maelezo yatakayoonekana kwa wateja"></label>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px">
+    <label class="field"><span>Chagua maduka (acha wazi kutumia maduka yote)</span><select id="zuneCouponStores" multiple size="5" style="min-height:120px"></select><small class="muted">Unaweza kuchagua duka moja au maduka mengi.</small></label>
+    <label class="field"><span>Chagua bidhaa (hiari)</span><select id="zuneCouponProducts" multiple size="5" style="min-height:120px"></select><small class="muted">Ukichagua bidhaa, coupon itahusu bidhaa hizo tu ndani ya maduka yaliyowekwa.</small></label>
+   </div>
+   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px"><button class="primary-btn" id="createZuneCouponBtn" type="submit">Tengeneza ZUNE coupon</button><span id="zuneCouponFormMessage" class="muted" role="status">Fedha za coupon hutolewa kwenye commission iliyokusanywa na ZUNE.</span></div>
+  </form>
+ </div>
+ <div class="panel"><div class="panel-heading"><div><h3>Coupon za ZUNE na legacy</h3><p class="muted">Angalia bajeti, matumizi, walengwa na hali ya kila coupon.</p></div></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>Punguzo</th><th>Walengwa</th><th>Bajeti</th><th>Imetumika</th><th>Muda</th><th>Matumizi</th><th>Hali</th></tr></thead><tbody id="couponsTableBody"><tr><td colspan="8" class="empty-state">Inasubiri coupons...</td></tr></tbody></table></div></div>
+ <div class="panel" style="margin-top:18px"><div class="section-intro"><div><h3>Maombi ya Promotions za Seller</h3><p>Idhinisha, kataa au omba marekebisho. Promotion ya Seller inabaki tofauti na coupon zinazofadhiliwa na ZUNE.</p></div></div><div class="table-wrap"><table><thead><tr><th>Duka</th><th>Promotion</th><th>Punguzo</th><th>Muda</th><th>Hali</th><th>Uamuzi</th></tr></thead><tbody id="sellerPromotionsBody"><tr><td colspan="6" class="empty-state">Inasubiri maombi...</td></tr></tbody></table></div></div>
+</section>
 
-      <section class="page-section" id="announcementsPage" data-section="announcements"><div class="section-intro"><div><h2>Matangazo</h2><p>Tuma taarifa rasmi kwa watumiaji na wauzaji.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Kichwa</th><th>Walengwa</th><th>Tarehe</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="announcementsTableBody"><tr><td colspan="5" class="empty-state">Inasubiri matangazo...</td></tr></tbody></table></div></div></section>
+<section class="page-section" id="announcementsPage" data-section="announcements"><div class="section-intro"><div><h2>Matangazo</h2><p>Tuma taarifa rasmi kwa watumiaji na wauzaji.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Kichwa</th><th>Walengwa</th><th>Tarehe</th><th>Hali</th><th>Kitendo</th></tr></thead><tbody id="announcementsTableBody"><tr><td colspan="5" class="empty-state">Inasubiri matangazo...</td></tr></tbody></table></div></div></section>
 
       <section class="page-section" id="adsPage" data-section="ads">
         <div class="section-intro"><div><h2>Ads Management</h2><p>Usimamizi wa Sponsored Stores, Sponsored Products na kampeni za matangazo ya kulipia.</p></div><span class="badge-pill success" data-ads-connected>Backend imeunganishwa</span></div>
