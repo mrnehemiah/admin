@@ -37,7 +37,11 @@
       const pending=campaigns.filter(x=>x.status==='pending_review').length;
       const active=campaigns.filter(x=>x.status==='approved' && (!x.ends_at || new Date(x.ends_at)>new Date())).length;
       metric('campaigns',String(campaigns.length)); metric('pending',String(pending)); metric('active',String(active));
-      metric('revenue',money(transactions.filter(x=>x.transaction_type==='campaign_charge' && x.status==='completed').reduce((n,x)=>n+Number(x.amount_tzs||0),0)));
+      const fixedIds=new Set(campaigns.filter(x=>x.billing_mode==='campaign' || x.pricing_model==='fixed').map(x=>x.id));
+      const fixedRevenue=transactions.filter(x=>x.transaction_type==='campaign_charge' && x.status==='completed' && fixedIds.has(x.campaign_id)).reduce((n,x)=>n+Number(x.amount_tzs||0),0);
+      const usageRevenue=events.filter(x=>x.is_billable).reduce((n,x)=>n+Number(x.cost_tzs||0),0);
+      metric('revenue',money(fixedRevenue+usageRevenue));
+      metric('commission',money(transactions.filter(x=>x.transaction_type==='commission_charge' && x.status==='completed').reduce((n,x)=>n+Number(x.amount_tzs||0),0)));
       const campaignRows=campaigns.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
       body('adsCampaignRows',campaignRows,[
         x=>'<strong>'+esc(x.title)+'</strong><small>'+esc(x.id.slice(0,8))+'</small>',
