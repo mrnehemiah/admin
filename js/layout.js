@@ -60,6 +60,19 @@
     ['adminDisplayName','topAdminName','welcomeAdminName'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name;});
     const year=$('#footerYear'); if(year)year.textContent=new Date().getFullYear();
     const dateEl=$('#currentDate'); if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('sw-TZ',{dateStyle:'full'}).format(new Date());
+    // Admin shortcut to the Marketplace App Icon Gallery.
+    const sideNav = $('.side-nav');
+    if (sideNav && !sideNav.querySelector('[data-zune-icon-gallery]')) {
+      const galleryLink = document.createElement('a');
+      galleryLink.className = 'nav-link';
+      galleryLink.href = 'https://mrnehemiah.github.io/icon-gallery.html';
+      galleryLink.target = '_blank';
+      galleryLink.rel = 'noopener noreferrer';
+      galleryLink.dataset.zuneIconGallery = 'true';
+      galleryLink.innerHTML = '<span class="nav-icon" aria-hidden="true">▣</span> App Icon Gallery <span class="nav-external" aria-hidden="true">↗</span>';
+      galleryLink.setAttribute('aria-label', 'Fungua App Icon Gallery kwenye Marketplace');
+      sideNav.appendChild(galleryLink);
+    }
     $('#adminLogoutBtn')?.addEventListener('click',()=>window.ZUNE_SECURITY?.signOut());
     $('#exportAuditBtn')?.addEventListener('click',()=>exportTable('adminAuditLogsBody','zune-admin-audit'));
     $('#exportReportsBtn')?.addEventListener('click',()=>exportTable('ordersTableBody','zune-orders-report'));
