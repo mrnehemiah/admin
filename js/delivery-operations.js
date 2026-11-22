@@ -69,8 +69,8 @@ async function loadDriverDirectory(){
  directoryRows=data||[];
  const {data:docRows,error:docError}=await db.from('delivery_driver_documents').select('user_id,document_type,status,expiry_date');
  if(docError)console.warn('Driver document summary:',docError.message);
- const docMap=new Map();(docRows||[]).forEach(x=>{const v=docMap.get(x.user_id)||{approved:new Set(),total:0};v.total++;if(x.status==='approved'&&requiredDocs.includes(x.document_type)&&(!['driving_license','vehicle_insurance'].includes(x.document_type)||(x.expiry_date&&x.expiry_date>=new Date().toISOString().slice(0,10))))v.approved.add(x.document_type);docMap.set(x.user_id,v);});
- directoryRows=directoryRows.map(d=>({...d,docsApproved:docMap.get(d.user_id)?.approved.size||0,docsTotal:docMap.get(d.user_id)?.total||0}));
+ const today=new Date().toISOString().slice(0,10),docMap=new Map();(docRows||[]).forEach(x=>{const v=docMap.get(x.user_id)||{approved:new Set(),total:0};v.total++;const expiryValid=['driving_license','vehicle_insurance'].includes(x.document_type)?!!x.expiry_date&&x.expiry_date>=today:(!x.expiry_date||x.expiry_date>=today);if(x.status==='approved'&&requiredDocs.includes(x.document_type)&&expiryValid)v.approved.add(x.document_type);docMap.set(x.user_id,v);});
+ directoryRows=directoryRows.map(d=>{const docsRequired=requiredDocs.filter(t=>!(t==='driving_license'&&d.vehicle_type==='bicycle')).length;return {...d,docsApproved:requiredDocs.filter(t=>!(t==='driving_license'&&d.vehicle_type==='bicycle')&&docMap.get(d.user_id)?.approved.has(t)).length,docsRequired,docsTotal:docMap.get(d.user_id)?.total||0};});
  $('#driverCountAll').textContent=directoryRows.length;$('#driverCountActive').textContent=directoryRows.filter(x=>x.status==='active').length;$('#driverCountPending').textContent=directoryRows.filter(x=>x.status==='pending').length;$('#driverCountSuspended').textContent=directoryRows.filter(x=>x.status==='suspended').length;
  renderDriverDirectory();
 }
@@ -81,7 +81,7 @@ function renderDriverDirectory(){
  body.innerHTML=list.length?list.map(d=>{
   const status=d.status==='active'?'success':d.status==='suspended'||d.status==='rejected'?'danger':'warning';
   const action=d.status==='active'?'<button class="danger-btn" data-driver-status="suspended" data-driver-id="'+esc(d.user_id)+'">Simamisha</button>':d.status==='suspended'?'<button class="primary-btn" data-driver-status="active" data-driver-id="'+esc(d.user_id)+'">Rejesha</button>':'—';
-  const compliance=d.docsApproved===5?'<span class="badge-pill success">5/5 zimeidhinishwa</span>':'<span class="badge-pill warning">'+d.docsApproved+'/5 zimeidhinishwa</span>';
+  const compliance=d.docsApproved===d.docsRequired?'<span class="badge-pill success">'+d.docsApproved+'/'+d.docsRequired+' zimeidhinishwa</span>':'<span class="badge-pill warning">'+d.docsApproved+'/'+d.docsRequired+' zimeidhinishwa</span>';
   return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc(d.user_id)+'</small></td><td>'+esc(d.phone_number)+'<br><small>'+esc(d.email||'')+'</small></td><td>'+esc(d.vehicle_type)+'<br><small>'+esc(d.vehicle_registration||'—')+'</small></td><td>'+compliance+'</td><td><span class="badge-pill '+status+'">'+esc(d.status)+'</span></td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleDateString('sw-TZ'):'—')+'</td><td><div class="action-row">'+action+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7" class="empty-state">Hakuna dereva anayelingana na utafutaji.</td></tr>';
 }
