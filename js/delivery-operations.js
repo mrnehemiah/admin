@@ -115,7 +115,7 @@ async function loadVehicleChangeRequests(){
 async function reviewVehicleChangeRequest(id,decision,button){
  const reason=window.prompt(decision==='approved'?'Sababu ya kuidhinisha mabadiliko ya chombo:':'Sababu ya kukataa ombi la mabadiliko:');
  if(!reason||reason.trim().length<5){window.alert('Sababu lazima iwe na angalau herufi 5.');return;}
- if(!window.confirm(decision==='approved'?'Unaidhinisha taarifa mpya za chombo? Zitaanza kutumika baada ya uamuzi huu.':'Unathibitisha kukataa ombi hili? Taarifa za sasa zitaendelea kutumika.'))return;
+ if(!window.confirm(decision==='approved'?'Umeshakagua nyaraka husika? Unaidhinisha taarifa mpya za chombo? Zitaanza kutumika baada ya uamuzi huu.':'Unathibitisha kukataa ombi hili? Taarifa za sasa zitaendelea kutumika.'))return;
  button.disabled=true;
  const {data,error}=await window.ZUNE_CORE.db().rpc('admin_review_delivery_vehicle_change_request',{p_request_id:id,p_decision:decision,p_reason:reason.trim()});
  button.disabled=false;if(error){window.alert(error.message);return;}if(!data?.ok){window.alert('Uamuzi haukukamilika.');return;}
