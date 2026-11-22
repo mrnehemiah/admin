@@ -64,7 +64,7 @@ async function createDriverInvitation(event){
 async function loadDriverDirectory(){
  const db=window.ZUNE_CORE?.db?.(),body=$('#driverDirectoryBody');if(!db||!body)return;
  body.innerHTML='<tr><td colspan="7">Inapakia...</td></tr>';
- const {data,error}=await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,status,created_at').order('created_at',{ascending:false});
+ const {data,error}=await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,license_number,status,created_at').order('created_at',{ascending:false});
  if(error){body.innerHTML='<tr><td colspan="7">'+esc(error.message)+'</td></tr>';return;}
  directoryRows=data||[];
  const {data:docRows,error:docError}=await db.from('delivery_driver_documents').select('user_id,document_type,status,expiry_date');
@@ -82,7 +82,7 @@ function renderDriverDirectory(){
   const status=d.status==='active'?'success':d.status==='suspended'||d.status==='rejected'?'danger':'warning';
   const action=d.status==='active'?'<button class="danger-btn" data-driver-status="suspended" data-driver-id="'+esc(d.user_id)+'">Simamisha</button>':d.status==='suspended'?'<button class="primary-btn" data-driver-status="active" data-driver-id="'+esc(d.user_id)+'">Rejesha</button>':'—';
   const compliance=d.docsApproved===d.docsRequired?'<span class="badge-pill success">'+d.docsApproved+'/'+d.docsRequired+' zimeidhinishwa</span>':'<span class="badge-pill warning">'+d.docsApproved+'/'+d.docsRequired+' zimeidhinishwa</span>';
-  return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc(d.user_id)+'</small></td><td>'+esc(d.phone_number)+'<br><small>'+esc(d.email||'')+'</small></td><td>'+esc(d.vehicle_type)+'<br><small>'+esc(d.vehicle_registration||'—')+'</small></td><td>'+compliance+'</td><td><span class="badge-pill '+status+'">'+esc(d.status)+'</span></td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleDateString('sw-TZ'):'—')+'</td><td><div class="action-row">'+action+'</div></td></tr>';
+  return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc(d.user_id)+'</small></td><td>'+esc(d.phone_number)+'<br><small>'+esc(d.email||'')+'</small></td><td>'+esc(d.vehicle_type)+'<br><small>'+esc(d.vehicle_registration||'Usajili: haujawekwa')+'</small>'+(d.vehicle_type!=='bicycle'&&(!d.vehicle_registration||!d.license_number)?'<small class="text-warning">Taarifa za chombo hazijakamilika</small>':'')+'</td><td>'+compliance+'</td><td><span class="badge-pill '+status+'">'+esc(d.status)+'</span></td><td>'+esc(d.created_at?new Date(d.created_at).toLocaleDateString('sw-TZ'):'—')+'</td><td><div class="action-row">'+action+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7" class="empty-state">Hakuna dereva anayelingana na utafutaji.</td></tr>';
 }
 async function setDriverStatus(id,status,button){
