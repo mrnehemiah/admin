@@ -230,3 +230,17 @@ create index if not exists order_deliveries_driver_created_idx
  on public.order_deliveries(assigned_driver_id,created_at desc);
 create index if not exists zune_delivery_events_delivery_created_idx
  on public.zune_delivery_events(delivery_id,created_at);
+
+-- 7) Permit drivers to replace their own expired approved documents, but never valid approvals.
+drop policy if exists "drivers replace own pending driver documents" on public.delivery_driver_documents;
+create policy "drivers replace own pending driver documents"
+on public.delivery_driver_documents for update to authenticated
+using (
+ user_id=(select auth.uid())
+ and (status in ('pending','rejected') or (status='approved' and (expiry_date<current_date or (document_type in ('driving_license','vehicle_insurance') and expiry_date is null))))
+ and exists(select 1 from public.delivery_driver_profiles d where d.user_id=auth.uid() and d.status in ('pending','active'))
+)
+with check (
+ user_id=(select auth.uid()) and status='pending' and reviewed_by is null and reviewed_at is null
+ and exists(select 1 from public.delivery_driver_profiles d where d.user_id=auth.uid() and d.status in ('pending','active'))
+);
