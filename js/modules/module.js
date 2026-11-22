@@ -173,29 +173,15 @@
         const rows = Array.isArray(data) ? data : [];
         const search = String(byId('searchBox')?.value || '').trim().toLowerCase();
         const status = String(byId('statusFilter')?.value || '').trim().toLowerCase();
+        window.__zuneModuleRows = rows;
         const filtered = renderRows(rows, meta, search, status);
         if (byId('exportBtn')) {
           byId('exportBtn').onclick = () => csvDownload(filtered, meta.fields, meta.slug || title);
         }
+        return rows;
       };
 
       const refreshButton = byId('refreshBtn');
-      if (refreshButton) refreshButton.addEventListener('click', () => {
-        refresh().catch(error => {
-          setMode('DATA ERROR', 'error');
-          showMessage('Imeshindikana kusoma ' + meta.table + ': ' + (error.message || 'Unknown error'), 'error');
-        });
-      });
-      ['searchBox', 'statusFilter'].forEach(id => {
-        const control = byId(id);
-        if (control) control.addEventListener('input', () => {
-          const search = String(byId('searchBox')?.value || '').trim().toLowerCase();
-          const status = String(byId('statusFilter')?.value || '').trim().toLowerCase();
-          const filtered = renderRows(window.__zuneModuleRows || [], meta, search, status);
-          if (byId('exportBtn')) byId('exportBtn').onclick = () => csvDownload(filtered, meta.fields, meta.slug || title);
-        });
-      });
-      const originalRender = renderRows;
       const firstLoad = await (async () => {
         const orderField = meta.fields.includes('updated_at') ? 'updated_at' : meta.fields.includes('created_at') ? 'created_at' : null;
         let request = client.from(meta.table).select(meta.fields.join(',')).limit(250);
