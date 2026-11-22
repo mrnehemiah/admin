@@ -39,10 +39,11 @@ language plpgsql security definer set search_path = ''
 as $$
 begin
  if auth.uid() is null then raise exception 'Tafadhali ingia kwanza.'; end if;
- if not exists(select 1 from public.delivery_driver_profiles p where p.user_id=auth.uid() and p.status='active')
-    or not public.zune_delivery_driver_has_required_documents(auth.uid()) then
-  raise exception 'Akaunti ya dereva haijaidhinishwa au nyaraka za lazima hazijaidhinishwa/zimemaliza muda.';
+ if not exists(select 1 from public.delivery_driver_profiles p where p.user_id=auth.uid() and p.status='active') then
+  raise exception 'Akaunti ya dereva haijaidhinishwa au imesimamishwa.';
  end if;
+ -- Existing assignments remain visible so a driver can finish work already handed over.
+ -- New assignments are blocked separately by zune_delivery_driver_has_required_documents().
  return query
  select d.id,d.checkout_id,d.delivery_fee,d.currency,d.status,c.recipient_name,c.recipient_phone,
  c.delivery_address,c.region,c.district,c.latitude,c.longitude,d.seller_handover_confirmed_at,
