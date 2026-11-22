@@ -6,15 +6,16 @@ const esc=v=>ui().esc(v??'—');
 const statusLabel=s=>({pending:'Inasubiri',confirmed:'Imethibitishwa',completed:'Imekamilika',cancelled:'Imeghairiwa'})[String(s||'').toLowerCase()]||String(s||'—');
 const paymentLabel=s=>({pending:'Inasubiri malipo',paid:'Imelipwa',completed:'Imelipwa',failed:'Malipo yameshindwa',refunded:'Imerejeshwa',cancelled:'Imeghairiwa'})[String(s||'').toLowerCase()]||String(s||'Haijathibitishwa');
 const shortId=id=>String(id||'').replace(/-/g,'').slice(0,8).toUpperCase();
+const orderRef=x=>String(x?.order_number||shortId(x?.id));
 const money=v=>'TZS '+Number(v||0).toLocaleString('en-TZ');
 function render(){
  const q=(document.getElementById('ordersSearch')?.value||'').trim().toLowerCase();
  const status=(document.getElementById('orderStatusFilter')?.value||'').toLowerCase();
  const rows=allOrders.filter(x=>(!status||String(x.status||'').toLowerCase()===status)&&(!q||[
-  shortId(x.id),x.id,x.buyer_name,x.buyer_phone,x.buyer_email,x.store_name,x.product_summary,x.recipient_name,x.recipient_phone,x.total_price,x.discount_total,x.status,x.payment_status,x.payment_method,x.delivery_address,x.delivery_region,x.delivery_district
+  orderRef(x),x.id,x.buyer_name,x.buyer_phone,x.buyer_email,x.store_name,x.product_summary,x.recipient_name,x.recipient_phone,x.total_price,x.discount_total,x.status,x.payment_status,x.payment_method,x.delivery_address,x.delivery_region,x.delivery_district
  ].some(v=>String(v??'').toLowerCase().includes(q))));
  c().setRows('ordersTableBody',rows,[
-  {html:x=>'<strong>#'+esc(shortId(x.id))+'</strong><small>'+esc(x.product_summary||'Bidhaa haijaorodheshwa')+'</small><small>Oda kamili: '+esc(x.id)+'</small>'},
+  {html:x=>'<strong>#'+esc(orderRef(x))+'</strong><small>'+esc(x.product_summary||'Bidhaa haijaorodheshwa')+'</small><small>Oda kamili: '+esc(x.id)+'</small>'},
   {html:x=>'<strong>'+esc(x.recipient_name||x.buyer_name||'Mteja hajatajwa')+'</strong><small>'+esc(x.recipient_phone||x.buyer_phone||'Simu haipo')+'</small><small>'+esc(x.buyer_email||'')+'</small>'},
   {html:x=>'<strong>'+esc(x.store_name||'Duka halijatambuliwa')+'</strong><small>'+esc(x.seller_name||'')+'</small>'},
   {html:x=>'<strong>'+money(x.store_order_total??x.total_price??0)+'</strong><small>Bidhaa: '+money(x.total_price||0)+'</small><small>Sehemu ya delivery: '+money(x.order_delivery_share||0)+'</small>'},
@@ -89,12 +90,12 @@ async function updateStatus(id){
  if(!window.confirm('Unathibitisha kubadilisha oda #'+shortId(id)+' kuwa '+statusLabel(next)+'?'))return;
  busy.add(id);render();
  try{
-  const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,buyer_id,product_id,checkout_id').maybeSingle();
+  const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,order_number,buyer_id,product_id,checkout_id').maybeSingle();
   if(error)throw error;if(!data)throw new Error('Oda haikupatikana au haikubadilishwa.');
   let vendorId=null;if(data.product_id){const p=await db().from('products').select('vendor_id').eq('id',data.product_id).maybeSingle();if(p.error)throw p.error;vendorId=p.data?.vendor_id||null;}
   await c().audit('order_status_'+next,'order',id,reason,{previous_status:order.status,new_status:next,checkout_id:data.checkout_id});
   const sw=next==='cancelled'?'Oda yako imeghairiwa':'Oda yako imethibitishwa',en=next==='cancelled'?'Your order was cancelled':'Your order was confirmed';
-  const note=await db().from('notifications').insert({user_id:data.buyer_id,type:'order_status_'+next,title_sw:sw,title_en:en,body_sw:'Oda #'+shortId(id)+' · '+statusLabel(next),body_en:'Order #'+shortId(id)+' · '+statusLabel(next),action_url:'./orders.html',is_read:false});
+  const note=await db().from('notifications').insert({user_id:data.buyer_id,type:'order_status_'+next,title_sw:sw,title_en:en,body_sw:'Oda #'+orderRef(order)+' · '+statusLabel(next),body_en:'Order #'+orderRef(order)+' · '+statusLabel(next),action_url:'./orders.html',is_read:false});
   if(note.error)console.warn('Order notification:',note.error.message);
   if(vendorId){const sellerNote=await db().from('notifications').insert({user_id:vendorId,type:'seller_order_status_'+next,title_sw:'Hali ya oda ya duka imesasishwa',title_en:'Your store order status was updated',body_sw:'Oda #'+shortId(id)+' · '+statusLabel(next),body_en:'Order #'+shortId(id)+' · '+statusLabel(next),action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller notification:',sellerNote.error.message);}
   ui().toast('Hali ya oda imebadilishwa.','success');await load();
