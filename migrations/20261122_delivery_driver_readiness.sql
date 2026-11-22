@@ -116,13 +116,12 @@ drop policy if exists driver_read_own_vehicle_change_requests on public.delivery
 create policy driver_read_own_vehicle_change_requests on public.delivery_driver_vehicle_change_requests
  for select to authenticated using(user_id=(select auth.uid()) or public.zune_is_admin());
 drop policy if exists driver_submit_own_vehicle_change_request on public.delivery_driver_vehicle_change_requests;
-create policy driver_submit_own_vehicle_change_request on public.delivery_driver_vehicle_change_requests
- for insert to authenticated with check(user_id=(select auth.uid()) and status='pending' and reviewed_by is null and reviewed_at is null);
-grant select,insert on public.delivery_driver_vehicle_change_requests to authenticated;
+revoke insert on public.delivery_driver_vehicle_change_requests from anon,authenticated;
+grant usage on schema private to authenticated;
 
-create or replace function public.zune_driver_submit_vehicle_change_request(
+create or replace function private.zune_driver_submit_vehicle_change_request(
  p_vehicle_type text,p_vehicle_registration text,p_license_number text,p_vehicle_ownership text,p_reason text
-) returns jsonb language plpgsql security invoker set search_path = ''
+) returns jsonb language plpgsql security definer set search_path = ''
 as $$
 declare v_profile public.delivery_driver_profiles%rowtype; v_id uuid;
 begin
@@ -144,6 +143,13 @@ begin
  return jsonb_build_object('ok',true,'request_id',v_id,'status','pending');
 end;
 $$;
+revoke all on function private.zune_driver_submit_vehicle_change_request(text,text,text,text,text) from public,anon,authenticated;
+grant execute on function private.zune_driver_submit_vehicle_change_request(text,text,text,text,text) to authenticated;
+
+create or replace function public.zune_driver_submit_vehicle_change_request(
+ p_vehicle_type text,p_vehicle_registration text,p_license_number text,p_vehicle_ownership text,p_reason text
+) returns jsonb language sql security invoker set search_path = ''
+as $$ select private.zune_driver_submit_vehicle_change_request($1,$2,$3,$4,$5); $$;
 revoke all on function public.zune_driver_submit_vehicle_change_request(text,text,text,text,text) from public,anon;
 grant execute on function public.zune_driver_submit_vehicle_change_request(text,text,text,text,text) to authenticated;
 
