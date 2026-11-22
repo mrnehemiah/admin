@@ -153,6 +153,10 @@
         await renderSystemHealth(client);
         return;
       }
+      if (meta.slug === 'analytics') {
+        await renderAnalytics(client);
+        return;
+      }
 
       setMode('LIVE SUPABASE', 'success');
       const refresh = async () => {
@@ -167,6 +171,7 @@
         }
         const orderField = meta.fields.includes('updated_at') ? 'updated_at' : meta.fields.includes('created_at') ? 'created_at' : null;
         let request = client.from(meta.table).select(meta.fields.join(',')).limit(250);
+        Object.entries(meta.filters || {}).forEach(([field, value]) => { request = request.eq(field, value); });
         if (orderField) request = request.order(orderField, { ascending: false, nullsFirst: false });
         const { data, error } = await request;
         if (error) throw error;
@@ -185,6 +190,7 @@
       const firstLoad = await (async () => {
         const orderField = meta.fields.includes('updated_at') ? 'updated_at' : meta.fields.includes('created_at') ? 'created_at' : null;
         let request = client.from(meta.table).select(meta.fields.join(',')).limit(250);
+        Object.entries(meta.filters || {}).forEach(([field, value]) => { request = request.eq(field, value); });
         if (orderField) request = request.order(orderField, { ascending: false, nullsFirst: false });
         const { data, error } = await request;
         if (error) throw error;
@@ -214,6 +220,61 @@
       setMode('DATA ERROR', 'error');
       showMessage('Imeshindikana kupakia ' + title + ': ' + (error && error.message ? error.message : 'Unknown error') + '. Hakuna demo data itakayoonyeshwa.', 'error');
     }
+  }
+
+  async function renderAnalytics(client) {
+    const definitions = [
+      { label: 'Registered users', table: 'profiles' },
+      { label: 'Products', table: 'products' },
+      { label: 'Orders', table: 'orders' },
+      { label: 'Delivery records', table: 'order_deliveries' }
+    ];
+    const results = await Promise.all(definitions.map(async item => {
+      const started = performance.now();
+      try {
+        const { count, error } = await client.from(item.table).select('id', { count: 'exact', head: true });
+        if (error) throw error;
+        return { ...item, count: Number(count || 0), ok: true, ms: Math.round(performance.now() - started), detail: 'Live count' };
+      } catch (error) {
+        return { ...item, count: null, ok: false, ms: Math.round(performance.now() - started), detail: error.message || 'Query failed' };
+      }
+    }));
+
+    const healthy = results.every(item => item.ok);
+    setMode(healthy ? 'LIVE ANALYTICS' : 'PARTIAL DATA', healthy ? 'success' : 'error');
+    setMetric('totalCount', results[0].count == null ? '—' : results[0].count);
+    setMetric('activeCount', results[1].count == null ? '—' : results[1].count);
+    setMetric('pendingCount', results[2].count == null ? '—' : results[2].count);
+    setMetric('updatedCount', results[3].count == null ? '—' : results[3].count);
+
+    const head = byId('tableHead');
+    const body = byId('tableBody');
+    if (head && body) {
+      head.replaceChildren();
+      ['Metric', 'Supabase source', 'Count', 'Status', 'Response'].forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        head.appendChild(th);
+      });
+      body.replaceChildren();
+      results.forEach(item => {
+        const row = document.createElement('tr');
+        [item.label, item.table, item.count == null ? '—' : item.count, item.ok ? 'LIVE' : 'UNAVAILABLE', item.ms + ' ms'].forEach(value => {
+          const cell = document.createElement('td');
+          cell.textContent = String(value);
+          row.appendChild(cell);
+        });
+        body.appendChild(row);
+      });
+    }
+    const count = byId('recordCount');
+    if (count) count.textContent = results.filter(item => !item.ok).length + ' data sources unavailable';
+    const add = byId('addBtn');
+    if (add) add.hidden = true;
+    const exportButton = byId('exportBtn');
+    if (exportButton) exportButton.onclick = () => csvDownload(results, ['label', 'table', 'count', 'ok', 'ms'], 'zune-live-analytics');
+    const refreshButton = byId('refreshBtn');
+    if (refreshButton) refreshButton.onclick = () => renderAnalytics(client);
   }
 
   async function renderSystemHealth(client) {
