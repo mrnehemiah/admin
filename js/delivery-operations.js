@@ -36,7 +36,7 @@ function renderDriverApplications(){
 async function reviewDriverApplication(id,decision,button){
  const reason=window.prompt(decision==='approved'?'Sababu ya kuidhinisha dereva:':'Sababu ya kukataa ombi:');
  if(!reason||reason.trim().length<5){window.alert('Sababu lazima iwe na angalau herufi 5.');return;}
- if(!window.confirm(decision==='approved'?'Unathibitisha kumuidhinisha dereva? Mfumo utakagua nyaraka 5 na role itakuwa Driver.':'Unathibitisha kukataa ombi hili?'))return;
+ if(!window.confirm(decision==='approved'?'Unathibitisha kumuidhinisha dereva? Mfumo utakagua nyaraka zote zinazotakiwa kulingana na aina ya chombo.':'Unathibitisha kukataa ombi hili?'))return;
  button.disabled=true;
  const db=window.ZUNE_CORE?.db?.();
  const {data,error}=await db.rpc('admin_review_delivery_driver_application',{p_application_id:id,p_decision:decision,p_reason:reason.trim()});
