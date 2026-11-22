@@ -66,7 +66,7 @@
 
     const filtered = rows.filter(row => {
       const matchesQuery = !query || fields.some(field => displayValue(row[field]).toLowerCase().includes(query));
-      const rowStatus = String(row.status || row.state || '').toLowerCase();
+      const rowStatus = String(row.status || row.state || row.account_status || row.moderation_status || '').toLowerCase();
       const matchesStatus = !status || rowStatus === status;
       return matchesQuery && matchesStatus;
     });
@@ -100,7 +100,7 @@
     }
 
     setMetric('totalCount', rows.length);
-    const active = rows.filter(row => ['active', 'approved', 'verified', 'delivered', 'resolved'].includes(String(row.status || row.state || '').toLowerCase()) || row.is_active === true).length;
+    const active = rows.filter(row => ['active', 'approved', 'verified', 'delivered', 'resolved'].includes(String(row.status || row.state || row.account_status || row.moderation_status || '').toLowerCase()) || row.is_active === true).length;
     const pending = rows.filter(row => ['pending', 'under_review', 'processing', 'open'].includes(String(row.status || row.state || '').toLowerCase())).length;
     setMetric('activeCount', active);
     setMetric('pendingCount', pending);
@@ -223,6 +223,7 @@
   }
 
   async function renderAnalytics(client) {
+    ['searchBox', 'statusFilter'].forEach(id => { const node = byId(id); if (node) node.hidden = true; });
     const definitions = [
       { label: 'Registered users', table: 'profiles' },
       { label: 'Products', table: 'products' },
@@ -278,6 +279,7 @@
   }
 
   async function renderSystemHealth(client) {
+    ['searchBox', 'statusFilter'].forEach(id => { const node = byId(id); if (node) node.hidden = true; });
     const checks = [];
     const run = async (label, callback) => {
       const started = performance.now();
