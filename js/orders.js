@@ -87,7 +87,7 @@ async function updateStatus(id){
  if(!['confirmed','cancelled'].includes(next)||next===order.status)return;
  const reason=window.prompt('Andika sababu ya kubadilisha hali ya oda (angalau herufi 5):')||'';
  if(reason.trim().length<5){ui().toast('Sababu lazima iwe na angalau herufi 5.','warning');return;}
- if(!window.confirm('Unathibitisha kubadilisha oda #'+shortId(id)+' kuwa '+statusLabel(next)+'?'))return;
+ if(!window.confirm('Unathibitisha kubadilisha oda #'+orderRef(order)+' kuwa '+statusLabel(next)+'?'))return;
  busy.add(id);render();
  try{
   const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,order_number,buyer_id,product_id,checkout_id').maybeSingle();
@@ -97,7 +97,7 @@ async function updateStatus(id){
   const sw=next==='cancelled'?'Oda yako imeghairiwa':'Oda yako imethibitishwa',en=next==='cancelled'?'Your order was cancelled':'Your order was confirmed';
   const note=await db().from('notifications').insert({user_id:data.buyer_id,type:'order_status_'+next,title_sw:sw,title_en:en,body_sw:'Oda #'+orderRef(order)+' · '+statusLabel(next),body_en:'Order #'+orderRef(order)+' · '+statusLabel(next),action_url:'./orders.html',is_read:false});
   if(note.error)console.warn('Order notification:',note.error.message);
-  if(vendorId){const sellerNote=await db().from('notifications').insert({user_id:vendorId,type:'seller_order_status_'+next,title_sw:'Hali ya oda ya duka imesasishwa',title_en:'Your store order status was updated',body_sw:'Oda #'+shortId(id)+' · '+statusLabel(next),body_en:'Order #'+shortId(id)+' · '+statusLabel(next),action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller notification:',sellerNote.error.message);}
+  if(vendorId){const sellerNote=await db().from('notifications').insert({user_id:vendorId,type:'seller_order_status_'+next,title_sw:'Hali ya oda ya duka imesasishwa',title_en:'Your store order status was updated',body_sw:'Oda #'+orderRef(order)+' · '+statusLabel(next),body_en:'Order #'+orderRef(order)+' · '+statusLabel(next),action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller notification:',sellerNote.error.message);}
   ui().toast('Hali ya oda imebadilishwa.','success');await load();
  }catch(e){console.error('Order status update:',e);ui().toast(e.message||'Imeshindikana kubadilisha oda.','error');}
  finally{busy.delete(id);render();}
