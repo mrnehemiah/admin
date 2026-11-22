@@ -25,21 +25,35 @@ async function load(){
  if(!window.zuneSupabase){['zpmTransactions','zpmAllocations','zpmEvents'].forEach((id,i)=>empty(id,[7,7,6][i],'Unganisha Supabase ili kuona taarifa halisi.'));return;}
  const btn=$('refreshZunePayments');if(btn){btn.disabled=true;btn.textContent='Inapakia...';}
  try{
-  const [orders,paymentRows,gatewayPayments,allocations,events]=await Promise.all([
+  const [orders,checkouts,paymentRows,gatewayPayments,allocations,events]=await Promise.all([
    read('orders','id,checkout_id,buyer_id,total_price,payment_method,payment_status,payment_reference,created_at'),
+   read('order_checkouts','id,buyer_id,grand_total,payment_method,status,created_at'),
    read('payments','id,order_id,buyer_id,amount,payment_method,transaction_reference,payment_status,created_at,updated_at'),
    read('zune_order_payment_transactions','id,checkout_id,buyer_id,provider_code,provider_reference,amount,currency,network_code,status,created_at,paid_at'),
    read('zune_seller_earnings_ledger','id,order_id,seller_id,gross_amount,commission_rate,commission_amount,net_amount,status,created_at'),
    read('zune_payment_provider_events','id,provider_code,provider_event_id,payment_reference,processing_status,received_at,error_message',100,'received_at')
   ]);
   const paymentByOrder=new Map(paymentRows.map(p=>[p.order_id,p]));
+  const checkoutById=new Map(checkouts.map(c=>[c.id,c]));
   const gatewayByCheckout=new Map();
   gatewayPayments.forEach(p=>{if(p.checkout_id&&!gatewayByCheckout.has(p.checkout_id))gatewayByCheckout.set(p.checkout_id,p);});
-  const rows=orders.map(o=>{
-   const p=paymentByOrder.get(o.id),g=gatewayByCheckout.get(o.checkout_id);
-   const status=stateOf(g?.status||p?.payment_status||o.payment_status);
-   const method=g?.provider_code||p?.payment_method||o.payment_method||'—';
-   return {orderId:o.id,buyerId:o.buyer_id,amount:g?.amount??p?.amount??o.total_price,provider:method,network:g?.network_code||'—',status,reference:g?.provider_reference||p?.transaction_reference||o.payment_reference||g?.id||p?.id||o.id,date:g?.paid_at||p?.updated_at||p?.created_at||o.created_at};
+  const grouped=new Map();
+  orders.forEach(o=>{
+   const key=o.checkout_id||o.id;
+   if(!grouped.has(key))grouped.set(key,{checkoutId:o.checkout_id,orders:[],createdAt:o.created_at});
+   grouped.get(key).orders.push(o);
+  });
+  const rows=Array.from(grouped.values()).map(group=>{
+   const c=group.checkoutId?checkoutById.get(group.checkoutId):null;
+   const related=group.orders.map(o=>paymentByOrder.get(o.id)).filter(Boolean);
+   const g=group.checkoutId?gatewayByCheckout.get(group.checkoutId):null;
+   const p=related.find(x=>['paid','succeeded','success','completed','confirmed'].includes(String(x.payment_status||'').toLowerCase()))||related[0];
+   const order=group.orders[0];
+   const status=stateOf(g?.status||p?.payment_status||order.payment_status);
+   const method=g?.provider_code||p?.payment_method||c?.payment_method||order.payment_method||'—';
+   const paidAmount=related.reduce((n,x)=>n+Number(x.amount||0),0);
+   const amount=g?.amount??(related.length?paidAmount:(c?.grand_total??group.orders.reduce((n,x)=>n+Number(x.total_price||0),0)));
+   return {orderId:group.checkoutId||order.id,orderCount:group.orders.length,buyerId:c?.buyer_id||order.buyer_id,amount,provider:method,network:g?.network_code||'—',status,reference:g?.provider_reference||p?.transaction_reference||order.payment_reference||g?.id||p?.id||group.checkoutId||order.id,date:g?.paid_at||p?.updated_at||p?.created_at||c?.created_at||group.createdAt};
   }).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
   const sum=(list,key)=>list.reduce((total,item)=>total+Number(item[key]||0),0);
   const paid=rows.filter(x=>x.status==='paid'),pending=rows.filter(x=>x.status==='pending'),failed=rows.filter(x=>x.status==='failed');
@@ -48,7 +62,7 @@ async function load(){
   $('zpmFailed').textContent=String(failed.length);
   $('zpmSellerNet').textContent=money(sum(allocations,'net_amount'));
   $('zpmCommission').textContent=money(sum(allocations,'commission_amount'));
-  $('zpmTransactions').innerHTML=rows.length?rows.map(x=>'<tr>'+cell(String(x.orderId).slice(0,8)+'… / '+String(x.reference).slice(0,16))+cell(String(x.buyerId||'').slice(0,8)+'…')+cell(money(x.amount))+cell(x.provider)+cell(x.network)+cell(statusLabel(x.status,x.provider))+cell(date(x.date))+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Bado hakuna oda zilizorekodiwa.</td></tr>';
+  $('zpmTransactions').innerHTML=rows.length?rows.map(x=>'<tr>'+cell(String(x.orderId).slice(0,8)+'…'+(x.orderCount>1?' ('+x.orderCount+' oda)':'')+' / '+String(x.reference).slice(0,16))+cell(String(x.buyerId||'').slice(0,8)+'…')+cell(money(x.amount))+cell(x.provider)+cell(x.network)+cell(statusLabel(x.status,x.provider))+cell(date(x.date))+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Bado hakuna oda zilizorekodiwa.</td></tr>';
   $('zpmAllocations').innerHTML=allocations.length?allocations.map(x=>'<tr>'+cell(String(x.order_id||'').slice(0,8)+'…')+cell(String(x.seller_id||'').slice(0,8)+'…')+cell(money(x.gross_amount))+cell((Number(x.commission_rate||0)*100).toFixed(2)+'%')+cell(money(x.commission_amount))+cell(money(x.net_amount))+cell(x.status)+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Bado hakuna seller earnings.</td></tr>';
   $('zpmEvents').innerHTML=events.length?events.map(x=>'<tr>'+cell(x.provider_code)+cell(x.provider_event_id)+cell(x.payment_reference)+cell(x.processing_status)+cell(date(x.received_at||x.created_at))+cell(x.error_message||'—')+'</tr>').join(''):'<tr><td colspan="6" class="empty-state">Bado hakuna gateway events.</td></tr>';
  }catch(e){console.error('ZUNE payment center',e);['zpmTransactions','zpmAllocations','zpmEvents'].forEach((id,i)=>empty(id,[7,7,6][i],'Imeshindikana kusoma taarifa: '+(e.message||'Unknown error')));}
