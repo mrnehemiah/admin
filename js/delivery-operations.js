@@ -96,6 +96,32 @@ async function setDriverStatus(id,status,button){
  if(!data?.ok){window.alert('Mabadiliko hayakuthibitishwa.');return;}
  await loadDriverDirectory();
 }
+async function loadVehicleChangeRequests(){
+ const body=$('#vehicleChangeRequestsBody'),client=window.ZUNE_CORE?.db?.();if(!body||!client)return;
+ body.innerHTML='<tr><td colspan="6">Inapakia maombi...</td></tr>';
+ const {data,error}=await client.from('delivery_driver_vehicle_change_requests').select('id,user_id,current_vehicle_type,current_vehicle_registration,current_license_number,current_vehicle_ownership,requested_vehicle_type,requested_vehicle_registration,requested_license_number,requested_vehicle_ownership,reason,status,submitted_at,review_note').order('submitted_at',{ascending:false}).limit(250);
+ if(error){body.innerHTML='<tr><td colspan="6">'+esc(error.message)+'</td></tr>';return;}
+ const requests=data||[],ids=[...new Set(requests.map(x=>x.user_id))];
+ const {data:drivers,error:driverError}=ids.length?await client.from('delivery_driver_profiles').select('user_id,full_name,phone_number').in('user_id',ids):{data:[],error:null};
+ if(driverError){body.innerHTML='<tr><td colspan="6">'+esc(driverError.message)+'</td></tr>';return;}
+ const byId=new Map((drivers||[]).map(x=>[x.user_id,x]));
+ const vehicle=(type,reg,license,ownership)=>[type,reg,license,ownership].filter(Boolean).join(' · ')||'—';
+ body.innerHTML=requests.length?requests.map(r=>{
+  const d=byId.get(r.user_id)||{},status=r.status==='approved'?'success':r.status==='rejected'?'danger':'warning';
+  const action=r.status==='pending'?'<div class="action-row"><button class="primary-btn" data-vehicle-change-review="approved" data-request-id="'+esc(r.id)+'">Idhinisha</button><button class="danger-btn" data-vehicle-change-review="rejected" data-request-id="'+esc(r.id)+'">Kataa</button></div>':'<span class="badge-pill '+status+'">'+esc(r.status)+'</span>'+(r.review_note?'<small>'+esc(r.review_note)+'</small>':'');
+  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(d.phone_number||'')+'</small></td><td>'+esc(vehicle(r.current_vehicle_type,r.current_vehicle_registration,r.current_license_number,r.current_vehicle_ownership))+'</td><td><strong>'+esc(vehicle(r.requested_vehicle_type,r.requested_vehicle_registration,r.requested_license_number,r.requested_vehicle_ownership))+'</strong></td><td>'+esc(r.reason)+'</td><td>'+esc(date(r.submitted_at))+'</td><td>'+action+'</td></tr>';
+ }).join(''):'<tr><td colspan="6" class="empty-state">Hakuna ombi la kubadilisha chombo.</td></tr>';
+}
+async function reviewVehicleChangeRequest(id,decision,button){
+ const reason=window.prompt(decision==='approved'?'Sababu ya kuidhinisha mabadiliko ya chombo:':'Sababu ya kukataa ombi la mabadiliko:');
+ if(!reason||reason.trim().length<5){window.alert('Sababu lazima iwe na angalau herufi 5.');return;}
+ if(!window.confirm(decision==='approved'?'Unaidhinisha taarifa mpya za chombo? Zitaanza kutumika baada ya uamuzi huu.':'Unathibitisha kukataa ombi hili? Taarifa za sasa zitaendelea kutumika.'))return;
+ button.disabled=true;
+ const {data,error}=await window.ZUNE_CORE.db().rpc('admin_review_delivery_vehicle_change_request',{p_request_id:id,p_decision:decision,p_reason:reason.trim()});
+ button.disabled=false;if(error){window.alert(error.message);return;}if(!data?.ok){window.alert('Uamuzi haukukamilika.');return;}
+ window.alert(decision==='approved'?'Taarifa mpya za chombo zimeidhinishwa.':'Ombi limekataliwa; taarifa za awali zimebaki.');
+ await Promise.all([loadVehicleChangeRequests(),loadDriverDirectory()]);
+}
 async function loadDriverDocuments(){
  const db=window.ZUNE_CORE?.db?.(),body=$('#driverDocumentsBody');if(!db||!body)return;
  body.innerHTML='<tr><td colspan="6">Inapakia...</td></tr>';
@@ -139,7 +165,9 @@ async function loadEvents(id){
 document.addEventListener('DOMContentLoaded',()=>{
  $('#refreshDeliveryOps')?.addEventListener('click',()=>load().catch(e=>{if(body)body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';}));
  $('#refreshDriverApplications')?.addEventListener('click',()=>loadDriverApplications());
- $('#refreshDriverDirectory')?.addEventListener('click',()=>Promise.all([loadDriverDirectory(),loadDriverDocuments()]));
+ $('#refreshDriverDirectory')?.addEventListener('click',()=>Promise.all([loadDriverDirectory(),loadDriverDocuments(),loadVehicleChangeRequests()]));
+ $('#refreshVehicleChangeRequests')?.addEventListener('click',loadVehicleChangeRequests);
+ $('#vehicleChangeRequestsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-vehicle-change-review]');if(b)reviewVehicleChangeRequest(b.dataset.requestId,b.dataset.vehicleChangeReview,b).catch(err=>window.alert(err.message));});
  $('#driverInviteForm')?.addEventListener('submit',createDriverInvitation);
  $('#driverApplicationSearch')?.addEventListener('input',renderDriverApplications);$('#driverApplicationFilter')?.addEventListener('change',renderDriverApplications);
  $('#driverApplicationsBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-driver-review]');if(b)reviewDriverApplication(b.dataset.applicationId,b.dataset.driverReview,b).catch(err=>window.alert(err.message));});
@@ -148,12 +176,12 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#driverDirectorySearch')?.addEventListener('input',renderDriverDirectory);$('#driverDirectoryFilter')?.addEventListener('change',renderDriverDirectory);
  const initial=location.hash.slice(1);
  if(initial==='driver-applications')loadDriverApplications();
- else if(initial==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+ else if(initial==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments(),loadVehicleChangeRequests()]);
  else if(initial==='delivery-operations'||!initial)load().catch(e=>{if(body)body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';});
 });
 document.addEventListener('zune:page-changed',e=>{
  if(e.detail.page==='driver-applications')loadDriverApplications();
- else if(e.detail.page==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments()]);
+ else if(e.detail.page==='driver-list')Promise.all([loadDriverDirectory(),loadDriverDocuments(),loadVehicleChangeRequests()]);
  else if(e.detail.page==='delivery-operations')load().catch(err=>{if(body)body.innerHTML='<tr><td colspan="9">'+esc(err.message)+'</td></tr>';});
 });
 setInterval(()=>{if(!document.hidden&&location.hash==='#delivery-operations')load().catch(err=>console.warn('Delivery auto-refresh:',err));},20000);
