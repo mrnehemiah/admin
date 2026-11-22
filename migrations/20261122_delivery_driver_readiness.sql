@@ -8,7 +8,9 @@ returns boolean language sql stable security definer set search_path = ''
 as $$
  select exists (
   select 1 from public.delivery_driver_profiles p
-  where p.user_id=p_driver_id and not exists (
+  where p.user_id=p_driver_id
+   and (coalesce(p.vehicle_type,'')='bicycle' or (nullif(btrim(p.vehicle_registration),'') is not null and nullif(btrim(p.license_number),'') is not null))
+   and not exists (
    select 1 from (values ('national_id'),('driver_photo'),('driving_license'),('vehicle_registration'),('vehicle_insurance')) required(doc_type)
    where (required.doc_type <> 'driving_license' or coalesce(p.vehicle_type,'') <> 'bicycle')
     and not exists (
