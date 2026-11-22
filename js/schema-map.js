@@ -4,7 +4,7 @@ export const MODULES={
  sellers:{title:'Maduka / Wauzaji',table:'seller_applications',order:'created_at',columns:[['store_name','Duka'],['owner_name','Mmiliki'],['phone','Simu'],['region','Mkoa'],['status','Hali'],['created_at','Tarehe']]},
  products:{title:'Bidhaa',table:'products',order:'created_at',columns:[['title','Bidhaa'],['vendor_id','Muuzaji'],['category','Category'],['price','Bei'],['stock_quantity','Stock'],['is_featured','Featured']]},
  orders:{title:'Oda',table:'orders',order:'created_at',columns:[['order_number','Order ID'],['buyer_id','Buyer'],['total_price','Jumla'],['status','Hali'],['payment_status','Malipo'],['created_at','Tarehe']]},
- payments:{title:'Malipo',table:'payments',order:'created_at',columns:[['order_id','Order'],['buyer_id','Buyer'],['amount','Kiasi'],['payment_method','Njia'],['transaction_reference','Reference'],['payment_status','Hali']]},
+ payments:{title:'Malipo',table:'payments',order:'created_at',columns:[['order_number','Order ID'],['buyer_id','Buyer'],['amount','Kiasi'],['payment_method','Njia'],['transaction_reference','Reference'],['payment_status','Hali']]},
  paymentTransactions:{title:'Payment transactions',table:'payment_transactions',order:'created_at',columns:[['reference_code','Reference'],['purpose','Purpose'],['amount','Kiasi'],['network_code','Network'],['status','Hali'],['submitted_at','Tarehe']]},
  wallet:{title:'Wallet',table:'wallets',order:'updated_at',columns:[['user_id','Mtumiaji'],['balance','Salio'],['updated_at','Last update']]},
  walletTransactions:{title:'Wallet transactions',table:'admin_wallet_transactions',order:'created_at',columns:[['reference','Reference'],['user_id','Mtumiaji'],['transaction_type','Aina'],['direction','Direction'],['amount','Kiasi'],['status','Hali']]},
