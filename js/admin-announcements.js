@@ -3,7 +3,7 @@
   const db = () => window.ZUNE_CORE?.db?.();
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const audience = value => value === 'buyers' ? 'Wateja pekee' : value === 'vendors' ? 'Wauzaji pekee' : 'Wote';
+  const audience = value => value === 'buyers' ? 'Wanunuzi pekee' : value === 'vendors' ? 'Wauzaji pekee' : value === 'drivers' ? 'Madereva pekee' : 'Wote (Wanunuzi, Wauzaji na Madereva)';
   const priority = value => ({low:'Chini',normal:'Kawaida',high:'Juu',urgent:'Dharura'}[value] || value || 'Kawaida');
   let busy = false;
   function mount() {
@@ -11,11 +11,11 @@
     if (!section || section.dataset.announcementMounted === '1') return;
     section.dataset.announcementMounted = '1';
     section.innerHTML = `
-      <div class="section-intro"><div><h2>Matangazo kwa Watumiaji</h2><p>Tuma taarifa rasmi kupitia Notification kwa Wateja, Wauzaji au wote. Hii ni tofauti na Sponsored Ads.</p></div><span class="badge-pill success">NOTIFICATION PEKEE</span></div>
+      <div class="section-intro"><div><h2>Matangazo kwa Watumiaji</h2><p>Tuma taarifa rasmi kwa Wanunuzi, Wauzaji, Madereva au makundi yote. Hii ni tofauti na Sponsored Ads.</p></div><span class="badge-pill success">NOTIFICATION PEKEE</span></div>
       <div class="form-grid" style="align-items:start">
         <div class="panel"><h3>Tuma tangazo jipya</h3><p class="muted">Kila akaunti hai inayolengwa itapokea notification yake binafsi.</p>
           <form id="adminAnnouncementForm">
-            <div class="form-field"><label for="annAudience">Walengwa</label><select id="annAudience" name="audience" required><option value="all">Wote — Wateja na Wauzaji</option><option value="buyers">Wateja pekee</option><option value="vendors">Wauzaji pekee</option></select></div>
+            <div class="form-field"><label for="annAudience">Walengwa</label><select id="annAudience" name="audience" required><option value="all">Wote — Wanunuzi, Wauzaji na Madereva</option><option value="buyers">Wanunuzi pekee</option><option value="vendors">Wauzaji pekee</option><option value="drivers">Madereva pekee</option></select></div>
             <div class="form-grid"><div class="form-field"><label for="annTitleSw">Kichwa (Kiswahili)</label><input id="annTitleSw" name="title_sw" maxlength="160" required></div><div class="form-field"><label for="annTitleEn">Title (English) — hiari</label><input id="annTitleEn" name="title_en" maxlength="160"></div></div>
             <div class="form-field"><label for="annBodySw">Ujumbe (Kiswahili)</label><textarea id="annBodySw" name="body_sw" rows="4" maxlength="3000" required></textarea></div>
             <div class="form-field"><label for="annBodyEn">Message (English) — hiari</label><textarea id="annBodyEn" name="body_en" rows="3" maxlength="3000"></textarea></div>
@@ -24,7 +24,7 @@
             <div class="action-row" style="margin-top:14px"><button class="primary-btn" id="annSendBtn" type="submit">Tuma Notification</button><button class="secondary-btn" type="reset">Futa fomu</button></div><p class="muted" id="annFormMessage" role="status"></p>
           </form>
         </div>
-        <div class="panel"><h3>Ufafanuzi wa walengwa</h3><p><b>Wateja:</b> akaunti hai zenye role ya buyer.</p><p><b>Wauzaji:</b> akaunti hai zenye role ya vendor.</p><p><b>Wote:</b> makundi yote mawili yenye akaunti hai.</p><div class="notice-box">Supabase inathibitisha Admin Mkuu kabla ya kutuma. Mfumo huu hauundi wala kubadilisha Sponsored Ads, coupons, promotions au promotional slides.</div></div>
+        <div class="panel"><h3>Ufafanuzi wa walengwa</h3><p><b>Wanunuzi:</b> akaunti hai zenye role ya buyer.</p><p><b>Wauzaji:</b> akaunti hai zenye role ya vendor.</p><p><b>Madereva:</b> akaunti hai zenye role ya driver.</p><p><b>Wote:</b> wanunuzi, wauzaji na madereva wenye akaunti hai. Admin hawajumuishwi.</p><div class="notice-box">Supabase inathibitisha Admin Mkuu kabla ya kutuma. Mfumo huu hauundi wala kubadilisha Sponsored Ads, coupons, promotions au promotional slides.</div></div>
       </div>
       <div class="panel" style="margin-top:18px"><div class="section-intro"><div><h3>Historia ya matangazo</h3><p>Notification zilizochapishwa pekee.</p></div><button class="secondary-btn" id="annRefreshBtn" type="button">Refresh</button></div>
         <div class="table-wrap"><table><thead><tr><th>Kichwa / Ujumbe</th><th>Walengwa</th><th>Kipaumbele</th><th>Hali</th><th>Tarehe</th><th>Inaisha</th></tr></thead><tbody id="annHistoryBody"><tr><td colspan="6" class="empty-state">Inapakia...</td></tr></tbody></table></div></div>`;
