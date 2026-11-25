@@ -5,6 +5,57 @@
 
 begin;
 
+-- Preserve the Seller Portal's separate auth_user_id -> profile owner_id mapping.
+-- Storage objects stay under auth.uid(); Reel creator_id stays the actual profiles.id.
+create or replace function public.zune_can_upload_reel()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = public.zune_seller_owner_id()
+      and p.role::text in ('vendor','admin')
+      and coalesce(p.account_status,'active') = 'active'
+      and p.removed_at is null
+  );
+$function$;
+revoke all on function public.zune_can_upload_reel() from public;
+grant execute on function public.zune_can_upload_reel() to authenticated;
+
+drop policy if exists zune_reels_creator_insert on public.zune_reels;
+create policy zune_reels_creator_insert on public.zune_reels
+for insert to authenticated with check (
+  creator_id = public.zune_seller_owner_id()
+  and public.zune_can_upload_reel()
+  and split_part(video_path,'/',1) = (select auth.uid())::text
+  and status = case when public.zune_is_admin() then 'published' else 'pending' end
+);
+
+drop policy if exists zune_reels_creator_read_own on public.zune_reels;
+create policy zune_reels_creator_read_own on public.zune_reels
+for select to authenticated using (
+  creator_id = public.zune_seller_owner_id() or public.zune_is_admin()
+);
+
+drop policy if exists zune_reels_creator_update on public.zune_reels;
+create policy zune_reels_creator_update on public.zune_reels
+for update to authenticated
+using (
+  (creator_id = public.zune_seller_owner_id() and status in ('pending','rejected'))
+  or public.zune_is_admin()
+)
+with check (
+  (
+    creator_id = public.zune_seller_owner_id()
+    and status in ('pending','rejected')
+    and split_part(video_path,'/',1) = (select auth.uid())::text
+  )
+  or public.zune_is_admin()
+);
+
 alter table public.zune_reels
   add column if not exists audio_path text,
   add column if not exists audio_source text not null default 'original',
@@ -221,7 +272,7 @@ begin
     raise exception 'Invalid share channel';
   end if;
   insert into public.zune_reel_shares(reel_id,user_id,channel)
-  select r.id,(select auth.uid()),p_channel
+  select r.id,(select auth.uid()),coalesce(p_channel,'native')
   from public.zune_reels r
   where r.id=p_reel_id and r.status='published';
   if not found then return false; end if;
@@ -299,6 +350,14 @@ with check (bucket_id='zune-reel-audio' and public.zune_is_admin());
 drop policy if exists zune_reel_audio_admin_delete on storage.objects;
 create policy zune_reel_audio_admin_delete on storage.objects
 for delete to authenticated using (bucket_id='zune-reel-audio' and public.zune_is_admin());
+
+grant select,insert,delete on public.zune_reel_saves to authenticated;
+grant select,insert on public.zune_reel_shares to authenticated;
+grant select on public.zune_reel_views to authenticated;
+grant select,insert,update,delete on public.zune_reel_sounds to authenticated;
+grant select,insert,update on public.zune_reel_reports to authenticated;
+grant select,insert,delete on public.zune_reel_comment_likes to authenticated;
+grant select on public.zune_reel_sounds to anon;
 
 commit;
 
