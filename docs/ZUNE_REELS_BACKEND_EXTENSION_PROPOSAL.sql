@@ -17,22 +17,16 @@ alter table public.zune_reels
   add column if not exists shares_count bigint not null default 0,
   add column if not exists saves_count bigint not null default 0;
 
-alter table public.zune_reels
-  add constraint zune_reels_audio_source_check
-  check (audio_source in ('original','library'))
-  not valid;
-
-alter table public.zune_reels
-  add constraint zune_reels_duration_check
-  check (duration_seconds is null or duration_seconds between 1 and 180)
-  not valid;
-
-alter table public.zune_reel_comments
-  add column if not exists parent_comment_id uuid
-  references public.zune_reel_comments(id) on delete cascade;
-
-create index if not exists zune_reel_comments_parent_idx
-  on public.zune_reel_comments(parent_comment_id);
+do $block$
+begin
+  if not exists (select 1 from pg_constraint where conname='zune_reels_audio_source_check' and conrelid='public.zune_reels'::regclass) then
+    alter table public.zune_reels add constraint zune_reels_audio_source_check check (audio_source in ('original','library')) not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname='zune_reels_duration_check' and conrelid='public.zune_reels'::regclass) then
+    alter table public.zune_reels add constraint zune_reels_duration_check check (duration_seconds is null or duration_seconds between 1 and 180) not valid;
+  end if;
+end;
+$block$;
 
 create table if not exists public.zune_reel_saves (
   reel_id uuid not null references public.zune_reels(id) on delete cascade,
@@ -86,6 +80,14 @@ create table if not exists public.zune_reel_reports (
   admin_note text,
   created_at timestamptz not null default now()
 );
+
+do $block$
+begin
+  if not exists (select 1 from pg_constraint where conname='zune_reels_sound_id_fkey' and conrelid='public.zune_reels'::regclass) then
+    alter table public.zune_reels add constraint zune_reels_sound_id_fkey foreign key (sound_id) references public.zune_reel_sounds(id) on delete set null;
+  end if;
+end;
+$block$;
 
 create table if not exists public.zune_reel_comment_likes (
   comment_id uuid not null references public.zune_reel_comments(id) on delete cascade,
@@ -215,7 +217,7 @@ begin
   if (select auth.uid()) is null then
     raise exception 'Sign in is required to record a share';
   end if;
-  if p_channel not in ('native','whatsapp','facebook','copy','other') then
+  if coalesce(p_channel,'native') not in ('native','whatsapp','facebook','copy','other') then
     raise exception 'Invalid share channel';
   end if;
   insert into public.zune_reel_shares(reel_id,user_id,channel)
@@ -249,7 +251,7 @@ begin
   end if;
   execute format('update public.zune_reels set %I=greatest(0,%I+$1) where id=$2',column_name,column_name)
     using delta,target_reel;
-  return coalesce(new,old);
+  if tg_op='DELETE' then return old; else return new; end if;
 end;
 $function$;
 
@@ -273,12 +275,17 @@ create trigger zune_reel_saves_count_delete after delete on public.zune_reel_sav
 for each row execute function public.zune_reel_engagement_counter('saves_count');
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('zune-reel-audio','zune-reel-audio',true,15728640,array['audio/mpeg','audio/mp4','audio/aac','audio/wav','audio/ogg','audio/webm'])
+values('zune-reel-audio','zune-reel-audio',false,15728640,array['audio/mpeg','audio/mp4','audio/aac','audio/wav','audio/ogg','audio/webm'])
 on conflict(id) do nothing;
 
 drop policy if exists zune_reel_audio_public_read on storage.objects;
 create policy zune_reel_audio_public_read on storage.objects
-for select to anon,authenticated using (bucket_id='zune-reel-audio');
+for select to anon,authenticated using (
+  bucket_id='zune-reel-audio' and exists (
+    select 1 from public.zune_reel_sounds s
+    where s.audio_path=name and s.is_active and s.commercial_use_allowed
+  )
+);
 
 drop policy if exists zune_reel_audio_admin_insert on storage.objects;
 create policy zune_reel_audio_admin_insert on storage.objects
