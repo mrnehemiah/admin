@@ -6,7 +6,7 @@ const esc=v=>ui().esc(v??'—');
 const statusLabel=s=>({pending:'Inasubiri',confirmed:'Imethibitishwa',completed:'Imekamilika',cancelled:'Imeghairiwa'})[String(s||'').toLowerCase()]||String(s||'—');
 const paymentLabel=s=>({pending:'Inasubiri malipo',paid:'Imelipwa',completed:'Imelipwa',failed:'Malipo yameshindwa',refunded:'Imerejeshwa',cancelled:'Imeghairiwa'})[String(s||'').toLowerCase()]||String(s||'Haijathibitishwa');
 const shortId=id=>String(id||'').replace(/-/g,'').slice(0,8).toUpperCase();
-const orderRef=x=>String(x?.order_number||shortId(x?.id));
+const orderRef=x=>String(x?.public_order_id||x?.order_number||shortId(x?.id));
 const money=v=>'TZS '+Number(v||0).toLocaleString('en-TZ');
 function render(){
  const q=(document.getElementById('ordersSearch')?.value||'').trim().toLowerCase();
@@ -90,7 +90,7 @@ async function updateStatus(id){
  if(!window.confirm('Unathibitisha kubadilisha oda #'+orderRef(order)+' kuwa '+statusLabel(next)+'?'))return;
  busy.add(id);render();
  try{
-  const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,order_number,buyer_id,product_id,checkout_id').maybeSingle();
+  const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,order_number,public_order_id,buyer_id,product_id,checkout_id').maybeSingle();
   if(error)throw error;if(!data)throw new Error('Oda haikupatikana au haikubadilishwa.');
   let vendorId=null;if(data.product_id){const p=await db().from('products').select('vendor_id').eq('id',data.product_id).maybeSingle();if(p.error)throw p.error;vendorId=p.data?.vendor_id||null;}
   await c().audit('order_status_'+next,'order',id,reason,{previous_status:order.status,new_status:next,checkout_id:data.checkout_id});
