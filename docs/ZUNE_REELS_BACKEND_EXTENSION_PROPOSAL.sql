@@ -32,6 +32,9 @@ for insert to authenticated with check (
   and public.zune_can_upload_reel()
   and split_part(video_path,'/',1) = (select auth.uid())::text
   and status = case when public.zune_is_admin() then 'published' else 'pending' end
+  and (public.zune_is_admin() or product_id is null or exists (
+    select 1 from public.products p where p.id=product_id and p.vendor_id=public.zune_seller_owner_id()
+  ))
 );
 
 drop policy if exists zune_reels_creator_read_own on public.zune_reels;
@@ -52,6 +55,7 @@ with check (
     creator_id = public.zune_seller_owner_id()
     and status in ('pending','rejected')
     and split_part(video_path,'/',1) = (select auth.uid())::text
+    and (product_id is null or exists (select 1 from public.products p where p.id=product_id and p.vendor_id=public.zune_seller_owner_id()))
   )
   or public.zune_is_admin()
 );
