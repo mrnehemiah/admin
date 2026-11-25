@@ -7,6 +7,26 @@ begin;
 
 -- Preserve the Seller Portal's separate auth_user_id -> profile owner_id mapping.
 -- Storage objects stay under auth.uid(); Reel creator_id stays the actual profiles.id.
+grant execute on function public.zune_seller_owner_id() to authenticated;
+
+create or replace function public.zune_seller_reel_profile()
+returns table(is_verified boolean,full_name text,role text)
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select p.is_verified,p.full_name,p.role::text
+  from public.profiles p
+  where p.id=public.zune_seller_owner_id()
+    and p.role::text='vendor'
+    and coalesce(p.account_status,'active')='active'
+    and p.removed_at is null
+  limit 1;
+$function$;
+revoke all on function public.zune_seller_reel_profile() from public;
+grant execute on function public.zune_seller_reel_profile() to authenticated;
+
 create or replace function public.zune_can_upload_reel()
 returns boolean
 language sql
