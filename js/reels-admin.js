@@ -23,7 +23,19 @@ function mount(){
  $('#adminReelForm').onsubmit=uploadOfficial;$('#adminSoundForm').onsubmit=uploadSound;
 }
 function filter(){const q=($('#reelsSearch')?.value||'').toLowerCase(),status=$('#reelsStatus')?.value||'';document.querySelectorAll('.reels-admin-row').forEach(el=>el.hidden=!(el.textContent.toLowerCase().includes(q)&&(!status||el.dataset.status===status)))}
-async function loadProducts(){const r=await db().from('products').select('id,title,price').order('created_at',{ascending:false}).limit(400);if(r.error)throw r.error;products=r.data||[];const s=$('#adminReelProduct');if(s)s.innerHTML='<option value="">Hakuna bidhaa maalumu</option>'+products.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — TSh '+Number(p.price||0).toLocaleString('en-TZ')+'</option>').join('')}
+async function loadProducts(){
+ const r=await db().from('products').select('id,title,price,stock_quantity,moderation_status,removed_at,seller_archived_at').eq('moderation_status','approved').is('removed_at',null).is('seller_archived_at',null).order('created_at',{ascending:false}).limit(400);
+ if(r.error)throw r.error;products=r.data||[];
+ const select=$('#adminReelProduct');if(!select)return;
+ select.innerHTML='<option value="">Hakuna bidhaa maalumu</option>'+products.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — TSh '+Number(p.price||0).toLocaleString('en-TZ')+'</option>').join('');
+ select.value='';select.style.display='none';
+ let picker=$('#adminReelProductPicker');
+ if(!picker){picker=document.createElement('section');picker.id='adminReelProductPicker';picker.style.cssText='margin-top:10px;padding:13px;border:1px solid #d8deea;border-radius:14px;background:#fff;color:#182033';select.insertAdjacentElement('afterend',picker);}
+ picker.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px"><strong style="font-size:13px">Tag bidhaa kwenye Reel</strong><span id="adminProductTagCount" style="font-size:11px;color:#64748b">0/10</span></div><p style="margin:0 0 10px;color:#64748b;font-size:11px">Chagua bidhaa zilizoidhinishwa. Upeo ni bidhaa 10 kwa Reel.</p><div style="display:grid;gap:7px;max-height:230px;overflow:auto">'+(products.length?products.map(p=>'<label style="display:flex;gap:9px;align-items:center;padding:8px;border:1px solid #e6eaf1;border-radius:10px;font-size:12px"><input type="checkbox" value="'+esc(p.id)+'" data-admin-product-tag style="width:17px;height:17px;accent-color:#7c3aed"><span style="min-width:0;flex:1"><strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.title)+'</strong><small style="color:#64748b">TSh '+Number(p.price||0).toLocaleString('en-TZ')+' · Stock '+Number(p.stock_quantity||0)+'</small></span></label>').join(''):'<small style="color:#64748b">Hakuna bidhaa zilizoidhinishwa zinazopatikana.</small>')+'</div>';
+ const update=()=>{const boxes=[...picker.querySelectorAll('[data-admin-product-tag]')],n=boxes.filter(x=>x.checked).length;const count=$('#adminProductTagCount');if(count)count.textContent=n+'/10';boxes.forEach(x=>{x.disabled=!x.checked&&n>=10;x.closest('label').style.opacity=x.disabled?'.45':'1';});};
+ picker.addEventListener('change',e=>{if(e.target.matches('[data-admin-product-tag]'))update();});update();
+}
+function selectedAdminProductIds(){return [...($('#adminReelProductPicker')?.querySelectorAll('[data-admin-product-tag]:checked')||[])].map(x=>x.value).slice(0,10)}
 async function load(){
  if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;if(!db())throw new Error('Supabase haijaunganishwa.');
  const r=await db().from('zune_reels').select('*,creator:profiles!zune_reels_creator_id_fkey(full_name,role,is_verified)').order('created_at',{ascending:false}).limit(300);if(r.error)throw r.error;rows=r.data||[];
@@ -32,7 +44,12 @@ async function load(){
  const countBy=list=>(list||[]).reduce((m,x)=>{m[x.reel_id]=(m[x.reel_id]||0)+1;return m},{}),likeCounts=countBy(likes.data),commentCounts=countBy(comments.data);
  rows=rows.map(x=>Object.assign({},x,{likes_count:likeCounts[x.id]||0,comments_count:commentCounts[x.id]||0}));
  $('#reelsTotal').textContent=rows.length.toLocaleString();$('#reelsPublished').textContent=rows.filter(x=>x.status==='published').length.toLocaleString();$('#reelsPending').textContent=rows.filter(x=>x.status==='pending').length.toLocaleString();$('#reelsViews').textContent=rows.reduce((n,x)=>n+Number(x.views_count||0),0).toLocaleString();$('#reelsLikes').textContent=rows.reduce((n,x)=>n+Number(x.likes_count||0),0).toLocaleString();$('#reelsComments').textContent=rows.reduce((n,x)=>n+Number(x.comments_count||0),0).toLocaleString();$('#reelsShares').textContent=rows.reduce((n,x)=>n+Number(x.shares_count||0),0).toLocaleString();
- await loadProducts();renderRows();
+ await loadProducts();
+ const tagResult=ids.length?await db().from('zune_reel_products').select('reel_id,product_id').in('reel_id',ids):{data:[]};
+ if(tagResult.error)console.warn('Admin Reel product tags:',tagResult.error);
+ const tagsByReel=(tagResult.data||[]).reduce((m,x)=>{(m[x.reel_id] ||= []).push(x.product_id);return m},{});
+ rows=rows.map(r=>Object.assign({},r,{taggedProducts:(tagsByReel[r.id]||[]).map(id=>products.find(p=>p.id===id)).filter(Boolean)}));
+ renderRows();
  try { await loadSounds(); } catch (soundError) { const soundHost=$('#adminSoundsList'); if(soundHost)soundHost.innerHTML='<div class="notice-box">Music Library haijapatikana: '+esc(soundError.message||soundError)+'</div>'; }
  try { await loadReports(); } catch(reportError) { showReportError(reportError); }
 }
@@ -41,8 +58,8 @@ function renderRows(){
  host.innerHTML=rows.map(r=>{
  const official=String(r.creator?.role||'').toLowerCase()==='admin',name=official?'ZUNE Official':(r.creator?.full_name||r.creator_display_name||'Seller');
  const badge=official?' <span class="reels-admin-badge">✦ OFFICIAL</span>':(r.creator?.is_verified?' <span class="reels-admin-badge">✓ VERIFIED</span>':'');
- const product=products.find(p=>p.id===r.product_id);
- return '<article class="reels-admin-row" data-status="'+esc(r.status)+'"><video src="'+esc(url(r.video_path))+'" muted playsinline controls preload="metadata"></video><div class="reels-admin-meta"><strong>'+esc(name)+badge+'</strong><p>'+esc(r.caption||'Reel ya bidhaa')+'</p><p>'+esc(r.status)+' · '+Number(r.views_count||0).toLocaleString()+' views · '+Number(r.likes_count||0)+' likes · '+Number(r.comments_count||0)+' comments · '+Number(r.shares_count||0)+' shares · '+new Date(r.created_at).toLocaleString('sw-TZ')+'</p>'+(product?'<p>Bidhaa: '+esc(product.title)+'</p>':'')+(r.moderation_note?'<p>Maelezo: '+esc(r.moderation_note)+'</p>':'')+'</div><div class="reels-admin-actions">'+(r.status!=='published'?'<button class="primary-btn" data-reel-action="publish" data-id="'+esc(r.id)+'">Publish</button>':'')+(r.status!=='rejected'?'<button class="warning-btn" data-reel-action="reject" data-id="'+esc(r.id)+'">Reject</button>':'')+(r.status!=='archived'?'<button class="secondary-btn" data-reel-action="archive" data-id="'+esc(r.id)+'">Archive</button>':'')+'<button class="secondary-btn" data-reel-comments="'+esc(r.id)+'">Comments</button></div></article>';
+ const tagged=r.taggedProducts?.length?r.taggedProducts:products.filter(p=>p.id===r.product_id);
+ return '<article class="reels-admin-row" data-status="'+esc(r.status)+'"><video src="'+esc(url(r.video_path))+'" muted playsinline controls preload="metadata"></video><div class="reels-admin-meta"><strong>'+esc(name)+badge+'</strong><p>'+esc(r.caption||'Reel ya bidhaa')+'</p><p>'+esc(r.status)+' · '+Number(r.views_count||0).toLocaleString()+' views · '+Number(r.likes_count||0)+' likes · '+Number(r.comments_count||0)+' comments · '+Number(r.shares_count||0)+' shares · '+new Date(r.created_at).toLocaleString('sw-TZ')+'</p>'+(tagged.length?'<p>Bidhaa: '+tagged.map(p=>esc(p.title)).join(' · ')+'</p>':'')+(r.moderation_note?'<p>Maelezo: '+esc(r.moderation_note)+'</p>':'')+'</div><div class="reels-admin-actions">'+(r.status!=='published'?'<button class="primary-btn" data-reel-action="publish" data-id="'+esc(r.id)+'">Publish</button>':'')+(r.status!=='rejected'?'<button class="warning-btn" data-reel-action="reject" data-id="'+esc(r.id)+'">Reject</button>':'')+(r.status!=='archived'?'<button class="secondary-btn" data-reel-action="archive" data-id="'+esc(r.id)+'">Archive</button>':'')+'<button class="secondary-btn" data-reel-comments="'+esc(r.id)+'">Comments</button></div></article>';
  }).join('');
  host.querySelectorAll('video').forEach(video=>video.addEventListener('error',()=>{const row=video.closest('.reels-admin-row');if(row){const note=document.createElement('p');note.className='notice-box';note.textContent='Video haipatikani kwenye Storage. Inahitaji kurejeshwa au kupakiwa tena; rekodi ya Reel haijafutwa.';row.querySelector('.reels-admin-meta')?.appendChild(note);}video.replaceWith(document.createElement('div'));},{once:true}));
  host.querySelectorAll('[data-reel-action]').forEach(b=>b.onclick=()=>moderate(b.dataset.id,b.dataset.reelAction,b));
@@ -127,12 +144,15 @@ async function uploadOfficial(e){
   const up=await uploadAdminReelTus(file,path);path=up.path;adminCompletedUpload={file,path,id};
  }
  const hashtags=$('#adminReelTags').value.split(/[\s,]+/).map(x=>x.trim().replace(/^#/,'')).filter(Boolean).slice(0,20);
- const payload={id,creator_id:user().id,video_path:up.data.path,caption,hashtags,product_id:$('#adminReelProduct').value||null,status:'published',creator_display_name:'ZUNE Official'};
+ const taggedProductIds=selectedAdminProductIds();
+ const payload={id,creator_id:user().id,video_path:path,caption,hashtags,product_id:taggedProductIds[0]||null,status:'published',creator_display_name:'ZUNE Official'};
  const soundId=$('#adminReelSound')?.value||'';const sound=sounds.find(x=>x.id===soundId);
  if(sound){payload.sound_id=sound.id;payload.audio_source='library';payload.audio_title=sound.title;payload.audio_artist=sound.artist||null;}
  const ins=await db().from('zune_reels').insert(payload);if(ins.error)throw ins.error;
+ let tagWarning='';
+ if(taggedProductIds.length){const tags=await db().from('zune_reel_products').insert(taggedProductIds.map(product_id=>({reel_id:id,product_id})));if(tags.error){console.error('Admin Reel product tags:',tags.error);tagWarning=' Reel imechapishwa lakini product tags hazikuhifadhiwa.';}}
  adminCompletedUpload=null;
- await window.ZUNE_CORE?.audit?.('reel_published','zune_reels',id,'Official ZUNE Reel published',{status:'published'});e.currentTarget.reset();message.textContent='Reel rasmi ya ZUNE imechapishwa.';toast('ZUNE Official Reel imechapishwa.');await load();
+ await window.ZUNE_CORE?.audit?.('reel_published','zune_reels',id,'Official ZUNE Reel published',{status:'published'});e.currentTarget.reset();message.textContent='Reel rasmi ya ZUNE imechapishwa.'+tagWarning;toast(tagWarning||'ZUNE Official Reel imechapishwa.');await load();
  }catch(err){message.textContent=(adminCompletedUpload&&adminCompletedUpload.path===path?'Video imepakiwa lakini taarifa hazijahifadhiwa. Bonyeza tena bila kubadilisha faili. ':'')+(err.message||'Imeshindikana kuchapisha Reel.');toast(message.textContent)}finally{button.disabled=false;button.textContent='Chapisha Reel rasmi'}
 }
 function showError(e){console.error('ZUNE Admin Reels:',e);const h=$('#reelsAdminList');if(h)h.innerHTML='<div class="notice-box">Reels hazikupatikana: '+esc(e.message||e)+'</div>'}
