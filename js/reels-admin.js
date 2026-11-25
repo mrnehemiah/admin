@@ -94,5 +94,6 @@ async function uploadOfficial(e){
 }
 function showError(e){console.error('ZUNE Admin Reels:',e);const h=$('#reelsAdminList');if(h)h.innerHTML='<div class="notice-box">Reels hazikupatikana: '+esc(e.message||e)+'</div>'}
 document.addEventListener('zune:page-changed',e=>{if(e.detail?.page==='reels'){if(!mounted)mount();load().catch(showError)}});
+document.addEventListener('DOMContentLoaded',()=>{if(location.pathname.endsWith('/reels.html')&&document.querySelector('[data-section="reels"]')){mount();load().catch(showError)}});
 
 })();
