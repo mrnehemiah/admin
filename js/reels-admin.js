@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const BUCKET='zune-reels', $=s=>document.querySelector(s);
-let mounted=false,rows=[],products=[];
+let mounted=false,rows=[],products=[],sounds=[];
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const db=()=>window.ZUNE_CORE&&window.ZUNE_CORE.db?window.ZUNE_CORE.db():window.zuneSupabase;
 const user=()=>window.ZUNE_ADMIN_PROFILE||window.ZUNE_CURRENT_USER||{};
@@ -54,7 +54,7 @@ async function loadSounds(){
  const host=$('#adminSoundsList');if(!host)return;
  const r=await db().from('zune_reel_sounds').select('id,title,artist,audio_path,license_name,license_reference,commercial_use_allowed,is_active,created_at').order('created_at',{ascending:false}).limit(200);
  if(r.error)throw r.error;
- const list=r.data||[];
+ const list=r.data||[];sounds=list;
  const soundSelect=$('#adminReelSound');if(soundSelect)soundSelect.innerHTML='<option value="">Tumia Original Audio</option>'+list.filter(x=>x.is_active&&x.commercial_use_allowed).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.title)+(x.artist?' — '+esc(x.artist):'')+'</option>').join('');
  host.innerHTML=list.length?list.map(x=>'<article class="reels-admin-row"><div class="reels-admin-meta"><strong>'+esc(x.title)+(x.artist?' · '+esc(x.artist):'')+'</strong><p>'+esc(x.license_name)+' · '+(x.commercial_use_allowed?'Commercial use approved':'Not approved')+'</p><p>'+ (x.is_active?'Active in Music Library':'Inactive')+'</p></div><div class="reels-admin-actions"><button class="'+(x.is_active?'warning-btn':'primary-btn')+'" data-sound-toggle="'+esc(x.id)+'" data-active="'+(x.is_active?'1':'0')+'">'+(x.is_active?'Zima':'Washa')+'</button></div></article>').join(''):'<div class="empty-state">Bado hakuna Music Track iliyoidhinishwa.</div>';
  host.querySelectorAll('[data-sound-toggle]').forEach(b=>b.onclick=async()=>{const next=b.dataset.active!=='1';const u=await db().from('zune_reel_sounds').update({is_active:next}).eq('id',b.dataset.soundToggle);if(u.error){toast(u.error.message);return}toast(next?'Music Track imewashwa.':'Music Track imezimwa.');await loadSounds()});
@@ -86,8 +86,8 @@ async function uploadOfficial(e){
  const up=await db().storage.from(BUCKET).upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});if(up.error)throw up.error;
  const hashtags=$('#adminReelTags').value.split(/[\s,]+/).map(x=>x.trim().replace(/^#/,'')).filter(Boolean).slice(0,20);
  const payload={id,creator_id:user().id,video_path:up.data.path,caption,hashtags,product_id:$('#adminReelProduct').value||null,status:'published',creator_display_name:'ZUNE Official'};
- const soundId=$('#adminReelSound')?.value||'';const sound=products.length?null:null;
- if(soundId){payload.sound_id=soundId;payload.audio_source='library';const selected=$('#adminReelSound').selectedOptions[0];payload.audio_title=selected?.textContent?.split(' — ')[0]||'Music';payload.audio_artist=null;}
+ const soundId=$('#adminReelSound')?.value||'';const sound=sounds.find(x=>x.id===soundId);
+ if(sound){payload.sound_id=sound.id;payload.audio_source='library';payload.audio_title=sound.title;payload.audio_artist=sound.artist||null;}
  const ins=await db().from('zune_reels').insert(payload);if(ins.error)throw ins.error;
  await window.ZUNE_CORE?.audit?.('reel_published','zune_reels',id,'Official ZUNE Reel published',{status:'published'});e.currentTarget.reset();message.textContent='Reel rasmi ya ZUNE imechapishwa.';toast('ZUNE Official Reel imechapishwa.');await load();
  }catch(err){if(path)await db().storage.from(BUCKET).remove([path]).catch(()=>{});message.textContent=err.message||'Imeshindikana kuchapisha Reel.';toast(message.textContent)}finally{button.disabled=false;button.textContent='Chapisha Reel rasmi'}
