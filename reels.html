@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="sw">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071c18">
+  <title>ZUNE PREMIUM ADMIN | Reels Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=4">
+  <link rel="stylesheet" href="css/premium-v2.css">
+  <style>
+    body{min-height:100vh;background:#071c18;color:#e8f0ea}
+    .reels-admin-shell{max-width:1440px;margin:0 auto;padding:22px}
+    .reels-admin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;margin-bottom:22px;border:1px solid #ffffff18;border-radius:16px;background:#0c2a21}
+    .reels-admin-brand{font:900 18px Manrope;letter-spacing:1px;color:#f0d99c}.reels-admin-brand small{display:block;color:#91a69a;font:800 9px "DM Sans";letter-spacing:1.6px;margin-top:4px}
+    .reels-admin-top a{color:#e8d39d;text-decoration:none;font-size:11px;font-weight:800;border:1px solid #ffffff20;border-radius:9px;padding:10px 13px}
+    .reels-admin-title{margin:0 0 16px}.reels-admin-title h1{font:800 25px Manrope;margin:0 0 6px}.reels-admin-title p{font-size:11px;color:#91a69a;margin:0}
+    [data-section="reels"]{display:block}
+    .small{font-size:10px}
+    @media(max-width:650px){.reels-admin-shell{padding:10px}.reels-admin-top{padding:12px}.reels-admin-title h1{font-size:21px}}
+  </style>
+</head>
+<body>
+  <main class="reels-admin-shell">
+    <header class="reels-admin-top">
+      <div class="reels-admin-brand">ZUNE PREMIUM ADMIN<small>CONTENT CONTROL CENTER</small></div>
+      <a href="index.html#dashboard">← Rudi Dashboard</a>
+    </header>
+    <section class="reels-admin-title"><h1>Reels Management</h1><p>Simamia Reels za Sellers na ZUNE Official, music library na usalama wa maudhui.</p></section>
+    <section class="page-section active" data-section="reels"></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="js/config.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/core.js"></script>
+  <script>
+    window.ZUNE_AUTH_READY = window.ZUNE_SECURITY.requireAdmin();
+    window.ZUNE_AUTH_READY.catch(function(error){
+      console.error('Admin authentication:',error);
+      var section=document.querySelector('[data-section="reels"]');
+      if(section)section.innerHTML='<div class="notice-box">Admin authentication failed: '+String(error.message||error)+'</div>';
+    });
+  </script>
+  <script src="js/reels-admin.js?v=20261125-2"></script>
+</body>
+</html>
