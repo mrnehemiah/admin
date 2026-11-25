@@ -89,7 +89,7 @@ async function uploadAdminReelTus(file,path){
  if(!session?.access_token)throw new Error('Session ya Admin imeisha. Ingia tena.');
  const endpoint='https://rpkogiieegqgxqbzwxwo.storage.supabase.co/storage/v1/upload/resumable';
  return await new Promise((resolve,reject)=>{
-  const upload=new tus(file,{endpoint,headers:{authorization:'Bearer '+session.access_token,apikey:window.SUPABASE_ANON_KEY||''},metadata:{bucketName:BUCKET,objectName:path,contentType:file.type||'application/octet-stream',cacheControl:'3600'},chunkSize:6*1024*1024,retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
+  const upload=new tus(file,{endpoint,headers:{authorization:'Bearer '+session.access_token,apikey:window.ZUNE_CONFIG?.SUPABASE_PUBLISHABLE_KEY||''},metadata:{bucketName:BUCKET,objectName:path,contentType:file.type||'application/octet-stream',cacheControl:'3600'},chunkSize:6*1024*1024,retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
    onProgress:(sent,total)=>{const pct=total?Math.round(sent/total*100):0;const msg=$('#adminReelMessage');if(msg)msg.textContent='Inapakia video kwa vipande: '+pct+'%';},
    onError:reject,onSuccess:()=>resolve({path})});
   upload.start();
