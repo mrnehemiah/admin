@@ -39,7 +39,7 @@ async function load(){
   const [profilesRes,productsRes,itemsRes,checkoutRes,deliveriesRes]=await Promise.all([
    buyerIds.length?db().from('profiles').select('id,full_name,phone_number,email').in('id',buyerIds):Promise.resolve({data:[],error:null}),
    productIds.length?db().from('products').select('id,title,vendor_id').in('id',productIds):Promise.resolve({data:[],error:null}),
-   db().from('order_items').select('order_id,product_name,quantity,seller_id').in('order_id',allOrders.map(x=>x.id)),
+   db().from('order_items').select('order_id,product_name,quantity,seller_id,variant_label,variant_sku').in('order_id',allOrders.map(x=>x.id)),
    checkoutIds.length?db().from('order_checkouts').select('id,subtotal,delivery_total,grand_total,discount_total,payment_method,recipient_name,recipient_phone,recipient_email,country,region,district,ward,delivery_address,latitude,longitude').in('id',checkoutIds):Promise.resolve({data:[],error:null}),
    checkoutIds.length?db().from('order_deliveries').select('checkout_id,vendor_id,delivery_fee').in('checkout_id',checkoutIds):Promise.resolve({data:[],error:null})
   ]);
@@ -65,7 +65,7 @@ async function load(){
    const product=products.get(o.product_id)||{},sellerId=items[0]?.seller_id||product.vendor_id;
    const sellerKey=o.checkout_id+'|'+sellerId,sellerSubtotal=sellerSubtotals.get(sellerKey)||Number(o.total_price||0),sellerDelivery=deliveryFees.get(sellerKey)||0;
    const orderValue=Number(o.total_price||0),checkoutSubtotal=Number(checkout.subtotal||0),discountShare=checkoutSubtotal>0?Number(checkout.discount_total||0)*(orderValue/checkoutSubtotal):0,deliveryShare=sellerSubtotal>0?sellerDelivery*(orderValue/sellerSubtotal):0;
-   const productSummary=items.length?items.map(it=>(it.product_name||'Bidhaa')+' × '+(it.quantity||1)).join(', '):((product.title||'Bidhaa')+(o.quantity?' × '+o.quantity:''));
+   const productSummary=items.length?items.map(it=>(it.product_name||'Bidhaa')+(it.variant_label?' · '+it.variant_label:'')+' × '+(it.quantity||1)).join(', '):((product.title||'Bidhaa')+(o.variant_label?' · '+o.variant_label:'')+(o.quantity?' × '+o.quantity:''));
    return {...o,buyer_name:buyer.full_name,buyer_phone:buyer.phone_number,buyer_email:buyer.email,
     recipient_name:o.recipient_name||checkout.recipient_name,recipient_phone:o.recipient_phone||checkout.recipient_phone,
     buyer_email:buyer.email||checkout.recipient_email,store_name:storeNames.get(sellerId),seller_name:sellerNames.get(sellerId),
