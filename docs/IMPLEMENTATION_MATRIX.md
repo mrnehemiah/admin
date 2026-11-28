@@ -2,7 +2,7 @@
 
 | Module | UI | Live source | Write actions in UI | Status |
 |---|---|---|---|---|
-| Dashboard | Yes | `admin_dashboard_overview()` | None | Live read |
+| Dashboard / Admin Intelligence | Yes | `admin_intelligence_overview(p_from,p_to)` | None | Guarded live read; date filters; gross order value and paid cash separated |
 | Users | Yes | `admin_list_users()` | Suspend/reactivate via `admin_set_user_status()` | Live read + guarded RPC |
 | Sellers & Stores | Yes | `stores` | None | Live read |
 | Seller Applications | Yes | `admin_list_seller_applications()` | Approve via `approve_seller_application()` | Live read + guarded RPC |
