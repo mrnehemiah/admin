@@ -93,7 +93,8 @@ function openAction(p,action){
   if(action==='message'&&message.length<5){ui().toast('Ujumbe lazima uwe na angalau herufi 5.','warning');return;}
   busy=true;const btn=e.submitter;btn.disabled=true;btn.textContent='Inahifadhi...';
   try{
-   await A().rpc('zune_admin_manage_product',{p_product_id:p.id,p_action:action,p_reason:reason||null,p_message:message||null});
+   const result=await A().rpc('zune_admin_manage_product',{p_product_id:p.id,p_action:action,p_reason:reason||null,p_message:message||null});
+   if(!result||result.success!==true)throw new Error('Backend haikuthibitisha mabadiliko ya bidhaa.');
    ui().toast(action==='message'?'Ujumbe umetumwa kwa Seller.':'Bidhaa imesasishwa na Seller ametumiwa taarifa.','success');
    overlay.remove();$('zuneProductModal')?.remove();await load();
   }catch(err){ui().toast(err.message||'Kitendo kimeshindwa.','error');}
