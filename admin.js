@@ -9,6 +9,7 @@
    ui().toast('Umeingia kwenye ZUNE PREMIUM ADMIN.','success');
    document.dispatchEvent(new Event('zune:admin-refresh'));
    const health=$('#systemStatusText');if(health)health.textContent='Admin amethibitishwa';
+   await runSystemHealthChecks();
   }catch(e){console.error(e);const msg=$('#globalMessage');if(msg){msg.hidden=false;msg.textContent=e.message||'Imeshindikana kuthibitisha Admin.';}ui().toast(e.message||'Admin access denied','error');}
  }
  function schemaNoticePages(){
@@ -16,10 +17,34 @@
    'badge-requests':'Schema ya verified badge requests haijawekwa kwenye package kwa sababu jina la jedwali na columns halijathibitishwa.',
    'badge-management':'Verified badge status ya profiles.is_verified inasomwa. Mabadiliko ya badge yatahitaji RPC salama ya backend.',
    categories:'Categories na subcategories husimamiwa kupitia Admin RPC zenye uthibitishaji wa Admin na audit log.',
-   security:'Sehemu ya usalama inaonyesha access model. Matukio maalum yatahitaji security-events table.',
-   'system-health':'Health check ya Supabase inategemea session na queries za dashboard.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Backup na recovery husimamiwa kupitia Supabase Dashboard/CLI, si frontend browser.'
+   security:'Security events zinasomwa kutoka security_events; risk posture na RLS/RPC findings zinaonekana kwenye Admin Intelligence Dashboard.',
+   'system-health':'Health checks za Data API, Authentication, Admin authorization na Marketplace Data API huhifadhiwa kwenye system_health_logs. Cloud uptime na backup restore bado huthibitishwa Supabase Dashboard/CLI.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Backup na recovery husimamiwa kupitia Supabase Dashboard/CLI, si frontend browser.'
   };
   Object.entries(pending).forEach(([id,msg])=>c().notice(id,msg));
+ }
+ async function runSystemHealthChecks(){
+  const db=c().db();if(!db)return;
+  const checks=[
+   ['database',async()=>{const r=await db.from('profiles').select('id',{head:true,count:'exact'});if(r.error)throw r.error;}],
+   ['authentication',async()=>{const r=await db.auth.getSession();if(r.error)throw r.error;if(!r.data?.session?.user)throw new Error('Hakuna active Admin session.');}],
+   ['admin_authorization',async()=>{const r=await db.rpc('admin_security_posture_overview');if(r.error)throw r.error;if(!r.data?.single_admin_ok)throw new Error('Single Admin Mkuu invariant inahitaji ukaguzi.');}],
+   ['marketplace_data_api',async()=>{const results=await Promise.all([db.from('orders').select('id',{head:true,count:'exact'}),db.from('products').select('id',{head:true,count:'exact'})]);if(results[0].error)throw results[0].error;if(results[1].error)throw results[1].error;}]
+  ];
+  const labels={database:'Supabase Data API',authentication:'Supabase Authentication',admin_authorization:'Admin authorization',marketplace_data_api:'Marketplace Data API'};
+  const results=await Promise.all(checks.map(async([component,run])=>{
+   const start=performance.now();let status='healthy',details={};
+   try{await run();}catch(e){status='degraded';details={message:String(e?.message||e).slice(0,240)};}
+   const latency=Math.max(0,Math.round(performance.now()-start));
+   try{const saved=await db.rpc('admin_record_system_health_check',{p_component:component,p_status:status,p_latency_ms:latency,p_details:details});if(saved.error)throw saved.error;}
+   catch(e){console.warn('Health log haijahifadhiwa:',component,e.message);}
+   return {component,status,latency,details};
+  }));
+  const textFor=r=>labels[r.component]+': '+r.status.toUpperCase()+' · '+r.latency+' ms'+(r.details.message?' · '+r.details.message:'');
+  const sup=results.find(x=>x.component==='database'),auth=results.find(x=>x.component==='authentication'),market=results.find(x=>x.component==='marketplace_data_api');
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  set('supabaseHealth',textFor(sup));set('authHealth',textFor(auth));set('serviceHealth',textFor(market));
+  const healthSection=document.querySelector('[data-section="system-health"]');
+  if(healthSection){let footer=healthSection.querySelector('[data-health-footnote]');if(!footer){footer=document.createElement('p');footer.dataset.healthFootnote='1';footer.className='notice-box';healthSection.appendChild(footer);}footer.textContent='Vipimo hivi vinakagua Data API, Authentication, Admin authorization na Marketplace Data API wakati Admin anapoingia. Haviwakilishi uptime ya cloud, Storage, Edge Functions au uthibitisho wa backup restore.';}
  }
  function bindActions(){
   document.getElementById('globalSearch')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;const page=/order/i.test(q)?'orders':/seller|duka/i.test(q)?'sellers':/product|bidhaa/i.test(q)?'products':'users';window.ZUNE_ROUTER.show(page);const target=document.querySelector(`[data-section="${page}"] input[type="search"], [data-section="${page}"] input`);if(target){target.value=q;target.dispatchEvent(new Event('input'));}});
