@@ -177,3 +177,13 @@ Run `node --check` against the JavaScript files after editing. This package uses
 - Run `sql/02_admin_action_rpcs.sql` after reviewing its assumptions: `admin_review_seller_application`, `admin_review_badge_request`, `admin_set_badge`. Buttons show an error until it is applied.
 - Fixed: syntax error in `js/core.js`, duplicate `totalUsers` id, stale search responses, full-filter Users export with CSV formula protection, `removed` admins blocked at login.
 - Still disabled (no RPC): Block seller, Delete seller, permanent removal.
+
+
+## Production blockers verified on 2026-11-28
+
+- Supabase organization plan is **Free**. Supabase's current backup documentation says daily managed database backups are for Pro/Team/Enterprise; Free projects should export with Supabase CLI and keep off-site copies. No production restore was started because it would replace live data and cause downtime.
+- Supabase Security Advisor reports auth_leaked_password_protection as a warning. Supabase documents leaked-password protection as available on Pro and above. It has not been enabled or represented as enabled.
+- Supabase platform-account MFA is an owner-level account security setting and requires the owner to enroll an authenticator and retain recovery codes. It cannot be enrolled by a repository deployment or by a database migration.
+- Project health advisor returned no health lints. Latest recorded application health probes reported Data API, Auth session, Admin authorization and Marketplace Data API as healthy. Recent unified logs had 1,789 Edge, 56 Storage and 128 Auth log events; a simple event-message scan found no strings matching error or failed in those sources. This text scan is not a complete error-rate/SLO monitor.
+- Edge Functions listed by Supabase were ACTIVE at inspection. That status is not a synthetic execution test of every provider integration.
+- Remaining production owner actions: upgrade the Supabase organization to Pro or higher if managed daily backups and leaked-password protection are required; enable MFA in Supabase Account Security; create an off-site logical backup for Free tier or verify managed backups after upgrade; restore into a separate project and validate rows, policies, functions, and Storage objects. Storage objects are not included in database backups.
