@@ -57,7 +57,7 @@ ZUNE_PREMIUM_ADMIN/
 - Added guarded RPCs `admin_intelligence_overview(p_from, p_to)` and `admin_security_posture_overview()` in `migrations/20261128_admin_intelligence_overview.sql` and `migrations/20261128_admin_security_posture_overview.sql`.
 - RPC requires a signed-in Admin Mkuu, verifies the single-admin invariant, validates the date window, and grants execution to `authenticated` only (not `anon`).
 - Dashboard now reads aggregate metrics from the RPC rather than independently counting raw tables for the primary KPI cards.
-- Date filters: last 7 days, last 30 days, last 90 days, this month, all time, and custom date range.
+- Date filters: today, yesterday, last 7 days, last 30 days, last 90 days, this month, last month, all time, and custom date range.
 - Financial measures are explicitly separated: completed-order gross value and order commission are not described as confirmed cash received; paid payments, paid verification transactions, wallet liabilities, pending withdrawals, and Admin Wallet balance are separate measures.
 - Operations signals include open disputes (including waiting-for-buyer/seller states), open support, in-transit deliveries, payout holds, high/critical security events, AI usage/error summaries, single-admin invariant, public-table RLS coverage, anonymous SECURITY DEFINER RPC count, and recent audit activity.
 - Dashboard failures show an error state; it does not fall back to fabricated or partial-sample financial totals.
