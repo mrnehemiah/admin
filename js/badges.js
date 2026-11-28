@@ -33,9 +33,10 @@
     if(error)throw error;verified=data||[];renderVerified();}catch(e){c().error('verifiedUsersBody',e);}finally{inV=null;}})();return inV;}
   const reloadAll=()=>Promise.all([loadRequests(),loadVerified()]);
   function decide(r,decision){
-    const label={under_review:'Weka Under Review',approved:'Idhinisha',rejected:'Kataa'}[decision];
-    A().confirm({title:`${label} — Verified Badge`,message:`${label}: ${r.full_name||r.user_id}. ${decision==='approved'?'Badge itatolewa kwa mtumiaji huyu.':''} Andika sababu.`,confirmText:label,
-      fn:async reason=>{await A().rpc('admin_review_zune_badge_request',{p_request_id:r.id,p_decision:decision==='under_review'?'approved':decision,p_reason:reason});ui().toast('Ombi la badge limesasishwa.','success');await reloadAll();}});
+    if(!['approved','rejected'].includes(decision)){ui().toast('Uamuzi huu haujawezeshwa na backend iliyothibitishwa.','warning');return;}
+    const label={approved:'Idhinisha',rejected:'Kataa'}[decision];
+    A().confirm({title:`${label} — Verified Badge`,message:`${label}: ${r.full_name||r.user_id}. ${decision==='approved'?'Badge itatolewa kwa mtumiaji huyu.':'Ombi litakataliwa; badge haitatolewa.'} Andika sababu.`,confirmText:label,
+      fn:async reason=>{const result=await A().rpc('admin_review_zune_badge_request',{p_request_id:r.id,p_decision:decision,p_reason:reason});if(!result||result.ok===false)throw new Error('Backend haikuthibitisha uamuzi wa badge.');ui().toast('Ombi la badge limesasishwa.','success');await reloadAll();}});
   }
   function removeBadge(userId,label,reason=''){
     A().confirm({title:'Ondoa Verified Badge',message:`Ondoa badge: ${label}. Akaunti haitafutwa.`,confirmText:'Remove Badge',reason,
