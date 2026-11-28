@@ -1,5 +1,10 @@
 -- ZUNE Delivery Phase 4 payout rules
 -- Apply after supabase-driver-payments.sql.
+-- Direct table writes are revoked; Admin must use the guarded RPC below.
+revoke insert, update, delete on public.zune_driver_payment_records from public,anon,authenticated;
+grant select on public.zune_driver_payment_records to authenticated;
+drop policy if exists zune_driver_payment_admin_insert on public.zune_driver_payment_records;
+drop policy if exists zune_driver_payment_admin_update on public.zune_driver_payment_records;
 -- Approved policy: fixed 3% of gross driver payout is credited to Admin Wallet
 -- after Admin confirms the transfer. Any active related dispute holds unpaid payout.
 
