@@ -44,7 +44,14 @@ The included SQL migration expects an existing `public.zune_is_admin()` function
 - [x] Admin-login health probes for Data API, Auth session, Admin authorization and Marketplace Data API, written only through the guarded health-log RPC.
 - [x] Recent Security Events visible in the Admin Security Center.
 - [x] Period-based reports and CSV snapshot export.
-- [ ] Admin MFA enablement/verification and leaked-password protection check in Supabase Auth settings.
-- [ ] Automated backup configuration and a successful restore drill, verified outside the browser through Supabase Dashboard/CLI.
+- [ ] Owner enables MFA under Supabase Account Security and safely stores recovery codes. This is an account-level action requiring the owner's authenticator.
+- [ ] Upgrade organization from Free to Pro or higher if leaked-password protection is required; Supabase Security Advisor currently flags it as disabled and the feature is Pro+.
+- [ ] Because the current Supabase organization is Free, configure scheduled supabase db dump logical exports to private off-site storage; or upgrade and verify managed daily backups.
+- [ ] Perform a restore drill into a separate non-production project and validate database objects/data plus separately-backed-up Storage files. Never restore over production as a test.
 - [ ] Live browser/mobile E2E as Admin Mkuu and review of browser console/network errors.
-- [ ] Cloud uptime, Storage and Edge Function monitoring integration (not represented by the browser probes).
+- [ ] Add synthetic checks for Storage and each critical Edge Function, plus alert routing and cloud uptime monitoring. Supabase listed all deployed Edge Functions as ACTIVE; this is not an execution test.
+
+
+## Verified project constraints
+
+The linked Supabase organization is currently on the Free plan. Managed daily backups are not included on Free; Supabase recommends regular CLI exports and off-site retention. Leaked-password protection is Pro+ according to Supabase Auth documentation. MFA for the Supabase platform account must be enrolled by the account owner in Account Security with an authenticator app and recovery codes. These cannot be honestly marked complete by code changes alone.
