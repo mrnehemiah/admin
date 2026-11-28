@@ -18,7 +18,7 @@ function render(){
  body.innerHTML=deliveries.length?deliveries.map(d=>{
   const dr=drivers.find(x=>x.user_id===d.assigned_driver_id)||{},p=payments.find(x=>x.delivery_id===d.id),held=d.payout_status==='on_hold_dispute';
   const state=held?'<span class="badge-pill danger">Mgogoro · imesimamishwa</span>':(p?pill(p.status):'<span class="badge-pill warning">Haijawekwa</span>');
-  const action=held?'<button class="secondary-btn" type="button" disabled>Imesimamishwa</button>':'<button class="secondary-btn" data-driver-payout="'+esc(d.id)+'">'+(p?'Hariri':'Weka malipo')+'</button>';
+  const action=held?'<button class="secondary-btn" type="button" disabled>Imesimamishwa</button>':p?.status==='paid'?'<button class="secondary-btn" type="button" disabled>Imelipwa · imefungwa</button>':'<button class="secondary-btn" type="button" data-driver-payout="'+esc(d.id)+'">'+(p?'Hariri':'Weka malipo')+'</button>';
   return '<tr><td><b>'+esc(d.id.slice(0,8).toUpperCase())+'</b><small>'+esc(date(d.created_at))+'</small></td><td>'+esc(dr.full_name||'Dereva')+'<small>'+esc(dr.phone_number||'')+'</small></td><td>'+money(d.delivery_fee)+'</td><td>'+money(d.driver_payout_amount)+'</td><td>'+money(p?.deduction??0)+'</td><td>'+esc(p?money(p.net_amount):'Haijawekwa')+'</td><td>'+esc(p?(methods[p.payment_method]||p.payment_method):'—')+'</td><td>'+state+'</td><td>'+esc(p?.transaction_reference||'—')+'</td><td>'+action+'</td></tr>';
  }).join(''):'<tr><td colspan="10" class="empty-state">Hakuna delivery iliyokamilika na kuthibitishwa.</td></tr>';
  const hist=$('zdpHistoryRows');
@@ -41,7 +41,7 @@ async function load(){
  finally{busy=false;if(btn){btn.disabled=false;btn.textContent='↻ Refresh'}}
 }
 function openModal(id){
- const d=deliveries.find(x=>x.id===id);if(!d)return;if(d.payout_status==='on_hold_dispute'){toast('Malipo yamesimamishwa kwa mgogoro wa oda mpaka Admin autatue.','warning');return;}const p=payments.find(x=>x.delivery_id===id),dr=drivers.find(x=>x.user_id===d.assigned_driver_id)||{};active=d;
+ const d=deliveries.find(x=>x.id===id);if(!d)return;if(d.payout_status==='on_hold_dispute'){toast('Malipo yamesimamishwa kwa mgogoro wa oda mpaka Admin autatue.','warning');return;}const p=payments.find(x=>x.delivery_id===id);if(p?.status==='paid'){toast('Malipo yaliyokamilika yamefungwa na hayawezi kuhaririwa. Tumia utaratibu rasmi wa marekebisho.','warning');return;}const dr=drivers.find(x=>x.user_id===d.assigned_driver_id)||{};active=d;
  $('zdpModalTitle').textContent=(p?'Hariri malipo':'Weka malipo')+' · '+(dr.full_name||'Dereva');
  $('zdpModalDelivery').textContent='Delivery '+id+' · Ada ya delivery: '+money(d.delivery_fee);
  $('zdpAmount').value=p?.amount??d.driver_payout_amount??'';$('zdpDeduction').value=(p?.deduction??Math.round(Number($('zdpAmount').value||0)*0.03*100)/100);$('zdpDeduction').readOnly=true;
