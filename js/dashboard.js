@@ -140,9 +140,9 @@
     set('intelPeriodOrders',number(data.orders_period));
     set('intelOrderOutcomes',number(data.orders_completed_period)+' completed · '+number(data.orders_cancelled_period)+' cancelled');
     set('intelDriverPayouts',money(data.driver_payouts_paid_period_tzs));
-    const health=data.latest_health_check||{};
-    set('intelHealthStatus',health.status||'Haijulikani');
-    set('intelHealthDetail',health.component?(health.component+' · '+(health.latency_ms??'—')+' ms · '+new Date(health.checked_at).toLocaleString('sw-TZ')):'Hakuna health check iliyorekodiwa');
+    const latestHealth=data.latest_health_check||{};
+    set('intelHealthStatus',latestHealth.status||'Haijulikani');
+    set('intelHealthDetail',latestHealth.component?(latestHealth.component+' · '+(latestHealth.latency_ms??'—')+' ms · '+new Date(latestHealth.checked_at).toLocaleString('sw-TZ')):'Hakuna health check iliyorekodiwa');
     const backup=data.latest_backup||{};
     set('intelBackupStatus',backup.status||'Haijulikani');
     set('intelBackupDetail',backup.operation?(backup.operation+' · '+new Date(backup.created_at).toLocaleString('sw-TZ')+(backup.reference?' · '+backup.reference:'')):'Hakuna backup log iliyorekodiwa');
