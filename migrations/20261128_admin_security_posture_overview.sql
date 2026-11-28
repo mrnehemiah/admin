@@ -8,7 +8,7 @@ set search_path = ''
 as $function$
 declare
   v_admin_count integer; v_tables_total integer; v_rls_disabled integer; v_rls_no_policy integer;
-  v_public_definer_anon integer; v_audit_7d integer; v_security_alerts_7d integer;
+  v_public_definer_anon integer; v_public_definer_anon_unreviewed integer; v_audit_7d integer; v_security_alerts_7d integer;
   v_open_disputes integer; v_payout_holds integer; v_ai_errors_30d integer;
   v_rls_disabled_names jsonb; v_rls_no_policy_names jsonb; v_anon_definer_names jsonb;
   v_health jsonb; v_backup jsonb; v_health_status text; v_health_checked timestamptz;
@@ -21,6 +21,7 @@ begin
   select count(*) into v_rls_disabled from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p') and not c.relrowsecurity;
   select count(*) into v_rls_no_policy from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p') and c.relrowsecurity and not exists(select 1 from pg_catalog.pg_policies pol where pol.schemaname='public' and pol.tablename=c.relname);
   select count(*) into v_public_definer_anon from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef and has_function_privilege('anon',p.oid,'EXECUTE');
+  select count(*) into v_public_definer_anon_unreviewed from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef and has_function_privilege('anon',p.oid,'EXECUTE') and p.proname not in ('list_active_seller_promotions','zune_store_follow_stats');
   select coalesce(jsonb_agg(c.relname order by c.relname),'[]'::jsonb) into v_rls_disabled_names from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p') and not c.relrowsecurity;
   select coalesce(jsonb_agg(c.relname order by c.relname),'[]'::jsonb) into v_rls_no_policy_names from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p') and c.relrowsecurity and not exists(select 1 from pg_catalog.pg_policies pol where pol.schemaname='public' and pol.tablename=c.relname);
   select coalesce(jsonb_agg(jsonb_build_object('name',p.proname,'arguments',pg_catalog.pg_get_function_identity_arguments(p.oid)) order by p.proname),'[]'::jsonb) into v_anon_definer_names from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef and has_function_privilege('anon',p.oid,'EXECUTE');
@@ -31,12 +32,13 @@ begin
   select count(*) into v_ai_errors_30d from public.ai_usage_logs where created_at>=now()-interval '30 days' and status in ('error','failed');
   select jsonb_build_object('component',component,'status',status,'latency_ms',latency_ms,'checked_at',checked_at),status,checked_at into v_health,v_health_status,v_health_checked from public.system_health_logs order by checked_at desc limit 1;
   select jsonb_build_object('operation',operation,'status',status,'reference',reference,'created_at',created_at),status,created_at into v_backup,v_backup_status,v_backup_created from public.backup_recovery_logs order by created_at desc limit 1;
+  if v_admin_count<>1 then v_risk_score:=v_risk_score+25;v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','single_admin_invariant','severity','critical','count',v_admin_count,'message','Single Admin Mkuu invariant is not satisfied')); end if;
   v_risk_score:=v_risk_score+least(30,v_security_alerts_7d*10);
   if v_security_alerts_7d>0 then v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','security_events','severity','high','count',v_security_alerts_7d,'message','High/critical security events in the last 7 days')); end if;
   v_risk_score:=v_risk_score+least(20,v_rls_disabled*10);
   if v_rls_disabled>0 then v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','rls_disabled','severity','critical','count',v_rls_disabled,'message','Public tables with RLS disabled')); end if;
   v_risk_score:=v_risk_score+least(20,v_public_definer_anon*10);
-  if v_public_definer_anon>0 then v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','anon_definer','severity','high','count',v_public_definer_anon,'message','SECURITY DEFINER RPCs executable by anon; review each public contract')); end if;
+  if v_public_definer_anon_unreviewed>0 then v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','anon_definer','severity','high','count',v_public_definer_anon_unreviewed,'message','Unreviewed SECURITY DEFINER RPCs executable by anon; review each public contract')); end if;
   v_risk_score:=v_risk_score+least(10,v_open_disputes*2);
   if v_open_disputes>0 then v_risk_factors:=v_risk_factors||jsonb_build_array(jsonb_build_object('code','open_disputes','severity','medium','count',v_open_disputes,'message','Open transaction disputes require review')); end if;
   v_risk_score:=v_risk_score+least(10,v_payout_holds*2);
@@ -55,7 +57,7 @@ begin
     'admin_accounts_count',v_admin_count,'single_admin_ok',v_admin_count=1,'public_tables_total',v_tables_total,
     'public_tables_rls_disabled',v_rls_disabled,'public_tables_rls_enabled_no_policy',v_rls_no_policy,
     'public_tables_rls_disabled_names',v_rls_disabled_names,'public_tables_rls_no_policy_names',v_rls_no_policy_names,
-    'public_security_definer_anon_count',v_public_definer_anon,'public_security_definer_anon_functions',v_anon_definer_names,
+    'public_security_definer_anon_count',v_public_definer_anon,'public_security_definer_anon_unreviewed_count',v_public_definer_anon_unreviewed,'public_security_definer_anon_functions',v_anon_definer_names,
     'admin_audit_events_7d',v_audit_7d,'high_security_events_7d',v_security_alerts_7d,
     'open_disputes',v_open_disputes,'payout_holds',v_payout_holds,'ai_errors_30d',v_ai_errors_30d,
     'latest_health_check',v_health,'latest_backup',v_backup,'risk_score',v_risk_score,'risk_level',v_risk_level,
