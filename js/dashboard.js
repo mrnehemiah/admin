@@ -55,7 +55,11 @@
       <article><span>Deliveries zinazosafirishwa</span><strong id="intelDeliveries">—</strong><small>Oda zilizo in_transit</small></article>
       <article><span>Delivery payouts zimesimamishwa</span><strong id="intelPayoutHolds">—</strong><small>Mgogoro wa oda</small></article>
       <article><span>Security alerts (siku 7)</span><strong id="intelSecurityAlerts">—</strong><small>Severity: high / critical</small></article>
-      <article><span>AI errors (siku 30)</span><strong id="intelAiErrors">—</strong><small id="intelAiUsage">—</small></article>`;
+      <article><span>AI errors (siku 30)</span><strong id="intelAiErrors">—</strong><small id="intelAiUsage">—</small></article>
+      <article><span>Public tables bila RLS</span><strong id="intelRlsDisabled">—</strong><small id="intelRlsCoverage">—</small></article>
+      <article><span>Public SECURITY DEFINER RPCs</span><strong id="intelPublicRpc">—</strong><small>Functions zinazoweza kuitwa na anon</small></article>
+      <article><span>Admin audit events (siku 7)</span><strong id="intelAuditEvents">—</strong><small>Matukio yaliyorekodiwa</small></article>
+      <article><span>Admin Mkuu accounts</span><strong id="intelAdminCount">—</strong><small id="intelAdminInvariant">—</small></article>`;
     filter.after(panel);
     const note=document.createElement('p');note.className='admin-intel-footnote';
     note.id='adminIntelFootnote';
@@ -88,12 +92,12 @@
 
   function set(id,value){C().setText(id,value??'—');}
   function label(selector,text){const el=document.querySelector(selector);if(el)el.textContent=text;}
-  function render(data,from,to){
+  function render(data,security,from,to){
     set('totalUsers',number(data.users_total));set('totalSellers',number(data.sellers_total));
     set('totalOrders',number(data.orders_total));set('totalProducts',number(data.products_total));
     set('pendingApplications',number(Number(data.seller_applications_pending||0)+Number(data.verifications_pending||0)));
     set('pendingOrders',number(data.orders_pending));set('openDisputes',number(data.disputes_open));
-    set('openComplaints',number(data.disputes_open));set('openTickets',number(data.support_open));
+    set('openComplaints',number(data.disputes_period));set('openTickets',number(data.support_open));
     set('totalRevenue',money(data.gross_completed_orders_period_tzs));
     set('totalCommission',money(data.commission_completed_orders_period_tzs));
     set('intelPaidPayments',money(data.payments_paid_period_tzs));
@@ -106,6 +110,12 @@
     set('intelSecurityAlerts',number(data.security_events_critical_7d));
     set('intelAiErrors',number(data.ai_errors_30d));
     set('intelAiUsage',number(data.ai_requests_30d)+' requests · '+money(data.ai_estimated_cost_30d)+' estimated cost');
+    set('intelRlsDisabled',number(security.public_tables_rls_disabled));
+    set('intelRlsCoverage',number(security.public_tables_total)+' public tables · '+number(security.public_tables_rls_enabled_no_policy)+' RLS no-policy (deny by default)');
+    set('intelPublicRpc',number(security.public_security_definer_anon_count));
+    set('intelAuditEvents',number(security.admin_audit_events_7d));
+    set('intelAdminCount',number(security.admin_accounts_count));
+    set('intelAdminInvariant',security.single_admin_ok?'Single Admin Mkuu invariant: OK':'Single Admin Mkuu invariant: ATTENTION');
     const rangeName=state.range==='7d'?'Siku 7 zilizopita':state.range==='90d'?'Siku 90 zilizopita':state.range==='month'?'Mwezi huu':state.range==='all'?'Tangu mwanzo':state.range==='custom'?'Kipindi maalum':'Siku 30 zilizopita';
     set('adminIntelPeriod',rangeName+' · '+new Date(from).toLocaleDateString('sw-TZ')+' – '+new Date(to).toLocaleDateString('sw-TZ'));
     set('adminIntelFootnote','Thamani ya oda zilizokamilika: '+money(data.gross_completed_orders_period_tzs)+'. Commission iliyoandikwa kwenye oda zilizokamilika: '+money(data.commission_completed_orders_period_tzs)+'. Hizi si uthibitisho wa fedha zilizopokelewa kwenye Admin Wallet.');
@@ -115,13 +125,13 @@
     if(commissionCard){const spans=commissionCard.querySelectorAll('.metric-top span,small');if(spans[0])spans[0].textContent='Commission kwenye oda zilizokamilika';if(spans[1])spans[1].textContent='Order commission record · 3% policy';}
     const generated=new Date(data.generated_at||Date.now());
     set('adminIntelRefresh', '↻');
-    const status=data.latest_health_check;
+    const status=security;
     const health=document.querySelector('#dashboardPage .security-summary');
     if(health){
       const line=health.querySelector('.security-line b');
-      if(line)line.textContent=status?.status?String(status.status).toUpperCase():'Hakuna health check';
+      if(line)line.textContent=status?.single_admin_ok?'Admin Mkuu mmoja: IMETHIBITISHWA':'Admin Mkuu count inahitaji ukaguzi';
       const rls=health.querySelectorAll('.security-line b')[1];
-      if(rls)rls.textContent='Audit inafuatiliwa';
+      if(rls)rls.textContent=Number(status?.public_tables_rls_disabled||0)===0?'RLS imewashwa kwenye public tables':'RLS OFF: '+number(status.public_tables_rls_disabled)+' tables';
     }
   }
 
@@ -133,15 +143,20 @@
       if(window.ZUNE_AUTH_READY)await window.ZUNE_AUTH_READY;
       const db=C().db();if(!db)throw new Error('Supabase haijaunganishwa.');
       const windowRange=dateWindow();
-      const {data,error}=await db.rpc('admin_intelligence_overview',{p_from:windowRange.from,p_to:windowRange.to});
-      if(error)throw error;
-      if(!data||typeof data!=='object')throw new Error('Admin Intelligence RPC haikurudisha muhtasari sahihi.');
-      render(data,windowRange.from,windowRange.to);
+      const [overviewResult,securityResult]=await Promise.all([
+        db.rpc('admin_intelligence_overview',{p_from:windowRange.from,p_to:windowRange.to}),
+        db.rpc('admin_security_posture_overview')
+      ]);
+      if(overviewResult.error)throw overviewResult.error;
+      if(securityResult.error)throw securityResult.error;
+      const data=overviewResult.data,security=securityResult.data;
+      if(!data||typeof data!=='object'||!security||typeof security!=='object')throw new Error('Admin Intelligence au Security Posture RPC haikurudisha muhtasari sahihi.');
+      render(data,security,windowRange.from,windowRange.to);
       try{const recent=await C().rows('orders',8);C().setRows('recentOrdersBody',recent,[{html:r=>'<strong>'+window.ZUNE_LAYOUT.esc(r.public_order_id||r.order_number||String(r.id||'').slice(0,8).toUpperCase())+'</strong>'},{key:'status',html:r=>window.ZUNE_LAYOUT.status(r.status)},{key:'created_at',html:r=>window.ZUNE_LAYOUT.date(r.created_at)}]);}catch(e){console.warn('Recent orders haijapakiwa:',e.message);}
       try{await window.ZUNE_ACTIVITY_LOGS?.load?.();}catch(e){console.warn('Admin activity feed haijapakiwa:',e.message);}
       C().notice('dashboard','Takwimu zimepakiwa kupitia admin_intelligence_overview; thamani ya oda zilizokamilika, malipo yaliyorekodiwa na wallet liabilities vinaonyeshwa tofauti.');
     }catch(e){
-      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors'].forEach(id=>set(id,'—'));
+      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount'].forEach(id=>set(id,'—'));
       C().notice('dashboard','Admin Intelligence haikuweza kupakia takwimu: '+(e.message||e)+'. Hakuna makadirio ya fallback yatakayoonyeshwa.');
       console.error('Admin Intelligence load failed',e);
     }finally{
