@@ -15,7 +15,7 @@
   const pending={
    'badge-requests':'Schema ya verified badge requests haijawekwa kwenye package kwa sababu jina la jedwali na columns halijathibitishwa.',
    'badge-management':'Verified badge status ya profiles.is_verified inasomwa. Mabadiliko ya badge yatahitaji RPC salama ya backend.',
-   categories:'Schema ya categories haijathibitishwa; hakuna INSERT/DELETE ya kubahatisha.',
+   categories:'Categories na subcategories husimamiwa kupitia Admin RPC zenye uthibitishaji wa Admin na audit log.',
    security:'Sehemu ya usalama inaonyesha access model. Matukio maalum yatahitaji security-events table.',
    'system-health':'Health check ya Supabase inategemea session na queries za dashboard.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Backup na recovery husimamiwa kupitia Supabase Dashboard/CLI, si frontend browser.'
   };
