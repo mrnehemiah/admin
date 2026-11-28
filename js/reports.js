@@ -59,7 +59,7 @@
     const exportBtn=document.createElement('button');exportBtn.className='secondary-btn';exportBtn.type='button';exportBtn.textContent='Pakua snapshot ya ripoti (CSV)';exportBtn.onclick=exportSnapshot;
     el.append(controls,grid,note,exportBtn);
     const from=document.getElementById('reportFrom'),to=document.getElementById('reportTo');
-    from.value=windowRange.from.slice(0,10);to.value=new Date(new Date(windowRange.to).getTime()-86400000).toISOString().slice(0,10);
+    from.value=windowRange.from.slice(0,10);const now=new Date();const localToday=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);to.value=localToday;
     document.getElementById('refreshReportsBtn').onclick=load;
   }
   function exportSnapshot(){
