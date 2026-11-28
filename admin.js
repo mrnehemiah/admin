@@ -60,6 +60,7 @@
   if(healthSection){let footer=healthSection.querySelector('[data-health-footnote]');if(!footer){footer=document.createElement('p');footer.dataset.healthFootnote='1';footer.className='notice-box';healthSection.appendChild(footer);}footer.textContent='Vipimo hivi vinakagua Data API, Authentication, Admin authorization na Marketplace Data API wakati Admin anapoingia. Haviwakilishi uptime ya cloud, Storage, Edge Functions au uthibitisho wa backup restore.';}
  }
  function bindActions(){
+  document.getElementById('refreshHealthChecksBtn')?.addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Inapima…';try{await runSystemHealthChecks();ui().toast('Health checks zimekamilika.','success');}catch(err){ui().toast('Health checks zimeshindwa: '+err.message,'error');}finally{b.disabled=false;b.textContent='Run Health Checks';}});
   document.getElementById('globalSearch')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;const page=/order/i.test(q)?'orders':/seller|duka/i.test(q)?'sellers':/product|bidhaa/i.test(q)?'products':'users';window.ZUNE_ROUTER.show(page);const target=document.querySelector(`[data-section="${page}"] input[type="search"], [data-section="${page}"] input`);if(target){target.value=q;target.dispatchEvent(new Event('input'));}});
   document.getElementById('addSellerBtn')?.addEventListener('click',async()=>{
    const btn=document.getElementById('addSellerBtn');if(btn?.disabled)return;
