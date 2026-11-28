@@ -88,6 +88,12 @@
     findings.className='admin-security-findings';
     findings.innerHTML='<div><strong>Security findings za ukaguzi</strong><p>Orodha hii inaonyesha maeneo ya kuchunguza; RLS bila policy huzuia ufikiaji wa kawaida, si ushahidi wa data kuvuja.</p></div><div class="finding-columns"><div><b>RLS OFF tables</b><ul id="intelRlsOffList"><li>Inapakia…</li></ul></div><div><b>RLS enabled, no policy</b><ul id="intelRlsNoPolicyList"><li>Inapakia…</li></ul></div><div><b>Anon SECURITY DEFINER RPCs</b><ul id="intelAnonRpcList"><li>Inapakia…</li></ul></div></div>';
     note.after(findings);
+    const risk=document.createElement('section');
+    risk.id='adminOperationalRisk';
+    risk.className='admin-operational-risk';
+    risk.setAttribute('aria-live','polite');
+    risk.innerHTML='<div class="risk-head"><div><strong>Operational Risk Intelligence</strong><p>Alama ya uchambuzi inayotokana na security events, RLS, disputes, payout holds, AI errors, health na backup logs.</p></div><div class="risk-score"><strong id="intelRiskScore">—</strong><span id="intelRiskLevel">Inasubiri data</span></div></div><div id="intelRiskFactors" class="risk-factors"><p>Inapakia tathmini…</p></div><small class="risk-disclaimer">Alama hii ni kiashiria cha uendeshaji tu; si hukumu ya udanganyifu na haichukui hatua za moja kwa moja kwenye akaunti, oda au fedha.</small>';
+    findings.after(risk);
     const style=document.createElement('style');
     style.textContent=`
       .admin-intel-filter{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 14px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#102c24}
@@ -107,7 +113,20 @@
       .finding-columns>div{min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px;background:#102c24}
       .finding-columns b{font-size:10px;color:var(--text)}
       .finding-columns ul{margin:8px 0 0;padding-left:17px;max-height:150px;overflow:auto;color:var(--muted);font-size:10px;line-height:1.7;overflow-wrap:anywhere}
+      .admin-operational-risk{margin:0 0 18px;padding:15px;border:1px solid var(--line);border-radius:13px;background:#102c24}
+      .risk-head{display:flex;justify-content:space-between;gap:15px;align-items:center}
+      .risk-head strong{font:800 13px Manrope;color:var(--gold-2)}
+      .risk-head p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+      .risk-score{min-width:82px;text-align:center;padding:9px;border:1px solid var(--line);border-radius:10px;background:#081e18}
+      .risk-score strong{display:block;font-size:25px;color:var(--text)}
+      .risk-score span{display:block;font-size:9px;text-transform:uppercase;color:var(--gold-2)}
+      .risk-factors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+      .risk-factors p{margin:0;color:var(--muted);font-size:10px}
+      .risk-factor{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#0d261f;color:var(--text);font-size:10px;line-height:1.5}
+      .risk-factor b{display:block;margin-bottom:3px;color:var(--gold-2);font-size:9px;text-transform:uppercase}
+      .risk-disclaimer{display:block;color:var(--muted);font-size:9px;line-height:1.5}
       @media(max-width:900px){.finding-columns{grid-template-columns:1fr}}
+      @media(max-width:560px){.risk-factors{grid-template-columns:1fr}.risk-head{align-items:flex-start}}
       @media(max-width:900px){.admin-intel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:560px){.admin-intel-filter{align-items:flex-start}.admin-intel-controls{width:100%}.admin-intel-controls select,.admin-intel-controls input{flex:1;min-width:120px;max-width:none}.admin-intel-grid article{padding:12px}.admin-intel-grid article strong{font-size:17px}}
     `;
@@ -148,6 +167,16 @@
     fillFindings('intelRlsOffList',security.public_tables_rls_disabled_names,name=>String(name));
     fillFindings('intelRlsNoPolicyList',security.public_tables_rls_no_policy_names,name=>String(name));
     fillFindings('intelAnonRpcList',security.public_security_definer_anon_functions,item=>item.name+'('+item.arguments+')');
+    const score=Math.max(0,Math.min(100,Number(security.risk_score??0)));
+    set('intelRiskScore',score+'/100');
+    set('intelRiskLevel',String(security.risk_level||'unknown').toUpperCase());
+    const factors=$('intelRiskFactors');
+    if(factors){
+      factors.replaceChildren();
+      const entries=Array.isArray(security.risk_factors)?security.risk_factors:[];
+      if(!entries.length){const p=document.createElement('p');p.textContent='Hakuna risk factor iliyoripotiwa na vipimo vya sasa.';factors.appendChild(p);}
+      entries.forEach(item=>{const card=document.createElement('div');card.className='risk-factor';const b=document.createElement('b');b.textContent=String(item.severity||'info')+' · '+String(item.code||'signal');const body=document.createElement('span');body.textContent=String(item.message||'Signal imegunduliwa')+(item.count!=null?' · '+number(item.count):'');card.append(b,body);factors.appendChild(card);});
+    }
     set('intelAuditEvents',number(security.admin_audit_events_7d));
     set('intelAdminCount',number(security.admin_accounts_count));
     set('intelAdminInvariant',security.single_admin_ok?'Single Admin Mkuu invariant: OK':'Single Admin Mkuu invariant: ATTENTION');
@@ -203,7 +232,7 @@
       try{await window.ZUNE_ACTIVITY_LOGS?.load?.();}catch(e){console.warn('Admin activity feed haijapakiwa:',e.message);}
       C().notice('dashboard','Takwimu zimepakiwa kupitia admin_intelligence_overview; thamani ya oda zilizokamilika, malipo yaliyorekodiwa na wallet liabilities vinaonyeshwa tofauti.');
     }catch(e){
-      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount','intelNewUsers','intelNewSellers','intelPendingVerification','intelPeriodOrders','intelDriverPayouts','intelHealthStatus','intelBackupStatus'].forEach(id=>set(id,'—'));
+      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount','intelNewUsers','intelNewSellers','intelPendingVerification','intelPeriodOrders','intelDriverPayouts','intelHealthStatus','intelBackupStatus','intelRiskScore','intelRiskLevel'].forEach(id=>set(id,'—'));
       C().notice('dashboard','Admin Intelligence haikuweza kupakia takwimu: '+(e.message||e)+'. Hakuna makadirio ya fallback yatakayoonyeshwa.');
       console.error('Admin Intelligence load failed',e);
     }finally{
