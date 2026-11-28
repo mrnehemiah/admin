@@ -504,6 +504,13 @@
         <div><span>${esc(key.replaceAll('_',' '))}</span><strong>${esc(displayValue(key,value))}</strong></div>
       `).join('')+'</div>';
     };
+    const autoRowsTable = rows => {
+      if (!Array.isArray(rows) || !rows.length) return '<p class="users-muted">Hakuna rekodi zilizohifadhiwa.</p>';
+      const keys = Object.keys(rows[0]).filter(key => !['raw_user_meta_data','raw_app_meta_data'].includes(key)).slice(0,10);
+      return '<div class="table-wrap"><table><thead><tr>'+keys.map(key=>'<th>'+esc(key.replaceAll('_',' '))+'</th>').join('')+'</tr></thead><tbody>'+
+        rows.map(row=>'<tr>'+keys.map(key=>'<td>'+esc(displayValue(key,row[key]))+'</td>').join('')+'</tr>').join('')+
+        '</tbody></table></div>';
+    };
     const metricCards = [
 
       [
@@ -706,7 +713,17 @@
       section('Verification Requests', rowsTable(data.verification_requests, [
         ['Aina ya nyaraka','document_type'],['Namba ya nyaraka','document_number'],
         ['Aina','verification_type'],['Hali','status'],['Tarehe','created_at'],['Maelezo','admin_note']
-      ], 'Hakuna verification requests.'))
+      ], 'Hakuna verification requests.')),
+      section('Bidhaa za Mtumiaji / Seller', autoRowsTable(data.products)),
+      section('Oda alizonunua', autoRowsTable(data.buyer_orders)),
+      section('Oda alizouza', autoRowsTable(data.seller_orders)),
+      section('Malipo ya Mtumiaji', autoRowsTable(data.payments)),
+      section('Malipo ya Oda', autoRowsTable(data.order_payments)),
+      section('Wallet Transactions', autoRowsTable(data.wallet_transactions)),
+      section('Withdrawal Requests', autoRowsTable(data.withdrawals)),
+      section('Disputes', autoRowsTable(data.disputes)),
+      section('Support Tickets', autoRowsTable(data.support_tickets)),
+      section('Admin Actions History', autoRowsTable(data.admin_actions))
     ].join('');
     host.innerHTML =
 
