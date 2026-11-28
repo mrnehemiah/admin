@@ -8,7 +8,7 @@
 
   function dateWindow(){
     const now=new Date();let from;
-    if(state.range==='all')from=new Date('2000-01-01T00:00:00.000Z');
+    if(state.range==='all')from=new Date('1970-01-01T00:00:00.000Z');
     else if(state.range==='month')from=new Date(now.getFullYear(),now.getMonth(),1);
     else if(state.range==='custom'){
       const a=$('adminIntelFrom')?.value,b=$('adminIntelTo')?.value;
@@ -106,7 +106,6 @@
     set('intelSecurityAlerts',number(data.security_events_critical_7d));
     set('intelAiErrors',number(data.ai_errors_30d));
     set('intelAiUsage',number(data.ai_requests_30d)+' requests · '+money(data.ai_estimated_cost_30d)+' estimated cost');
-    label('#totalRevenue')?.textContent;
     const rangeName=state.range==='7d'?'Siku 7 zilizopita':state.range==='90d'?'Siku 90 zilizopita':state.range==='month'?'Mwezi huu':state.range==='all'?'Tangu mwanzo':state.range==='custom'?'Kipindi maalum':'Siku 30 zilizopita';
     set('adminIntelPeriod',rangeName+' · '+new Date(from).toLocaleDateString('sw-TZ')+' – '+new Date(to).toLocaleDateString('sw-TZ'));
     set('adminIntelFootnote','Thamani ya oda zilizokamilika: '+money(data.gross_completed_orders_period_tzs)+'. Commission iliyoandikwa kwenye oda zilizokamilika: '+money(data.commission_completed_orders_period_tzs)+'. Hizi si uthibitisho wa fedha zilizopokelewa kwenye Admin Wallet.');
