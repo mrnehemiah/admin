@@ -69,6 +69,7 @@
       <article><span>AI errors (siku 30)</span><strong id="intelAiErrors">—</strong><small id="intelAiUsage">—</small></article>
       <article><span>Public tables bila RLS</span><strong id="intelRlsDisabled">—</strong><small id="intelRlsCoverage">—</small></article>
       <article><span>Public SECURITY DEFINER RPCs</span><strong id="intelPublicRpc">—</strong><small>Functions zinazoweza kuitwa na anon</small></article>
+      <article><span>Authenticated SECURITY DEFINER RPCs</span><strong id="intelAuthenticatedDefiner">—</strong><small>Review internal Admin/owner guards</small></article>
       <article><span>Admin audit events (siku 7)</span><strong id="intelAuditEvents">—</strong><small>Matukio yaliyorekodiwa</small></article>
       <article><span>Admin Mkuu accounts</span><strong id="intelAdminCount">—</strong><small id="intelAdminInvariant">—</small></article>
       <article><span>Watumiaji wapya</span><strong id="intelNewUsers">—</strong><small>Waliojisajili ndani ya kipindi</small></article>
@@ -163,6 +164,7 @@
     set('intelRlsDisabled',number(security.public_tables_rls_disabled));
     set('intelRlsCoverage',number(security.public_tables_total)+' public tables · '+number(security.public_tables_rls_enabled_no_policy)+' RLS no-policy (deny by default)');
     set('intelPublicRpc',number(security.public_security_definer_anon_count));
+    set('intelAuthenticatedDefiner',number(security.authenticated_security_definer_count));
     const fillFindings=(id,items,format)=>{const list=$(id);if(!list)return;list.replaceChildren();const values=Array.isArray(items)?items:[];if(!values.length){const li=document.createElement('li');li.textContent='Hakuna rekodi';list.appendChild(li);return;}values.forEach(item=>{const li=document.createElement('li');li.textContent=format(item);list.appendChild(li);});};
     fillFindings('intelRlsOffList',security.public_tables_rls_disabled_names,name=>String(name));
     fillFindings('intelRlsNoPolicyList',security.public_tables_rls_no_policy_names,name=>String(name));
@@ -232,7 +234,7 @@
       try{await window.ZUNE_ACTIVITY_LOGS?.load?.();}catch(e){console.warn('Admin activity feed haijapakiwa:',e.message);}
       C().notice('dashboard','Takwimu zimepakiwa kupitia admin_intelligence_overview; thamani ya oda zilizokamilika, malipo yaliyorekodiwa na wallet liabilities vinaonyeshwa tofauti.');
     }catch(e){
-      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount','intelNewUsers','intelNewSellers','intelPendingVerification','intelPeriodOrders','intelDriverPayouts','intelHealthStatus','intelBackupStatus','intelRiskScore','intelRiskLevel'].forEach(id=>set(id,'—'));
+      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuthenticatedDefiner','intelAuditEvents','intelAdminCount','intelNewUsers','intelNewSellers','intelPendingVerification','intelPeriodOrders','intelDriverPayouts','intelHealthStatus','intelBackupStatus','intelRiskScore','intelRiskLevel'].forEach(id=>set(id,'—'));
       C().notice('dashboard','Admin Intelligence haikuweza kupakia takwimu: '+(e.message||e)+'. Hakuna makadirio ya fallback yatakayoonyeshwa.');
       console.error('Admin Intelligence load failed',e);
     }finally{
