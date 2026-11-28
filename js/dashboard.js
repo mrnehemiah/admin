@@ -5,8 +5,9 @@
       c.count('profiles'),c.count('profiles',[['role','eq','vendor']]),c.count('products'),c.count('orders')
     ]);
     c.setText('totalUsers',users.toLocaleString());c.setText('totalSellers',sellers.toLocaleString());c.setText('totalProducts',products.toLocaleString());c.setText('totalOrders',orders.toLocaleString());
-    c.setText('reportOrders',orders.toLocaleString());c.setText('reportCommission','TZS —');c.setText('totalCommission','TZS —');
-    c.setText('totalRevenue','TZS —');c.setText('statSales','TZS —');
+    c.setText('reportOrders',orders.toLocaleString());c.setText('reportCommission','Inahitaji finance RPC');c.setText('totalCommission','Inahitaji finance RPC');
+    c.setText('totalRevenue','Inahitaji finance RPC');c.setText('statSales','Inahitaji finance RPC');
+    c.notice('dashboard','Mapato na commission zinasubiri reporting RPC inayotumia financial ledger. Takwimu za mauzo hazikadiriwi kutoka kwenye orders za hivi karibuni.');
     try{const recent=await c.rows('orders',8);c.setRows('recentOrdersBody',recent,[{html:r=>'<strong>'+window.ZUNE_LAYOUT.esc(r.public_order_id||r.order_number||String(r.id||'').slice(0,8).toUpperCase())+'</strong>'},{key:'status',html:r=>window.ZUNE_LAYOUT.status(r.status)},{key:'created_at',html:r=>window.ZUNE_LAYOUT.date(r.created_at)}]);}catch(e){/* optional dashboard block */}
     try{await window.ZUNE_ACTIVITY_LOGS?.load?.();}catch(e){console.warn('Admin activity feed haijapakiwa:',e.message);}
   }catch(e){c.notice('dashboard',`Takwimu hazijapakiwa: ${e.message}. Hakikisha profiles, products na orders zinaruhusu Admin SELECT.`);}}
