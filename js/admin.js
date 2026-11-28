@@ -20,7 +20,7 @@
  }
  function bindActions(){
   document.getElementById('globalSearch')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;const page=/order/i.test(q)?'orders':/seller|duka/i.test(q)?'sellers':/product|bidhaa/i.test(q)?'products':'users';window.ZUNE_ROUTER.show(page);const target=document.querySelector(`[data-section="${page}"] input[type="search"], [data-section="${page}"] input`);if(target){target.value=q;target.dispatchEvent(new Event('input'));}});
-  document.getElementById('addSellerBtn')?.addEventListener('click',()=>ui().toast('Kuongeza seller kunahitaji utaratibu wa backend unaobadilisha profiles.role kwa usalama.','warning'));
+  document.getElementById('addSellerBtn')?.addEventListener('click',()=>window.ZUNE_USER_ACCOUNTS?.open('vendor'));
   // Category, seller verification/suspension and badge controls are owned by
   // their feature modules. Do not attach generic warning handlers here: that
   // creates misleading warnings alongside the real modal/action handlers.
