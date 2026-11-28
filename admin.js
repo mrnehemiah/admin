@@ -18,8 +18,8 @@
    'badge-requests':'Schema ya verified badge requests haijawekwa kwenye package kwa sababu jina la jedwali na columns halijathibitishwa.',
    'badge-management':'Verified badge status ya profiles.is_verified inasomwa. Mabadiliko ya badge yatahitaji RPC salama ya backend.',
    categories:'Categories na subcategories husimamiwa kupitia Admin RPC zenye uthibitishaji wa Admin na audit log.',
-   security:'Security events zinasomwa kutoka security_events; risk posture na RLS/RPC findings zinaonekana kwenye Admin Intelligence Dashboard.',
-   'system-health':'Health checks za Data API, Authentication, Admin authorization na Marketplace Data API huhifadhiwa kwenye system_health_logs. Cloud uptime na backup restore bado huthibitishwa Supabase Dashboard/CLI.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Backup na recovery husimamiwa kupitia Supabase Dashboard/CLI, si frontend browser.'
+   security:'Security events na risk posture vinaonekana hapa. Security Advisor bado inaripoti leaked-password protection haijawashwa; project iko kwenye Free plan, hivyo kipengele hicho kinahitaji upgrade ya Pro. MFA ya Supabase account lazima iwashwe na mmiliki kwenye Account Security.',
+   'system-health':'Health checks za Data API, Authentication, Admin authorization na Marketplace Data API huhifadhiwa kwenye system_health_logs. Cloud uptime na backup restore bado huthibitishwa Supabase Dashboard/CLI.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Project iko kwenye Free plan: hakuna daily managed database backups. Fanya logical exports za mara kwa mara na off-site storage; restore drill lazima ifanyike kwenye project tofauti. Usifanye restore kwenye production bila idhini na mpango wa downtime.'
   };
   Object.entries(pending).forEach(([id,msg])=>c().notice(id,msg));
  }
