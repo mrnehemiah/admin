@@ -507,7 +507,7 @@
     };
     const autoRowsTable = rows => {
       if (!Array.isArray(rows) || !rows.length) return '<p class="users-muted">Hakuna rekodi zilizohifadhiwa.</p>';
-      const keys = Object.keys(rows[0]).filter(key => !['raw_user_meta_data','raw_app_meta_data'].includes(key)).slice(0,10);
+      const keys = Object.keys(rows[0]).filter(key => !['raw_user_meta_data','raw_app_meta_data'].includes(key));
       return '<div class="table-wrap"><table><thead><tr>'+keys.map(key=>'<th>'+esc(key.replaceAll('_',' '))+'</th>').join('')+'</tr></thead><tbody>'+
         rows.map(row=>'<tr>'+keys.map(key=>'<td>'+esc(displayValue(key,row[key]))+'</td>').join('')+'</tr>').join('')+
         '</tbody></table></div>';
@@ -689,41 +689,80 @@
 
     const linkedSections = [
       section('Akaunti ya Supabase Auth', objectDetails(data.auth_account, ['id'])),
+      section('Taarifa zote za Profile', objectDetails(profile)),
       section('Taarifa za Duka / Seller', objectDetails(data.store)),
+      section('Wallet ya Mtumiaji', objectDetails(data.wallet)),
       section('Taarifa za Dereva', objectDetails(data.driver_profile)),
-      section('Anwani za Delivery', rowsTable(data.delivery_addresses, [
-        ['Mpokeaji','recipient_name'],['Simu','phone'],['Nchi','country'],['Mkoa','region'],
-        ['Wilaya','district'],['Kata','ward'],['Mtaa','street'],['Alama ya karibu','landmark'],
-        ['Latitude','latitude'],['Longitude','longitude'],['Anwani chaguo-msingi','is_default'],['Maelekezo','delivery_notes']
-      ], 'Hakuna anwani za delivery.')),
-      section('Maombi ya Dereva', rowsTable(data.driver_applications, [
-        ['Chanzo','application_source'],['Hali','status'],['Imetumwa','submitted_at'],
-        ['Imehakikiwa','reviewed_at'],['Maelezo','review_note']
-      ], 'Hakuna maombi ya dereva.')),
-      section('Nyaraka za Dereva', rowsTable(data.driver_documents, [
-        ['Aina ya nyaraka','document_type'],['Jina la faili','original_file_name'],
-        ['Aina ya faili','mime_type'],['Ukubwa (bytes)','file_size'],['Inaisha','expiry_date'],
-        ['Hali','status'],['Maelezo ya ukaguzi','review_note']
-      ], 'Hakuna nyaraka za dereva.')),
-      section('Maombi ya Seller', rowsTable(data.seller_applications, [
-        ['Duka','store_name'],['Hali','status'],['Tarehe','created_at'],['Maelezo','admin_note']
-      ], 'Hakuna maombi ya Seller.')),
-      section('Verification Applications', rowsTable(data.verification_applications, [
-        ['Aina','verification_type'],['Sababu','reason'],['Hali','status'],['Tarehe','created_at']
-      ], 'Hakuna maombi ya verification.')),
-      section('Verification Requests', rowsTable(data.verification_requests, [
-        ['Aina ya nyaraka','document_type'],['Namba ya nyaraka','document_number'],
-        ['Aina','verification_type'],['Hali','status'],['Tarehe','created_at'],['Maelezo','admin_note']
-      ], 'Hakuna verification requests.')),
+      section('Anwani za Delivery', autoRowsTable(data.delivery_addresses)),
+      section('Maombi ya Dereva', autoRowsTable(data.driver_applications)),
+      section('Nyaraka za Dereva', autoRowsTable(data.driver_documents)),
+      section('Mabadiliko ya Chombo cha Dereva', autoRowsTable(data.driver_vehicle_change_requests)),
+      section('Malipo ya Dereva', autoRowsTable(data.driver_payment_records)),
+      section('Maombi ya Seller', autoRowsTable(data.seller_applications)),
+      section('Verification Applications', autoRowsTable(data.verification_applications)),
+      section('Verification Requests', autoRowsTable(data.verification_requests)),
+      section('Verification Audit History', autoRowsTable(data.verification_audit_logs)),
+      section('Verified Badge Requests', autoRowsTable(data.verified_badge_requests)),
+      section('Verified Badges', autoRowsTable(data.public_badges)),
+      section('Individual Badges', autoRowsTable(data.public_individual_badges)),
+      section('Store Badges', autoRowsTable(data.public_store_badges)),
       section('Bidhaa za Mtumiaji / Seller', autoRowsTable(data.products)),
       section('Oda alizonunua', autoRowsTable(data.buyer_orders)),
       section('Oda alizouza', autoRowsTable(data.seller_orders)),
-      section('Malipo ya Mtumiaji', autoRowsTable(data.payments)),
-      section('Malipo ya Oda', autoRowsTable(data.order_payments)),
+      section('Order Items', autoRowsTable(data.order_items)),
+      section('Delivery Records', autoRowsTable(data.order_deliveries)),
+      section('Shopping Cart', autoRowsTable(data.cart_items)),
+      section('Wishlist', autoRowsTable(data.wishlists)),
+      section('Price Drop Alerts', autoRowsTable(data.price_drop_alerts)),
+      section('Coupon Redemptions', autoRowsTable(data.coupon_redemptions)),
+      section('Checkout Records', autoRowsTable(data.order_checkouts)),
+      section('Product Reviews', autoRowsTable(data.product_reviews)),
+      section('Product Questions', autoRowsTable(data.product_questions)),
+      section('Seller Answers', autoRowsTable(data.product_answers)),
+      section('Payments', autoRowsTable(data.payments)),
+      section('Order Payments', autoRowsTable(data.order_payments)),
       section('Wallet Transactions', autoRowsTable(data.wallet_transactions)),
-      section('Withdrawal Requests', autoRowsTable(data.withdrawals)),
-      section('Disputes', autoRowsTable(data.disputes)),
+      section('Wallet Ledger', autoRowsTable(data.wallet_ledger)),
+      section('Payout Accounts', autoRowsTable(data.wallet_payout_accounts)),
+      section('Refund Requests', autoRowsTable(data.wallet_refunds)),
+      section('Withdrawals', autoRowsTable(data.withdrawals)),
       section('Support Tickets', autoRowsTable(data.support_tickets)),
+      section('Disputes', autoRowsTable(data.disputes)),
+      section('Notifications', autoRowsTable(data.notifications)),
+      section('Chat Conversations', autoRowsTable(data.chat_conversations)),
+      section('Conversation Participation', autoRowsTable(data.conversation_participants)),
+      section('Conversations Created', autoRowsTable(data.conversations_created)),
+      section('Security Events', autoRowsTable(data.security_events)),
+      section('Login History', autoRowsTable(data.admin_login_events)),
+      section('Seller Earnings', autoRowsTable(data.seller_earnings)),
+      section('Seller Payout Methods', autoRowsTable(data.seller_payout_methods)),
+      section('Seller Locations', autoRowsTable(data.seller_locations)),
+      section('Seller Promotions', autoRowsTable(data.seller_promotions)),
+      section('Seller Business Goals', autoRowsTable(data.seller_business_goals)),
+      section('Ad Campaigns', autoRowsTable(data.ad_campaigns)),
+      section('Ad Auction Bids', autoRowsTable(data.ad_auction_bids)),
+      section('Ads Wallet', objectDetails(data.ads_wallet)),
+      section('Ads Wallet Transactions', autoRowsTable(data.ads_wallet_transactions)),
+      section('Coupons za Seller', autoRowsTable(data.coupon_ownership)),
+      section('Store Login Aliases', autoRowsTable(data.store_login_aliases)),
+      section('Store Follows', autoRowsTable(data.store_follows)),
+      section('Reels', autoRowsTable(data.reels)),
+      section('Reel Comments', autoRowsTable(data.reel_comments)),
+      section('Reel Likes', autoRowsTable(data.reel_likes)),
+      section('Reel Saves', autoRowsTable(data.reel_saves)),
+      section('Reel Shares', autoRowsTable(data.reel_shares)),
+      section('Reel Follows', autoRowsTable(data.reel_follows)),
+      section('Status Comments', autoRowsTable(data.status_comments)),
+      section('Status Likes', autoRowsTable(data.status_likes)),
+      section('Store Statuses', autoRowsTable(data.store_statuses)),
+      section('Creator Earnings', autoRowsTable(data.creator_earnings)),
+      section('Creator Applications', autoRowsTable(data.creator_applications)),
+      section('Creator Withdrawals', autoRowsTable(data.creator_withdrawals)),
+      section('Reward Accounts', autoRowsTable(data.reward_accounts)),
+      section('Reward Ledger', autoRowsTable(data.reward_ledger)),
+      section('Referral Codes', autoRowsTable(data.referral_codes)),
+      section('Theme Assets', autoRowsTable(data.theme_assets)),
+      section('Theme Trusted Creator', autoRowsTable(data.theme_trusted_creator)),
       section('Admin Actions History', autoRowsTable(data.admin_actions))
     ].join('');
     host.innerHTML =
