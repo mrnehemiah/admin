@@ -104,7 +104,6 @@
   }
   document.addEventListener('DOMContentLoaded', () => {
     $('addUserAccountBtn')?.addEventListener('click', () => open('buyer'));
-    $('addSellerBtn')?.addEventListener('click', () => open('vendor'));
     $('addDriverAccountBtn')?.addEventListener('click', () => open('driver'));
   });
   window.ZUNE_USER_ACCOUNTS = { open, close };
