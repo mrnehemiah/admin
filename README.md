@@ -64,6 +64,7 @@ ZUNE_PREMIUM_ADMIN/
 - Dashboard failures show an error state; it does not fall back to fabricated or partial-sample financial totals.
 - Live signed-in Admin browser execution and visual/mobile E2E verification are still required. The RPC migration is applied to the shared Supabase project.
 - Supabase security advisor snapshot on 2026-11-28 reported 2 anon-executable SECURITY DEFINER RPCs (`list_active_seller_promotions`, `zune_store_follow_stats`), 15 RLS-enabled/no-policy tables (including private-schema tables and public tables that therefore default-deny), plus 116 authenticated-executable SECURITY DEFINER RPCs. These are review findings, not proof of exploitation; do not mass-revoke without checking each client contract and function's internal Admin/owner guard. Advisor also reported many unindexed foreign keys; prioritize by query workload and measured plans.
+- The Admin-only `admin_security_posture_overview()` RPC now returns actionable names for public tables with RLS disabled, public tables with RLS but no policies, and anon-callable SECURITY DEFINER RPCs. The dashboard lists these findings without exposing them to anonymous clients; the RPC raises `42501` when called without an authenticated Admin session.
 
 ## Data tables zinazotumiwa
 
