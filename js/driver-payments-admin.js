@@ -12,7 +12,7 @@ function render(){
  const held=deliveries.filter(d=>d.payout_status==='on_hold_dispute').reduce((a,d)=>a+Math.max(0,Number(d.driver_payout_amount||0)-Number(payments.find(x=>x.delivery_id===d.id)?.deduction||0)),0);
  const earned=deliveries.reduce((a,d)=>a+Number(d.driver_payout_amount||0),0),commission=deliveries.reduce((a,d)=>a+Number(payments.find(x=>x.delivery_id===d.id)?.deduction||0),0),paid=payments.filter(p=>p.status==='paid');
  $('zdpEarned').textContent=money(earned);$('zdpCommission').textContent=money(commission);$('zdpPaid').textContent=money(paid.reduce((a,p)=>a+Number(p.net_amount||0),0));
- $('zdpPending').textContent=money(Math.max(earned-commission-paid.reduce((a,p)=>a+Number(p.net_amount||0),0),0));$('zdpHeld').textContent=money(held);
+ $('zdpPending').textContent=money(Math.max(earned-commission-paid.reduce((a,p)=>a+Number(p.net_amount||0),0)-held,0));$('zdpHeld').textContent=money(held);
  $('zdpDrivers').textContent=new Set(deliveries.map(d=>d.assigned_driver_id)).size;
  const body=$('zdpDeliveryRows');
  body.innerHTML=deliveries.length?deliveries.map(d=>{
