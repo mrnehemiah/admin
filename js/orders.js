@@ -25,7 +25,7 @@ function render(){
   {html:x=>'<strong>'+esc(x.delivery_method||'Delivery')+'</strong><small>'+esc(x.delivery_time||'')+'</small><small>'+esc([x.delivery_address,x.delivery_ward,x.delivery_district,x.delivery_region,x.delivery_country].filter(Boolean).join(', ')||'Anwani haipo')+'</small>'},
   {html:x=>ui().date(x.created_at)},
   {html:x=>x.delivery_latitude!=null&&x.delivery_longitude!=null?'<a class="secondary-btn" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(x.delivery_latitude)+'&mlon='+encodeURIComponent(x.delivery_longitude)+'#map=17/'+encodeURIComponent(x.delivery_latitude)+'/'+encodeURIComponent(x.delivery_longitude)+'">Ramani ↗</a>':'—'},
-  {html:x=>'<div class="action-row"><select class="field-input" data-order-next="'+esc(x.id)+'" '+(['completed','cancelled'].includes(String(x.status||''))?'disabled':'')+'>'+ (x.status==='pending'?['pending','confirmed','cancelled']:x.status==='confirmed'?['confirmed','cancelled']:[x.status]).map(s=>'<option value="'+s+'" '+(x.status===s?'selected':'')+'>'+esc(statusLabel(s))+'</option>').join('') +'</select><button class="secondary-btn" type="button" data-order-save="'+esc(x.id)+'" '+(busy.has(x.id)?'disabled':'')+'>Hifadhi</button></div>'}
+  {html:x=>'<div class="action-row"><select class="field-input" disabled aria-label="Order status update disabled"><option>'+esc(statusLabel(x.status))+'</option></select><button class="secondary-btn" type="button" disabled title="Inahitaji audited server-side RPC">RPC inahitajika</button></div>'}
  ],'Hakuna oda zinazolingana na vichujio.');
  c().setText('totalOrders',allOrders.length.toLocaleString());
 }
@@ -81,26 +81,9 @@ async function load(){
  }catch(e){c().error('ordersTableBody',e);}
 }
 async function updateStatus(id){
- const order=allOrders.find(x=>String(x.id)===String(id));if(!order||busy.has(id))return;
- if(['completed','cancelled'].includes(String(order.status||''))){ui().toast('Oda iliyokamilika au kughairiwa haiwezi kubadilishwa tena.','warning');return;}
- const select=document.querySelector('[data-order-next="'+CSS.escape(String(id))+'"]'),next=select?.value;
- if(!['confirmed','cancelled'].includes(next)||next===order.status)return;
- const reason=window.prompt('Andika sababu ya kubadilisha hali ya oda (angalau herufi 5):')||'';
- if(reason.trim().length<5){ui().toast('Sababu lazima iwe na angalau herufi 5.','warning');return;}
- if(!window.confirm('Unathibitisha kubadilisha oda #'+orderRef(order)+' kuwa '+statusLabel(next)+'?'))return;
- busy.add(id);render();
- try{
-  const {data,error}=await db().from('orders').update({status:next}).eq('id',id).select('id,order_number,public_order_id,buyer_id,product_id,checkout_id').maybeSingle();
-  if(error)throw error;if(!data)throw new Error('Oda haikupatikana au haikubadilishwa.');
-  let vendorId=null;if(data.product_id){const p=await db().from('products').select('vendor_id').eq('id',data.product_id).maybeSingle();if(p.error)throw p.error;vendorId=p.data?.vendor_id||null;}
-  await c().audit('order_status_'+next,'order',id,reason,{previous_status:order.status,new_status:next,checkout_id:data.checkout_id});
-  const sw=next==='cancelled'?'Oda yako imeghairiwa':'Oda yako imethibitishwa',en=next==='cancelled'?'Your order was cancelled':'Your order was confirmed';
-  const note=await db().from('notifications').insert({user_id:data.buyer_id,type:'order_status_'+next,title_sw:sw,title_en:en,body_sw:'Oda #'+orderRef(order)+' · '+statusLabel(next),body_en:'Order #'+orderRef(order)+' · '+statusLabel(next),action_url:'./orders.html',is_read:false});
-  if(note.error)console.warn('Order notification:',note.error.message);
-  if(vendorId){const sellerNote=await db().from('notifications').insert({user_id:vendorId,type:'seller_order_status_'+next,title_sw:'Hali ya oda ya duka imesasishwa',title_en:'Your store order status was updated',body_sw:'Oda #'+orderRef(order)+' · '+statusLabel(next),body_en:'Order #'+orderRef(order)+' · '+statusLabel(next),action_url:'./seller-dashboard.html',is_read:false});if(sellerNote.error)console.warn('Seller notification:',sellerNote.error.message);}
-  ui().toast('Hali ya oda imebadilishwa.','success');await load();
- }catch(e){console.error('Order status update:',e);ui().toast(e.message||'Imeshindikana kubadilisha oda.','error');}
- finally{busy.delete(id);render();}
+ const order=allOrders.find(x=>String(x.id)===String(id));
+ if(!order)return;
+ ui().toast('Kubadilisha hali ya oda kumesitishwa kwa muda. Backend inahitaji RPC salama inayothibitisha Admin, transition, kurejesha stock inapohitajika na kuandika audit log ndani ya transaction.','warning');
 }
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('ordersSearch')?.addEventListener('input',render);document.getElementById('orderStatusFilter')?.addEventListener('change',render);document.getElementById('refreshOrdersBtn')?.addEventListener('click',load);document.getElementById('ordersTableBody')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-save]');if(b)updateStatus(b.dataset.orderSave);});load();});
 document.addEventListener('zune:page-changed',e=>{if(e.detail.page==='orders')load();});
