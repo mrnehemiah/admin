@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=4">
+  <link rel="stylesheet" href="css/template-manager.css?v=1">
   <style>
     .page-section{display:none}.page-section.active{display:block}
     .section-intro{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 0 18px}
@@ -100,6 +101,8 @@
       <a class="nav-link" href="#wallet" data-page="wallet"><span class="nav-icon">◈</span> Wallet & Commission</a>
       <a class="nav-link" href="#disputes" data-page="disputes"><span class="nav-icon">⚖</span> Disputes</a>
       <a class="nav-link" href="#support-tickets" data-page="support-tickets"><span class="nav-icon">✉</span> Support Tickets</a>
+      <p class="nav-caption">MUONEKANO WA MARKETPLACE</p>
+      <a class="nav-link" href="#template-manager" data-page="template-manager"><span class="nav-icon">▧</span> Template Manager</a>
       <p class="nav-caption">USIMAMIZI NA USALAMA</p>
       <a class="nav-link" href="#reports" data-page="reports"><span class="nav-icon">▥</span> Reports & Analytics</a>
       <a class="nav-link" href="#audit-logs" data-page="audit-logs"><span class="nav-icon">◷</span> Admin Audit Center</a>
@@ -490,6 +493,30 @@
         <div class="panel settings-audit-note"><strong>Audit & accountability</strong><p class="muted">Kila mabadiliko yanayohifadhiwa kupitia RPC yataandika thamani ya zamani, thamani mpya, sababu, Admin Mkuu na muda kwenye <code>admin_settings_audit</code> na <code>admin_activity_logs</code>.</p></div>
       </section>
 
+      <section class="page-section" id="templateManagerPage" data-section="template-manager">
+        <div class="section-intro"><div><h2>Official Template Manager</h2><p>Simamia templates rasmi za Customer Marketplace na Seller Storefront. Mabadiliko yote yana audit trail.</p></div><span class="badge-pill warning" id="templateManagerStatus">Inathibitisha ruhusa…</span></div>
+        <div class="template-manager-toolbar panel"><div><strong>Official template library</strong><p class="muted">Washa, ficha, sasisha toleo na toa taarifa ya template mpya. Data za wateja, bidhaa, orders na maduka haziguswi.</p></div><button class="primary-btn" id="newOfficialTemplateBtn" type="button">＋ Ongeza template</button></div>
+        <div class="template-manager-stats"><article class="metric-card"><span>Templates zote</span><strong id="templateTotalCount">—</strong><small>Customer + Seller</small></article><article class="metric-card"><span>Zinazoonekana</span><strong id="templatePublishedCount">—</strong><small>Official published</small></article><article class="metric-card"><span>Zilizofichwa</span><strong id="templateHiddenCount">—</strong><small>Hazionekani kwa users</small></article></div>
+        <div class="template-manager-filters panel"><label>Audience<select id="templateAudienceFilter" class="field-input"><option value="all">Zote</option><option value="customer">Customer Marketplace</option><option value="seller">Seller Storefront</option></select></label><label>Hali<select id="templateStatusFilter" class="field-input"><option value="all">Zote</option><option value="published">Zinazoonekana</option><option value="hidden">Zilizofichwa</option><option value="draft">Draft</option></select></label><button class="secondary-btn" id="refreshOfficialTemplatesBtn" type="button">↻ Refresh</button></div>
+        <div id="officialTemplateGrid" class="official-template-grid"><div class="panel empty-state">Inapakia official templates…</div></div>
+        <div class="panel template-manager-note"><strong>Notify & Update</strong><p class="muted">Toleo jipya litahifadhi release notes. Marketplace itaonyesha taarifa ya update itakapounganishwa na registry; data za mtumiaji hazifutwi.</p></div>
+        <div class="modal-backdrop" id="officialTemplateModal" aria-hidden="true"><div class="modal-card template-editor-card" role="dialog" aria-modal="true" aria-labelledby="officialTemplateModalTitle">
+          <div class="modal-heading"><h3 id="officialTemplateModalTitle">Ongeza official template</h3><button class="icon-btn" id="closeOfficialTemplateModal" type="button" aria-label="Funga">×</button></div>
+          <form id="officialTemplateForm"><input id="officialTemplateId" type="hidden"><div class="form-grid">
+            <div class="form-field"><label for="officialTemplateAudience">Template ni ya nani?</label><select id="officialTemplateAudience" required><option value="customer">Customer Marketplace</option><option value="seller">Seller Storefront</option></select></div>
+            <div class="form-field"><label for="officialTemplateKey">Template key</label><input id="officialTemplateKey" maxlength="40" pattern="[a-z0-9-]+" placeholder="modern-market" required></div>
+            <div class="form-field"><label for="officialTemplateTitle">Jina la template</label><input id="officialTemplateTitle" maxlength="80" minlength="2" required></div>
+            <div class="form-field"><label for="officialTemplatePreview">Preview image URL (optional)</label><input id="officialTemplatePreview" type="url" maxlength="500" placeholder="https://…"></div>
+            <div class="form-field"><label for="officialTemplateVersion">Version</label><input id="officialTemplateVersion" type="number" min="1" max="999" value="1" required></div>
+            <div class="form-field"><label for="officialTemplateStatus">Hali</label><select id="officialTemplateStatus"><option value="published">Chapisha / onyesha</option><option value="hidden">Ficha kwa users</option><option value="draft">Draft</option></select></div>
+            <div class="form-field full-width"><label for="officialTemplateDescription">Maelezo</label><textarea id="officialTemplateDescription" maxlength="500" rows="3"></textarea></div>
+            <div class="form-field full-width"><label for="officialTemplateReleaseNotes">Release notes / ujumbe wa update</label><textarea id="officialTemplateReleaseNotes" maxlength="1000" rows="3"></textarea></div>
+            <div class="form-field full-width"><label><input id="officialTemplateFeatured" type="checkbox"> Ionyeshe kama template iliyopendekezwa</label></div>
+            <div class="form-field full-width"><label for="officialTemplateReason">Sababu ya mabadiliko (inahitajika kwa audit)</label><textarea id="officialTemplateReason" minlength="5" maxlength="500" rows="2" required></textarea></div>
+          </div><div class="modal-actions"><button class="secondary-btn" id="cancelOfficialTemplateBtn" type="button">Ghairi</button><button class="primary-btn" id="saveOfficialTemplateBtn" type="submit">Hifadhi template</button></div></form>
+        </div></div>
+      </section>
+
       <section class="page-section" id="sellerDetailsPage" data-section="seller-details">
         <div class="section-intro"><div><button class="back-link" id="backToSellersBtn" type="button">← Rudi kwa Sellers</button><h2>Maelezo ya Seller</h2><p>Wasifu kamili, biashara, fedha na historia ya seller.</p></div><span class="subtle-tag" id="sellerDetailsStatus">Seller profile</span></div>
         <div class="seller-profile-hero panel"><div class="avatar avatar-large" id="sellerDetailsAvatar">S</div><div class="seller-hero-info"><h2 id="sellerDetailsName">Seller Name</h2><p id="sellerDetailsStore">Store information</p><span id="sellerDetailsVerification" class="verification-pill">Haijathibitishwa</span></div><div class="seller-actions"><button class="secondary-btn" id="verifySellerBtn" type="button">Thibitisha</button><button class="warning-btn" id="suspendSellerBtn" type="button">Simamisha</button><button class="danger-btn" id="blockSellerBtn" type="button">Zuia</button><button class="danger-btn" id="deleteSellerBtn" type="button">Delete Seller</button></div></div>
@@ -565,6 +592,7 @@
 <script src="js/reports.js"></script>
 <script src="js/activity-logs.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/template-manager.js?v=2"></script>
 <script src="js/supabase-management.js"></script>
 <script src="js/admin-announcements.js?v=20261119-1"></script>
 <script src="admin.js?v=20261128-phase2-1"></script>
