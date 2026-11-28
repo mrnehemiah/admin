@@ -10,8 +10,8 @@
     const fromEl=document.getElementById('reportFrom'),toEl=document.getElementById('reportTo');
     let from=fromEl?.value?new Date(fromEl.value+'T00:00:00'):new Date(now);
     if(!fromEl?.value)from.setDate(from.getDate()-30);
-    let to=toEl?.value?new Date(toEl.value+'T00:00:00'):now;
-    if(toEl?.value)to.setDate(to.getDate()+1);
+    let to=now;
+    if(toEl?.value){to=new Date(toEl.value+'T00:00:00');to.setDate(to.getDate()+1);if(to>now)to=now;}
     if(Number.isNaN(+from)||Number.isNaN(+to)||from>=to)throw new Error('Tarehe za ripoti si sahihi.');
     return {from:from.toISOString(),to:to.toISOString()};
   }
