@@ -20,10 +20,14 @@
   function error(id,e){const el=document.getElementById(id);if(!el)return;const n=el.closest('table')?.querySelectorAll('th').length||12;el.innerHTML=`<tr><td colspan="${n}" class="empty-state">Imeshindikana kupakia data: ${ui().esc(e.message||e)}</td></tr>`;console.warn('ZUNE data error',e);}
   function notice(section,message){const el=document.querySelector(`[data-section="${section}"]`);if(!el)return;let n=el.querySelector('.schema-note');if(!n){n=document.createElement('div');n.className='notice-box schema-note';el.appendChild(n);}n.textContent=message;}
   async function audit(action,targetType,targetId,reason,details={}){
-    const user=window.ZUNE_CURRENT_USER;if(!db()||!user)return;
-    const payload={actor_id:user.id,action,target_type:targetType||null,target_id:targetId==null?null:String(targetId),reason:String(reason||'Sababu haijaainishwa'),details};
-    const {error:e}=await db().from(cfg.TABLES.activityLogs||'admin_activity_logs').insert(payload);
-    if(e)console.warn('Audit log haikuandikwa:',e.message);
+    if(!db())throw new Error('Supabase haijaunganishwa.');
+    let user=window.ZUNE_CURRENT_USER;
+    if(!user){const {data,error}=await db().auth.getUser();if(error)throw error;user=data?.user;}
+    if(!user?.id)throw new Error('Session ya Admin haijathibitishwa; audit haijaandikwa.');
+    const payload={actor_id:user.id,action:String(action),target_type:targetType||null,target_id:targetId==null?null:String(targetId),reason:String(reason||'Sababu haijaainishwa'),details:details&&typeof details==='object'?details:{value:details},result:'success'};
+    const {error}=await db().from(cfg.TABLES.activityLogs||'admin_activity_logs').insert(payload);
+    if(error){console.error('Audit log haikuandikwa:',error);throw new Error('Kitendo kimefanyika lakini audit log haikuandikwa: '+error.message);}
+    return true;
   }
   function bindFilter(inputId,bodyId){const input=document.getElementById(inputId),body=document.getElementById(bodyId);if(!input||!body||input.dataset.bound)return;input.dataset.bound='1';input.addEventListener('input',()=>{const q=input.value.toLowerCase().trim();body.querySelectorAll('tr').forEach(tr=>tr.hidden=!tr.textContent.toLowerCase().includes(q));});}
   window.ZUNE_CORE={db,cfg,rows,count,setText,setRows,error,notice,audit,bindFilter};
