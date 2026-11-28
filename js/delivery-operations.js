@@ -9,29 +9,59 @@ const driverDocLabels={national_id:'Kitambulisho NIDA',driver_photo:'Picha ya de
 const date=v=>v?new Date(v).toLocaleString('sw-TZ'):'—';
 async function loadDriverApplications(){
  const appsBody=$('#driverApplicationsBody');if(!appsBody)return;
- const db=window.ZUNE_CORE?.db?.();if(!db){appsBody.innerHTML='<tr><td colspan="6">Supabase haijaunganishwa.</td></tr>';return;}
- appsBody.innerHTML='<tr><td colspan="6">Inapakia maombi...</td></tr>';
+ const db=window.ZUNE_CORE?.db?.();if(!db){appsBody.innerHTML='<tr><td colspan="7">Supabase haijaunganishwa.</td></tr>';return;}
+ appsBody.innerHTML='<tr><td colspan="7">Inapakia maombi na nyaraka...</td></tr>';
  const {data:apps,error}=await db.from('delivery_driver_applications').select('id,user_id,application_source,status,submitted_at,reviewed_at,review_note').order('submitted_at',{ascending:false});
- if(error){appsBody.innerHTML='<tr><td colspan="6">'+esc(error.message)+'</td></tr>';return;}
- applicationRows=apps||[];
- const ids=[...new Set(applicationRows.map(a=>a.user_id))];
- const {data:drivers,error:driverError}=ids.length?await db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,license_number,status').in('user_id',ids):{data:[],error:null};
- if(driverError){appsBody.innerHTML='<tr><td colspan="6">'+esc(driverError.message)+'</td></tr>';return;}
- const byId=new Map((drivers||[]).map(d=>[d.user_id,d]));
- applicationRows=applicationRows.map(a=>({...a,driver:byId.get(a.user_id)||{}}));
- renderDriverApplications();
+ if(error){appsBody.innerHTML='<tr><td colspan="7">'+esc(error.message)+'</td></tr>';return;}
+ const ids=[...new Set((apps||[]).map(a=>a.user_id))];
+ const [driverResult,docResult]=await Promise.all([
+  ids.length?db.from('delivery_driver_profiles').select('user_id,full_name,phone_number,email,vehicle_type,vehicle_registration,license_number,status').in('user_id',ids):Promise.resolve({data:[],error:null}),
+  ids.length?db.from('delivery_driver_documents').select('id,user_id,document_type,file_path,original_file_name,expiry_date,status,review_note,created_at').in('user_id',ids).order('created_at',{ascending:false}):Promise.resolve({data:[],error:null})
+ ]);
+ if(driverResult.error){appsBody.innerHTML='<tr><td colspan="7">'+esc(driverResult.error.message)+'</td></tr>';return;}
+ const byId=new Map((driverResult.data||[]).map(d=>[d.user_id,d]));
+ const docsByUser=new Map();
+ (docResult.data||[]).forEach(doc=>{const list=docsByUser.get(doc.user_id)||[];list.push(doc);docsByUser.set(doc.user_id,list);});
+ const signedEntries=await Promise.all((docResult.data||[]).filter(d=>d.file_path).map(async doc=>{
+  try{
+   const {data,error}=await db.storage.from('zune-driver-documents').createSignedUrl(doc.file_path,120);
+   return [doc.id,error?null:data?.signedUrl||null];
+  }catch{return [doc.id,null];}
+ }));
+ const signedUrls=new Map(signedEntries);
+ const docLabels={national_id:'Kitambulisho',driver_photo:'Picha ya dereva',driving_license:'Leseni',vehicle_registration:'Kadi ya usajili',vehicle_insurance:'Bima',vehicle_photo:'Picha ya chombo',vehicle_authorization:'Ruhusa ya chombo'};
+ applicationRows=(apps||[]).map(a=>({...a,driver:byId.get(a.user_id)||{},documents:docsByUser.get(a.user_id)||[]}));
+ renderDriverApplications({docError:docResult.error,signedUrls,docLabels});
 }
-function renderDriverApplications(){
+function renderDriverApplications(context={}){
  const appsBody=$('#driverApplicationsBody');if(!appsBody)return;
  const q=String($('#driverApplicationSearch')?.value||'').toLowerCase().trim(),filter=$('#driverApplicationFilter')?.value||'all';
  const list=applicationRows.filter(a=>(filter==='all'||a.status===filter)&&[a.driver.full_name,a.driver.phone_number,a.driver.email,a.user_id].some(v=>String(v||'').toLowerCase().includes(q)));
+ const docLabels=context.docLabels||{national_id:'Kitambulisho',driver_photo:'Picha ya dereva',driving_license:'Leseni',vehicle_registration:'Kadi ya usajili',vehicle_insurance:'Bima',vehicle_photo:'Picha ya chombo',vehicle_authorization:'Ruhusa ya chombo'};
+ const required=['national_id','driver_photo','vehicle_registration','vehicle_insurance'];
  appsBody.innerHTML=list.length?list.map(a=>{
   const d=a.driver||{},contact=[d.phone_number,d.email].filter(Boolean).map(esc).join('<br>');
   const vehicle=[d.vehicle_type,d.vehicle_registration,d.license_number].filter(Boolean).map(esc).join(' · ');
+  const docs=a.documents||[],byType=new Map();docs.forEach(doc=>{if(!byType.has(doc.document_type))byType.set(doc.document_type,doc);});
+  const mustHave=d.vehicle_type==='bicycle'?required:required.concat('driving_license');
+  const docHtml=mustHave.map(type=>{
+   const doc=byType.get(type);
+   if(!doc)return '<span class="badge-pill warning">'+esc(docLabels[type]||type)+': haijawasilishwa</span>';
+   const expiryRequired=['driving_license','vehicle_insurance'].includes(type),expired=expiryRequired&&(!doc.expiry_date||doc.expiry_date<new Date().toISOString().slice(0,10));
+   const status=doc.status==='approved'&&!expired?'success':doc.status==='rejected'?'danger':'warning';
+   const label=expired?'Tarehe imeisha / haipo':doc.status==='approved'?'Imeidhinishwa':doc.status==='rejected'?'Imekataliwa':doc.status==='needs_correction'?'Inahitaji marekebisho':doc.status||'Inasubiri';
+   const url=context.signedUrls?.get(doc.id);
+   return '<span class="driver-doc-item"><span class="badge-pill '+status+'">'+esc(docLabels[type]||type)+': '+esc(label)+'</span>'+(url?'<a class="secondary-btn" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Fungua</a>':'<small class="muted">'+(doc.file_path?'Faili haijafunguka':'Faili halipo')+'</small>')+(doc.expiry_date?'<small>'+esc(doc.expiry_date)+'</small>':'')+'</span>';
+  }).join('');
+  const optional=docs.filter(doc=>!mustHave.includes(doc.document_type)).map(doc=>{
+   const url=context.signedUrls?.get(doc.id);
+   return '<span class="driver-doc-item"><span class="badge-pill">'+esc(docLabels[doc.document_type]||doc.document_type)+': '+esc(doc.status)+'</span>'+(url?'<a class="secondary-btn" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Fungua</a>':'<small class="muted">Faili haijafunguka</small>')+'</span>';
+  }).join('');
+  const docsCell=(docResultError=>docResultError?'<span class="badge-pill danger">Imeshindwa kusoma nyaraka</span><small>'+esc(docResultError.message)+'</small>':'<div class="driver-doc-list">'+(docHtml||'')+optional+'</div>')(context.docError);
   const status=a.status==='approved'?'success':a.status==='rejected'?'danger':'warning';
   const action=a.status==='pending'?'<button class="primary-btn" type="button" data-driver-review="approved" data-application-id="'+esc(a.id)+'">Idhinisha</button><button class="danger-btn" type="button" data-driver-review="rejected" data-application-id="'+esc(a.id)+'">Kataa</button>':'<span class="badge-pill '+status+'">'+esc(a.status)+'</span>';
-  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+(contact||'—')+'</td><td>'+(vehicle||'—')+'</td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(date(a.submitted_at))+'</td><td><div class="action-row">'+action+'</div>'+(a.review_note?'<small>'+esc(a.review_note)+'</small>':'')+'</td></tr>';
- }).join(''):'<tr><td colspan="6" class="empty-state">Hakuna maombi yanayolingana na kichujio.</td></tr>';
+  return '<tr><td><strong>'+esc(d.full_name||'Dereva')+'</strong><small>'+esc(a.user_id)+'</small></td><td>'+(contact||'—')+'</td><td>'+(vehicle||'—')+'</td><td>'+docsCell+'</td><td>'+esc(a.application_source==='admin_invite'?'Mwaliko wa Admin':'Ombi binafsi')+'</td><td>'+esc(date(a.submitted_at))+'</td><td><div class="action-row">'+action+'</div>'+(a.review_note?'<small>'+esc(a.review_note)+'</small>':'')+'</td></tr>';
+ }).join(''):'<tr><td colspan="7" class="empty-state">Hakuna maombi yanayolingana na kichujio.</td></tr>';
 }
 async function reviewDriverApplication(id,decision,button){
  const reason=window.prompt(decision==='approved'?'Sababu ya kuidhinisha dereva:':'Sababu ya kukataa ombi:');
