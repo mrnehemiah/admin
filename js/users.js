@@ -689,7 +689,6 @@
 
     const linkedSections = [
       section('Akaunti ya Supabase Auth', objectDetails(data.auth_account, ['id'])),
-      section('Taarifa zote za Profile', objectDetails(profile)),
       section('Taarifa za Duka / Seller', objectDetails(data.store)),
       section('Wallet ya Mtumiaji', objectDetails(data.wallet)),
       section('Taarifa za Dereva', objectDetails(data.driver_profile)),
