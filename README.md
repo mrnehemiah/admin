@@ -60,8 +60,10 @@ ZUNE_PREMIUM_ADMIN/
 - Date filters: today, yesterday, last 7 days, last 30 days, last 90 days, this month, last month, all time, and custom date range.
 - Financial measures are explicitly separated: completed-order gross value and order commission are not described as confirmed cash received; paid payments, paid verification transactions, wallet liabilities, pending withdrawals, and Admin Wallet balance are separate measures.
 - Operations signals include open disputes (including waiting-for-buyer/seller states), open support, in-transit deliveries, payout holds, high/critical security events, AI usage/error summaries, single-admin invariant, public-table RLS coverage, anonymous SECURITY DEFINER RPC count, and recent audit activity.
+- Dashboard growth/continuity signals also show new users, new sellers, pending verification, period order outcomes, confirmed driver payouts, latest recorded system-health check and latest backup/recovery log. Missing health/backup evidence is labelled as not recorded, never interpreted as success.
 - Dashboard failures show an error state; it does not fall back to fabricated or partial-sample financial totals.
 - Live signed-in Admin browser execution and visual/mobile E2E verification are still required. The RPC migration is applied to the shared Supabase project.
+- Supabase security advisor snapshot on 2026-11-28 reported 2 anon-executable SECURITY DEFINER RPCs (`list_active_seller_promotions`, `zune_store_follow_stats`), 15 RLS-enabled/no-policy tables (including private-schema tables and public tables that therefore default-deny), plus 116 authenticated-executable SECURITY DEFINER RPCs. These are review findings, not proof of exploitation; do not mass-revoke without checking each client contract and function's internal Admin/owner guard. Advisor also reported many unindexed foreign keys; prioritize by query workload and measured plans.
 
 ## Data tables zinazotumiwa
 
