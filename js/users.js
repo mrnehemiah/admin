@@ -485,7 +485,8 @@
       if (value === null || value === undefined || value === '') return 'Haijawekwa';
       if (key === 'role') return roleLabel(value);
       if (key === 'is_verified') return value ? 'Verified' : 'Not verified';
-      if (/(^|_)(at|date)$/.test(key) && typeof value === 'string') return layout().date(value);
+      if (key === 'gender') return ({male:'Mwanaume',female:'Mwanamke',other:'Nyingine',prefer_not_to_say:'Hajataja'})[value] || value;
+      if ((key === 'date_of_birth' || key.endsWith('_date') || key.endsWith('_at')) && typeof value === 'string') return layout().date(value);
       if (typeof value === 'object') return JSON.stringify(value);
       return String(value);
     };
