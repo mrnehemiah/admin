@@ -9,7 +9,16 @@
   function dateWindow(){
     const now=new Date();let from;
     if(state.range==='all')from=new Date('1970-01-01T00:00:00.000Z');
-    else if(state.range==='month')from=new Date(now.getFullYear(),now.getMonth(),1);
+    else if(state.range==='today')from=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    else if(state.range==='yesterday'){
+      const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
+      const end=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      return {from:start.toISOString(),to:end.toISOString()};
+    }else if(state.range==='lastMonth'){
+      const start=new Date(now.getFullYear(),now.getMonth()-1,1);
+      const end=new Date(now.getFullYear(),now.getMonth(),1);
+      return {from:start.toISOString(),to:end.toISOString()};
+    }else if(state.range==='month')from=new Date(now.getFullYear(),now.getMonth(),1);
     else if(state.range==='custom'){
       const a=$('adminIntelFrom')?.value,b=$('adminIntelTo')?.value;
       if(!a||!b)throw new Error('Chagua tarehe ya mwanzo na mwisho.');
@@ -34,9 +43,11 @@
       <div><strong>Admin Intelligence</strong><small id="adminIntelPeriod">Takwimu za siku 30 zilizopita</small></div>
       <div class="admin-intel-controls">
         <select id="adminIntelRange" aria-label="Kipindi cha takwimu">
+          <option value="today">Leo</option><option value="yesterday">Jana</option>
           <option value="7d">Siku 7</option><option value="30d" selected>Siku 30</option>
           <option value="90d">Siku 90</option><option value="month">Mwezi huu</option>
-          <option value="all">Tangu mwanzo</option><option value="custom">Tarehe maalum</option>
+          <option value="lastMonth">Mwezi uliopita</option><option value="all">Tangu mwanzo</option>
+          <option value="custom">Tarehe maalum</option>
         </select>
         <input id="adminIntelFrom" type="date" aria-label="Tarehe ya mwanzo" hidden>
         <input id="adminIntelTo" type="date" aria-label="Tarehe ya mwisho" hidden>
@@ -116,7 +127,7 @@
     set('intelAuditEvents',number(security.admin_audit_events_7d));
     set('intelAdminCount',number(security.admin_accounts_count));
     set('intelAdminInvariant',security.single_admin_ok?'Single Admin Mkuu invariant: OK':'Single Admin Mkuu invariant: ATTENTION');
-    const rangeName=state.range==='7d'?'Siku 7 zilizopita':state.range==='90d'?'Siku 90 zilizopita':state.range==='month'?'Mwezi huu':state.range==='all'?'Tangu mwanzo':state.range==='custom'?'Kipindi maalum':'Siku 30 zilizopita';
+    const rangeName=state.range==='today'?'Leo':state.range==='yesterday'?'Jana':state.range==='7d'?'Siku 7 zilizopita':state.range==='90d'?'Siku 90 zilizopita':state.range==='month'?'Mwezi huu':state.range==='lastMonth'?'Mwezi uliopita':state.range==='all'?'Tangu mwanzo':state.range==='custom'?'Kipindi maalum':'Siku 30 zilizopita';
     set('adminIntelPeriod',rangeName+' · '+new Date(from).toLocaleDateString('sw-TZ')+' – '+new Date(to).toLocaleDateString('sw-TZ'));
     set('adminIntelFootnote','Thamani ya oda zilizokamilika: '+money(data.gross_completed_orders_period_tzs)+'. Commission iliyoandikwa kwenye oda zilizokamilika: '+money(data.commission_completed_orders_period_tzs)+'. Hizi si uthibitisho wa fedha zilizopokelewa kwenye Admin Wallet.');
     const revenueCard=$('totalRevenue')?.closest('.metric-card');
