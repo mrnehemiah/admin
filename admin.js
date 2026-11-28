@@ -10,6 +10,7 @@
    document.dispatchEvent(new Event('zune:admin-refresh'));
    const health=$('#systemStatusText');if(health)health.textContent='Admin amethibitishwa';
    await runSystemHealthChecks();
+   try{await loadSecurityEvents();}catch(e){console.warn('Security events hazijapakiwa:',e.message);c().notice('security','Security events hazijapakiwa: '+e.message);}
   }catch(e){console.error(e);const msg=$('#globalMessage');if(msg){msg.hidden=false;msg.textContent=e.message||'Imeshindikana kuthibitisha Admin.';}ui().toast(e.message||'Admin access denied','error');}
  }
  function schemaNoticePages(){
@@ -21,6 +22,18 @@
    'system-health':'Health checks za Data API, Authentication, Admin authorization na Marketplace Data API huhifadhiwa kwenye system_health_logs. Cloud uptime na backup restore bado huthibitishwa Supabase Dashboard/CLI.',database:'Database monitoring: tumia Supabase Dashboard kwa metrics za ndani; browser key haiwezi kusoma database internals.',backup:'Backup na recovery husimamiwa kupitia Supabase Dashboard/CLI, si frontend browser.'
   };
   Object.entries(pending).forEach(([id,msg])=>c().notice(id,msg));
+ }
+ async function loadSecurityEvents(){
+  const db=c().db(),body=document.getElementById('securityEventsBody');if(!db||!body)return;
+  const {data,error}=await db.from('security_events').select('event_type,source,severity,occurred_at,details').order('occurred_at',{ascending:false}).limit(50);
+  if(error)throw error;
+  body.replaceChildren();
+  if(!data?.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='empty-state';td.textContent='Hakuna security events zilizorekodiwa.';tr.appendChild(td);body.appendChild(tr);return;}
+  data.forEach(item=>{
+   const tr=document.createElement('tr');
+   [item.event_type,item.source,item.severity,new Date(item.occurred_at).toLocaleString('sw-TZ'),item.details&&typeof item.details==='object'?JSON.stringify(item.details):'—'].forEach(value=>{const td=document.createElement('td');td.textContent=String(value??'—');tr.appendChild(td);});
+   body.appendChild(tr);
+  });
  }
  async function runSystemHealthChecks(){
   const db=c().db();if(!db)return;
