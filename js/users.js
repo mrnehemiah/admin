@@ -35,6 +35,7 @@
   const roleLabel = value => ({
     buyer: 'Buyer',
     vendor: 'Seller',
+    driver: 'Driver',
     admin: 'Admin'
   }[value] || value || '—');
 
@@ -471,84 +472,38 @@
 
 
 
-    const fields = [
-
-      [
-        'Jina kamili',
-        profile.full_name
-      ],
-
-      [
-        'Email',
-        profile.email
-      ],
-
-      [
-        'Simu',
-        profile.phone_number
-      ],
-
-      [
-        'ZUNE ID',
-        profile.zune_id
-      ],
-
-      [
-        'Vendor code',
-        profile.vendor_code
-      ],
-
-      [
-        'Role',
-        roleLabel(profile.role)
-      ],
-
-      [
-        'Hali ya akaunti',
-        statusLabel(profile.account_status)
-      ],
-
-      [
-        'Verification',
-        profile.is_verified
-        ? 'Verified'
-        : 'Unverified'
-      ],
-
-      [
-        'Amesajiliwa',
-        layout().date(profile.created_at)
-      ]
-
-    ];
-
-
-
-    const details =
-      fields.map(field =>
-
-        `
-
-        <div>
-
-          <span>
-          ${esc(field[0])}
-          </span>
-
-          <strong>
-          ${esc(field[1])}
-          </strong>
-
-
-        </div>
-
-        `
-
-      )
-      .join('');
-
-
-
+    const profileLabels = {
+      id:'Auth User ID', full_name:'Jina kamili', email:'Email', phone_number:'Namba ya simu',
+      zune_id:'ZUNE ID', vendor_code:'Vendor code', role:'Aina ya akaunti',
+      account_status:'Hali ya akaunti', is_verified:'Verified', gender:'Jinsia',
+      date_of_birth:'Tarehe ya kuzaliwa', residential_address:'Anwani ya makazi',
+      avatar_path:'Picha ya wasifu (Storage path)', created_at:'Tarehe ya usajili',
+      suspended_at:'Tarehe ya kusimamishwa', removed_at:'Tarehe ya kuondolewa',
+      status_updated_by:'Aliyesasisha hali', removal_type:'Aina ya kuondoa'
+    };
+    const displayValue = (key,value) => {
+      if (value === null || value === undefined || value === '') return 'Haijawekwa';
+      if (key === 'role') return roleLabel(value);
+      if (key === 'is_verified') return value ? 'Verified' : 'Not verified';
+      if (/(^|_)(at|date)$/.test(key) && typeof value === 'string') return layout().date(value);
+      if (typeof value === 'object') return JSON.stringify(value);
+      return String(value);
+    };
+    const fields = Object.entries(profile).map(([key,value]) => [
+      profileLabels[key] || key.replaceAll('_',' ').replace(/\\b\\w/g,c=>c.toUpperCase()),
+      displayValue(key,value)
+    ]);
+    const details = fields.map(field => `
+      <div><span>${esc(field[0])}</span><strong>${esc(field[1])}</strong></div>
+    `).join('');
+    const objectDetails = (obj, omit=[]) => {
+      if (!obj || typeof obj !== 'object') return '<p class="users-muted">Hakuna taarifa zilizohifadhiwa.</p>';
+      const pairs = Object.entries(obj).filter(([key])=>!omit.includes(key));
+      if (!pairs.length) return '<p class="users-muted">Hakuna taarifa zilizohifadhiwa.</p>';
+      return '<div class="user-detail-grid">'+pairs.map(([key,value])=>`
+        <div><span>${esc(key.replaceAll('_',' '))}</span><strong>${esc(displayValue(key,value))}</strong></div>
+      `).join('')+'</div>';
+    };
     const metricCards = [
 
       [
@@ -724,6 +679,35 @@
     `;
 
 
+    const linkedSections = [
+      section('Akaunti ya Supabase Auth', objectDetails(data.auth_account, ['id'])),
+      section('Taarifa za Duka / Seller', objectDetails(data.store)),
+      section('Taarifa za Dereva', objectDetails(data.driver_profile)),
+      section('Anwani za Delivery', rowsTable(data.delivery_addresses, [
+        ['Mpokeaji','recipient_name'],['Simu','phone'],['Nchi','country'],['Mkoa','region'],
+        ['Wilaya','district'],['Kata','ward'],['Mtaa','street'],['Alama ya karibu','landmark'],
+        ['Latitude','latitude'],['Longitude','longitude'],['Anwani chaguo-msingi','is_default'],['Maelekezo','delivery_notes']
+      ], 'Hakuna anwani za delivery.')),
+      section('Maombi ya Dereva', rowsTable(data.driver_applications, [
+        ['Chanzo','application_source'],['Hali','status'],['Imetumwa','submitted_at'],
+        ['Imehakikiwa','reviewed_at'],['Maelezo','review_note']
+      ], 'Hakuna maombi ya dereva.')),
+      section('Nyaraka za Dereva', rowsTable(data.driver_documents, [
+        ['Aina ya nyaraka','document_type'],['Jina la faili','original_file_name'],
+        ['Aina ya faili','mime_type'],['Ukubwa (bytes)','file_size'],['Inaisha','expiry_date'],
+        ['Hali','status'],['Maelezo ya ukaguzi','review_note']
+      ], 'Hakuna nyaraka za dereva.')),
+      section('Maombi ya Seller', rowsTable(data.seller_applications, [
+        ['Duka','store_name'],['Hali','status'],['Tarehe','created_at'],['Maelezo','admin_note']
+      ], 'Hakuna maombi ya Seller.')),
+      section('Verification Applications', rowsTable(data.verification_applications, [
+        ['Aina','verification_type'],['Sababu','reason'],['Hali','status'],['Tarehe','created_at']
+      ], 'Hakuna maombi ya verification.')),
+      section('Verification Requests', rowsTable(data.verification_requests, [
+        ['Aina ya nyaraka','document_type'],['Namba ya nyaraka','document_number'],
+        ['Aina','verification_type'],['Hali','status'],['Tarehe','created_at'],['Maelezo','admin_note']
+      ], 'Hakuna verification requests.'))
+    ].join('');
     host.innerHTML =
 
     `
@@ -786,17 +770,7 @@
 
 
 
-    ${section(
-      'Verification Requests',
-      rowsTable(
-        data.verification_requests,
-        [
-          ['Hali','status'],
-          ['Tarehe','created_at']
-        ],
-        'Hakuna verification requests.'
-      )
-    )}
+    ${linkedSections}
 
     `;
 
