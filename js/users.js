@@ -841,36 +841,47 @@
 
 
   }
-  async function viewUser(id) {
-
-    try {
-
-      const data =
-        await rpc(
-          'admin_get_user_details',
-          {
-            p_user_id:id
-          }
-        );
-
-
-      openDetails(
-        data || {}
-      );
-
-
-    } catch(error) {
-
-
-      layout().toast(
-        error.message ||
-        'Imeshindikana kupata taarifa za mtumiaji.',
-        'error'
-      );
-
-
+  async function viewUser(id, triggerButton = null) {
+    if (!id) {
+      layout().toast('ID ya mtumiaji haijapatikana.', 'error');
+      return;
     }
 
+    const originalText = triggerButton?.textContent || 'Maelezo';
+    if (triggerButton) {
+      triggerButton.disabled = true;
+      triggerButton.setAttribute('aria-busy', 'true');
+      triggerButton.textContent = 'Inafungua...';
+    }
+
+    const host = $('usersDetailPanel');
+    if (host) {
+      host.hidden = false;
+      host.innerHTML = '<div class="empty-state" role="status">Inapakia taarifa zote za mtumiaji...</div>';
+    }
+
+    try {
+      const data = await rpc('admin_get_user_details', { p_user_id: id });
+      if (!data?.profile) {
+        throw new Error('Taarifa za profile hazikupatikana kwa akaunti hii.');
+      }
+      openDetails(data);
+    } catch (error) {
+      if (host) {
+        host.hidden = false;
+        host.innerHTML = '<div class="empty-state"><strong>Imeshindikana kufungua taarifa.</strong><p>' +
+          esc(error.message || 'Tafadhali jaribu tena.') +
+          '</p><button class="secondary-btn" type="button" data-user-retry="' + esc(id) + '">Jaribu tena</button></div>';
+        host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      layout().toast(error.message || 'Imeshindikana kupata taarifa za mtumiaji.', 'error');
+    } finally {
+      if (triggerButton) {
+        triggerButton.disabled = false;
+        triggerButton.removeAttribute('aria-busy');
+        triggerButton.textContent = originalText;
+      }
+    }
   }
 
 
@@ -1512,7 +1523,8 @@
 
 
             viewUser(
-              button.dataset.userView
+              button.dataset.userView,
+              button
             );
 
 
@@ -1533,6 +1545,11 @@
       ?.addEventListener(
         'click',
         event => {
+          const retry = event.target.closest('[data-user-retry]');
+          if (retry) {
+            viewUser(retry.dataset.userRetry);
+            return;
+          }
 
 
 
