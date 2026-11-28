@@ -83,6 +83,11 @@
     note.id='adminIntelFootnote';
     note.textContent='Takwimu za fedha zimegawanywa: thamani ya oda zilizokamilika si sawa na malipo yaliyothibitishwa, na wallet liability si mapato ya ZUNE.';
     panel.after(note);
+    const findings=document.createElement('section');
+    findings.id='adminSecurityFindings';
+    findings.className='admin-security-findings';
+    findings.innerHTML='<div><strong>Security findings za ukaguzi</strong><p>Orodha hii inaonyesha maeneo ya kuchunguza; RLS bila policy huzuia ufikiaji wa kawaida, si ushahidi wa data kuvuja.</p></div><div class="finding-columns"><div><b>RLS OFF tables</b><ul id="intelRlsOffList"><li>Inapakia…</li></ul></div><div><b>RLS enabled, no policy</b><ul id="intelRlsNoPolicyList"><li>Inapakia…</li></ul></div><div><b>Anon SECURITY DEFINER RPCs</b><ul id="intelAnonRpcList"><li>Inapakia…</li></ul></div></div>';
+    note.after(findings);
     const style=document.createElement('style');
     style.textContent=`
       .admin-intel-filter{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 14px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#102c24}
@@ -94,7 +99,15 @@
       .admin-intel-grid article span{display:block;color:var(--muted);font-size:10px;line-height:1.45;min-height:29px}
       .admin-intel-grid article strong{display:block;margin:8px 0 5px;font:800 19px Manrope;color:var(--text);overflow-wrap:anywhere}
       .admin-intel-grid article small{font-size:9px;color:var(--muted)}
-      .admin-intel-footnote{margin:0 0 18px;padding:10px 12px;border-left:3px solid var(--gold);background:#d9b66c0b;color:var(--muted);font-size:10px;line-height:1.6}
+      .admin-intel-footnote{margin:0 0 12px;padding:10px 12px;border-left:3px solid var(--gold);background:#d9b66c0b;color:var(--muted);font-size:10px;line-height:1.6}
+      .admin-security-findings{margin:0 0 18px;padding:15px;border:1px solid var(--line);border-radius:13px;background:#0d261f}
+      .admin-security-findings>div:first-child strong{font:800 13px Manrope;color:var(--gold-2)}
+      .admin-security-findings p{font-size:10px;color:var(--muted);margin:5px 0 12px}
+      .finding-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+      .finding-columns>div{min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px;background:#102c24}
+      .finding-columns b{font-size:10px;color:var(--text)}
+      .finding-columns ul{margin:8px 0 0;padding-left:17px;max-height:150px;overflow:auto;color:var(--muted);font-size:10px;line-height:1.7;overflow-wrap:anywhere}
+      @media(max-width:900px){.finding-columns{grid-template-columns:1fr}}
       @media(max-width:900px){.admin-intel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:560px){.admin-intel-filter{align-items:flex-start}.admin-intel-controls{width:100%}.admin-intel-controls select,.admin-intel-controls input{flex:1;min-width:120px;max-width:none}.admin-intel-grid article{padding:12px}.admin-intel-grid article strong{font-size:17px}}
     `;
@@ -131,6 +144,10 @@
     set('intelRlsDisabled',number(security.public_tables_rls_disabled));
     set('intelRlsCoverage',number(security.public_tables_total)+' public tables · '+number(security.public_tables_rls_enabled_no_policy)+' RLS no-policy (deny by default)');
     set('intelPublicRpc',number(security.public_security_definer_anon_count));
+    const fillFindings=(id,items,format)=>{const list=$(id);if(!list)return;list.replaceChildren();const values=Array.isArray(items)?items:[];if(!values.length){const li=document.createElement('li');li.textContent='Hakuna rekodi';list.appendChild(li);return;}values.forEach(item=>{const li=document.createElement('li');li.textContent=format(item);list.appendChild(li);});};
+    fillFindings('intelRlsOffList',security.public_tables_rls_disabled_names,name=>String(name));
+    fillFindings('intelRlsNoPolicyList',security.public_tables_rls_no_policy_names,name=>String(name));
+    fillFindings('intelAnonRpcList',security.public_security_definer_anon_functions,item=>item.name+'('+item.arguments+')');
     set('intelAuditEvents',number(security.admin_audit_events_7d));
     set('intelAdminCount',number(security.admin_accounts_count));
     set('intelAdminInvariant',security.single_admin_ok?'Single Admin Mkuu invariant: OK':'Single Admin Mkuu invariant: ATTENTION');
