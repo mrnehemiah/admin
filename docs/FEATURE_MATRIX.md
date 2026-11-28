@@ -2,7 +2,7 @@
 
 | Feature area | Current implementation | Write status |
 |---|---|---|
-| Dashboard / Admin Intelligence | Guarded `admin_intelligence_overview(p_from,p_to)`; period filters, live operations and finance signals, explicit gross-vs-paid separation | Read-only RPC |
+| Dashboard / Admin Intelligence | Guarded `admin_intelligence_overview(p_from,p_to)` + `admin_security_posture_overview()`; date filters, live operations/finance/security signals, gross-vs-paid separation | Read-only RPC |
 | Users | `admin_list_users`, status and verification RPCs | RPC |
 | Sellers | Seller applications + approve RPC | RPC |
 | Products | Product list + featured toggle | RLS update |
