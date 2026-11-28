@@ -58,6 +58,7 @@
   set('supabaseHealth',textFor(sup));set('authHealth',textFor(auth));set('serviceHealth',textFor(market));
   const healthSection=document.querySelector('[data-section="system-health"]');
   if(healthSection){let footer=healthSection.querySelector('[data-health-footnote]');if(!footer){footer=document.createElement('p');footer.dataset.healthFootnote='1';footer.className='notice-box';healthSection.appendChild(footer);}footer.textContent='Vipimo hivi vinakagua Data API, Authentication, Admin authorization na Marketplace Data API wakati Admin anapoingia. Haviwakilishi uptime ya cloud, Storage, Edge Functions au uthibitisho wa backup restore.';}
+  document.dispatchEvent(new Event('zune:admin-refresh'));
  }
  function bindActions(){
   document.getElementById('refreshHealthChecksBtn')?.addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Inapima…';try{await runSystemHealthChecks();ui().toast('Health checks zimekamilika.','success');}catch(err){ui().toast('Health checks zimeshindwa: '+err.message,'error');}finally{b.disabled=false;b.textContent='Run Health Checks';}});
