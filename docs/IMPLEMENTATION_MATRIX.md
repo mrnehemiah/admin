@@ -11,7 +11,7 @@
 | Categories | Yes | `product_categories` | None | Live read |
 | Orders | Yes | `orders`, `order_deliveries` | Status writes disabled until a verified server-side RPC atomically validates transitions, restores stock on cancellation, records audit and emits notifications | Live read; lifecycle write intentionally locked |
 | Product Reviews | Yes | `product_reviews` | Approve/reject with moderation note, audit log, and buyer/Seller notifications | Live read + moderation |
-| Payments | Yes | `payment_transactions` | None | Live read; payment provider verifies payment |
+| Payments & Settlement Center | Yes | Recent rows from payment/checkout/provider-event tables (bounded display only) | No financial total writes | Recent records only; lifetime/period totals disabled until a complete ledger-backed finance RPC is verified |
 | Wallet & Ledger | Yes | `wallet_ledger` | None | Live read; no direct balance writes |
 | Withdrawals | Yes | `withdrawal_requests` | Review via `admin_review_withdrawal()` | Live read + guarded RPC |
 | Commission | Yes | `commission_rules` | None | Live read |

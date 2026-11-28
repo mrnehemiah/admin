@@ -11,7 +11,7 @@ async function read(table,cols,limit=200,orderBy='created_at'){
 }
 const stateOf=value=>{
  const s=String(value||'pending').toLowerCase();
- if(['paid','succeeded','success','completed','confirmed'].includes(s))return 'paid';
+ if(['paid','succeeded','success'].includes(s))return 'paid';
  if(['failed','rejected','cancelled','canceled','expired'].includes(s))return 'failed';
  return 'pending';
 };
@@ -48,21 +48,27 @@ async function load(){
    const c=group.checkoutId?checkoutById.get(group.checkoutId):null;
    const related=group.orders.map(o=>paymentByOrder.get(o.id)).filter(Boolean);
    const g=group.checkoutId?gatewayByCheckout.get(group.checkoutId):null;
-   const p=related.find(x=>['paid','succeeded','success','completed','confirmed'].includes(String(x.payment_status||'').toLowerCase()))||related[0];
+   const p=related.find(x=>['paid','succeeded','success'].includes(String(x.payment_status||'').toLowerCase()))||related[0];
    const order=group.orders[0];
-   const status=stateOf(g?.status||p?.payment_status||order.payment_status);
+   const status=stateOf(g?.status||p?.payment_status);
    const method=g?.provider_code||p?.payment_method||c?.payment_method||order.payment_method||'—';
    const paidAmount=related.reduce((n,x)=>n+Number(x.amount||0),0);
    const amount=g?.amount??(related.length?paidAmount:(c?.grand_total??group.orders.reduce((n,x)=>n+Number(x.total_price||0),0)));
    return {orderId:group.checkoutId||order.id,orderLabels:[...new Set(group.orders.map(o=>o.public_order_id||o.order_number||String(o.id).slice(0,8)).filter(Boolean))],orderCount:group.orders.length,buyerId:c?.buyer_id||order.buyer_id,amount,provider:method,network:g?.network_code||'—',status,reference:g?.provider_reference||p?.transaction_reference||order.payment_reference||g?.id||p?.id||group.checkoutId||order.id,date:g?.paid_at||p?.updated_at||p?.created_at||c?.created_at||group.createdAt};
   }).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-  const sum=(list,key)=>list.reduce((total,item)=>total+Number(item[key]||0),0);
-  const paid=rows.filter(x=>x.status==='paid'),pending=rows.filter(x=>x.status==='pending'),failed=rows.filter(x=>x.status==='failed');
-  $('zpmPaid').textContent=money(sum(paid,'amount'))+' · '+paid.length;
-  $('zpmPending').textContent=String(pending.length);
-  $('zpmFailed').textContent=String(failed.length);
-  $('zpmSellerNet').textContent=money(sum(allocations,'net_amount'));
-  $('zpmCommission').textContent=money(sum(allocations,'commission_amount'));
+  const pending=rows.filter(x=>x.status==='pending'),failed=rows.filter(x=>x.status==='failed');
+  $('zpmPaid').textContent='Inahitaji finance RPC';
+  $('zpmPending').textContent=pending.length+' / '+rows.length+' za karibuni';
+  $('zpmFailed').textContent=failed.length+' / '+rows.length+' za karibuni';
+  $('zpmSellerNet').textContent='Inahitaji finance RPC';
+  $('zpmCommission').textContent='Inahitaji finance RPC';
+  const paymentSection=$('zpmTransactions')?.closest('section');
+  if(paymentSection&&!paymentSection.querySelector('.zpm-finance-warning')){
+   const note=document.createElement('p');note.className='zpm-finance-warning';
+   note.textContent='Takwimu za orodha ni rekodi za karibuni tu (hadi 200). Jumla ya malipo, mgao wa wauzaji na commission zimefungwa mpaka finance RPC itoe jumla kamili kutoka ledger iliyothibitishwa. Hali ya oda “completed/confirmed” peke yake si uthibitisho wa malipo.';
+   note.style.cssText='padding:10px 12px;margin:10px 0;border-left:3px solid #d9b66c;background:#d9b66c12;color:var(--muted);font-size:12px;line-height:1.5';
+   paymentSection.querySelector('.metrics-grid')?.after(note);
+  }
   $('zpmTransactions').innerHTML=rows.length?rows.map(x=>'<tr>'+cell((x.orderLabels.join(', ')||String(x.orderId).slice(0,8)+'…')+(x.orderCount>1?' ('+x.orderCount+' oda)':'')+' / '+String(x.reference).slice(0,16))+cell(String(x.buyerId||'').slice(0,8)+'…')+cell(money(x.amount))+cell(x.provider)+cell(x.network)+cell(statusLabel(x.status,x.provider))+cell(date(x.date))+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Bado hakuna oda zilizorekodiwa.</td></tr>';
   $('zpmAllocations').innerHTML=allocations.length?allocations.map(x=>'<tr>'+cell(orderById.get(x.order_id)?.public_order_id||orderById.get(x.order_id)?.order_number||String(x.order_id||'').slice(0,8)+'…')+cell(String(x.seller_id||'').slice(0,8)+'…')+cell(money(x.gross_amount))+cell((Number(x.commission_rate||0)*100).toFixed(2)+'%')+cell(money(x.commission_amount))+cell(money(x.net_amount))+cell(x.status)+'</tr>').join(''):'<tr><td colspan="7" class="empty-state">Bado hakuna seller earnings.</td></tr>';
   $('zpmEvents').innerHTML=events.length?events.map(x=>'<tr>'+cell(x.provider_code)+cell(x.provider_event_id)+cell(x.payment_reference)+cell(x.processing_status)+cell(date(x.received_at||x.created_at))+cell(x.error_message||'—')+'</tr>').join(''):'<tr><td colspan="6" class="empty-state">Bado hakuna gateway events.</td></tr>';
