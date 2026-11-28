@@ -34,3 +34,17 @@
 
 ## Known limitation
 The included SQL migration expects an existing `public.zune_is_admin()` function and existing Supabase auth/profile conventions. It must be reviewed against the live schema. The ZIP cannot prove that remote database functions, RLS policies, providers or backup systems are correctly configured.
+
+
+## Phase 5 — Admin Intelligence completion record (2026-11-28)
+
+- [x] Admin-only intelligence overview RPC with period bounds and separate operational/financial source metrics.
+- [x] Admin-only security posture RPC with actionable RLS and anonymous SECURITY DEFINER findings.
+- [x] Deterministic operational risk score with explainable factors; informational only, no automatic account/order/payment actions.
+- [x] Admin-login health probes for Data API, Auth session, Admin authorization and Marketplace Data API, written only through the guarded health-log RPC.
+- [x] Recent Security Events visible in the Admin Security Center.
+- [x] Period-based reports and CSV snapshot export.
+- [ ] Admin MFA enablement/verification and leaked-password protection check in Supabase Auth settings.
+- [ ] Automated backup configuration and a successful restore drill, verified outside the browser through Supabase Dashboard/CLI.
+- [ ] Live browser/mobile E2E as Admin Mkuu and review of browser console/network errors.
+- [ ] Cloud uptime, Storage and Edge Function monitoring integration (not represented by the browser probes).
