@@ -48,7 +48,7 @@ async function load(){
    const c=group.checkoutId?checkoutById.get(group.checkoutId):null;
    const related=group.orders.map(o=>paymentByOrder.get(o.id)).filter(Boolean);
    const g=group.checkoutId?gatewayByCheckout.get(group.checkoutId):null;
-   const p=related.find(x=>['paid','succeeded','success','completed','confirmed'].includes(String(x.payment_status||'').toLowerCase()))||related[0];
+   const p=related.find(x=>['paid','succeeded','success'].includes(String(x.payment_status||'').toLowerCase()))||related[0];
    const order=group.orders[0];
    const status=stateOf(g?.status||p?.payment_status);
    const method=g?.provider_code||p?.payment_method||c?.payment_method||order.payment_method||'—';
@@ -56,8 +56,7 @@ async function load(){
    const amount=g?.amount??(related.length?paidAmount:(c?.grand_total??group.orders.reduce((n,x)=>n+Number(x.total_price||0),0)));
    return {orderId:group.checkoutId||order.id,orderLabels:[...new Set(group.orders.map(o=>o.public_order_id||o.order_number||String(o.id).slice(0,8)).filter(Boolean))],orderCount:group.orders.length,buyerId:c?.buyer_id||order.buyer_id,amount,provider:method,network:g?.network_code||'—',status,reference:g?.provider_reference||p?.transaction_reference||order.payment_reference||g?.id||p?.id||group.checkoutId||order.id,date:g?.paid_at||p?.updated_at||p?.created_at||c?.created_at||group.createdAt};
   }).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-  const sum=(list,key)=>list.reduce((total,item)=>total+Number(item[key]||0),0);
-  const paid=rows.filter(x=>x.status==='paid'),pending=rows.filter(x=>x.status==='pending'),failed=rows.filter(x=>x.status==='failed');
+  const pending=rows.filter(x=>x.status==='pending'),failed=rows.filter(x=>x.status==='failed');
   $('zpmPaid').textContent='Inahitaji finance RPC';
   $('zpmPending').textContent=pending.length+' / '+rows.length+' za karibuni';
   $('zpmFailed').textContent=failed.length+' / '+rows.length+' za karibuni';
