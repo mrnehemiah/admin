@@ -465,7 +465,7 @@
         <div class="panel" style="margin-top:16px"><div class="panel-heading"><div><p class="eyebrow">USALAMA</p><h3>Kanuni za usimamizi</h3></div><span class="badge-pill success">Protected</span></div><ul class="supabase-safety-list"><li>Admin Mkuu pekee ndiye atakayeruhusiwa kwenye vitendo nyeti.</li><li>Hakuna service_role key au secret key ndani ya JavaScript ya browser.</li><li>Database writes, user deletion na mabadiliko ya RLS yatahitaji Edge Function/RPC yenye ukaguzi wa role na audit log.</li><li>Kurasa za Supabase zinafunguka kwenye dashboard rasmi; ukurasa huu haujidai kuwa umefanya mabadiliko ya backend.</li></ul></div>
       </section>
 
-      <section class="page-section" id="system-healthPage" data-section="system-health"><div class="section-intro"><div><h2>System Health</h2><p>Ufuatiliaji wa huduma muhimu za marketplace.</p></div></div><div class="security-cards"><article class="panel"><h3>Supabase</h3><p id="supabaseHealth">Inasubiri connection check...</p></article><article class="panel"><h3>Authentication</h3><p id="authHealth">Inasubiri status...</p></article><article class="panel"><h3>Marketplace Services</h3><p id="serviceHealth">Inasubiri status...</p></article></div></section>
+      <section class="page-section" id="system-healthPage" data-section="system-health"><div class="section-intro"><div><h2>System Health</h2><p>Ufuatiliaji wa huduma muhimu za marketplace.</p></div><button class="secondary-btn" id="refreshHealthChecksBtn" type="button">Run Health Checks</button></div><div class="security-cards"><article class="panel"><h3>Supabase</h3><p id="supabaseHealth">Inasubiri connection check...</p></article><article class="panel"><h3>Authentication</h3><p id="authHealth">Inasubiri status...</p></article><article class="panel"><h3>Marketplace Services</h3><p id="serviceHealth">Inasubiri status...</p></article></div></section>
 
       <section class="page-section" id="databasePage" data-section="database"><div class="section-intro"><div><h2>Database Monitoring</h2><p>Ufuatiliaji wa database, data integrity na errors.</p></div></div><div class="panel"><div class="notice-box">Database metrics na health checks zitaonyeshwa hapa baada ya kuunganishwa na monitoring endpoint salama. Usionyeshe service_role key kwenye browser.</div><div class="table-wrap"><table><thead><tr><th>Check</th><th>Result</th><th>Last checked</th><th>Status</th></tr></thead><tbody id="databaseHealthBody"><tr><td colspan="4" class="empty-state">Inasubiri database checks...</td></tr></tbody></table></div></div></section>
 
@@ -595,7 +595,7 @@
 <script src="js/template-manager.js?v=2"></script>
 <script src="js/supabase-management.js"></script>
 <script src="js/admin-announcements.js?v=20261119-1"></script>
-<script src="admin.js?v=phase5-health-security-events-20261128-2"></script>
+<script src="admin.js?v=phase5-health-security-events-20261128-3"></script>
 <script src="js/premium-v2.js"></script>
 </body>
 </html>
