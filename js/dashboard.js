@@ -70,7 +70,14 @@
       <article><span>Public tables bila RLS</span><strong id="intelRlsDisabled">—</strong><small id="intelRlsCoverage">—</small></article>
       <article><span>Public SECURITY DEFINER RPCs</span><strong id="intelPublicRpc">—</strong><small>Functions zinazoweza kuitwa na anon</small></article>
       <article><span>Admin audit events (siku 7)</span><strong id="intelAuditEvents">—</strong><small>Matukio yaliyorekodiwa</small></article>
-      <article><span>Admin Mkuu accounts</span><strong id="intelAdminCount">—</strong><small id="intelAdminInvariant">—</small></article>`;
+      <article><span>Admin Mkuu accounts</span><strong id="intelAdminCount">—</strong><small id="intelAdminInvariant">—</small></article>
+      <article><span>Watumiaji wapya</span><strong id="intelNewUsers">—</strong><small>Waliojisajili ndani ya kipindi</small></article>
+      <article><span>Seller wapya</span><strong id="intelNewSellers">—</strong><small>Maombi ya seller ndani ya kipindi</small></article>
+      <article><span>Maombi ya verification</span><strong id="intelPendingVerification">—</strong><small>Yanayosubiri ukaguzi</small></article>
+      <article><span>Oda za kipindi</span><strong id="intelPeriodOrders">—</strong><small id="intelOrderOutcomes">—</small></article>
+      <article><span>Malipo ya dereva</span><strong id="intelDriverPayouts">—</strong><small>Net payouts zilizothibitishwa</small></article>
+      <article><span>System health</span><strong id="intelHealthStatus">—</strong><small id="intelHealthDetail">Hakuna health check iliyorekodiwa</small></article>
+      <article><span>Backup status</span><strong id="intelBackupStatus">—</strong><small id="intelBackupDetail">Hakuna backup log iliyorekodiwa</small></article>`;
     filter.after(panel);
     const note=document.createElement('p');note.className='admin-intel-footnote';
     note.id='adminIntelFootnote';
@@ -127,6 +134,18 @@
     set('intelAuditEvents',number(security.admin_audit_events_7d));
     set('intelAdminCount',number(security.admin_accounts_count));
     set('intelAdminInvariant',security.single_admin_ok?'Single Admin Mkuu invariant: OK':'Single Admin Mkuu invariant: ATTENTION');
+    set('intelNewUsers',number(data.users_new_period));
+    set('intelNewSellers',number(data.sellers_new_period));
+    set('intelPendingVerification',number(data.verifications_pending));
+    set('intelPeriodOrders',number(data.orders_period));
+    set('intelOrderOutcomes',number(data.orders_completed_period)+' completed · '+number(data.orders_cancelled_period)+' cancelled');
+    set('intelDriverPayouts',money(data.driver_payouts_paid_period_tzs));
+    const health=data.latest_health_check||{};
+    set('intelHealthStatus',health.status||'Haijulikani');
+    set('intelHealthDetail',health.component?(health.component+' · '+(health.latency_ms??'—')+' ms · '+new Date(health.checked_at).toLocaleString('sw-TZ')):'Hakuna health check iliyorekodiwa');
+    const backup=data.latest_backup||{};
+    set('intelBackupStatus',backup.status||'Haijulikani');
+    set('intelBackupDetail',backup.operation?(backup.operation+' · '+new Date(backup.created_at).toLocaleString('sw-TZ')+(backup.reference?' · '+backup.reference:'')):'Hakuna backup log iliyorekodiwa');
     const rangeName=state.range==='today'?'Leo':state.range==='yesterday'?'Jana':state.range==='7d'?'Siku 7 zilizopita':state.range==='90d'?'Siku 90 zilizopita':state.range==='month'?'Mwezi huu':state.range==='lastMonth'?'Mwezi uliopita':state.range==='all'?'Tangu mwanzo':state.range==='custom'?'Kipindi maalum':'Siku 30 zilizopita';
     set('adminIntelPeriod',rangeName+' · '+new Date(from).toLocaleDateString('sw-TZ')+' – '+new Date(to).toLocaleDateString('sw-TZ'));
     set('adminIntelFootnote','Thamani ya oda zilizokamilika: '+money(data.gross_completed_orders_period_tzs)+'. Commission iliyoandikwa kwenye oda zilizokamilika: '+money(data.commission_completed_orders_period_tzs)+'. Hizi si uthibitisho wa fedha zilizopokelewa kwenye Admin Wallet.');
@@ -167,7 +186,7 @@
       try{await window.ZUNE_ACTIVITY_LOGS?.load?.();}catch(e){console.warn('Admin activity feed haijapakiwa:',e.message);}
       C().notice('dashboard','Takwimu zimepakiwa kupitia admin_intelligence_overview; thamani ya oda zilizokamilika, malipo yaliyorekodiwa na wallet liabilities vinaonyeshwa tofauti.');
     }catch(e){
-      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount'].forEach(id=>set(id,'—'));
+      ['totalUsers','totalSellers','totalOrders','totalProducts','totalRevenue','totalCommission','pendingApplications','pendingOrders','openDisputes','openTickets','intelPaidPayments','intelVerificationRevenue','intelWalletLiabilities','intelWithdrawals','intelDeliveries','intelPayoutHolds','intelSecurityAlerts','intelAiErrors','intelRlsDisabled','intelPublicRpc','intelAuditEvents','intelAdminCount','intelNewUsers','intelNewSellers','intelPendingVerification','intelPeriodOrders','intelDriverPayouts','intelHealthStatus','intelBackupStatus'].forEach(id=>set(id,'—'));
       C().notice('dashboard','Admin Intelligence haikuweza kupakia takwimu: '+(e.message||e)+'. Hakuna makadirio ya fallback yatakayoonyeshwa.');
       console.error('Admin Intelligence load failed',e);
     }finally{
