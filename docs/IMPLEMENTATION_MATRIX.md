@@ -9,7 +9,7 @@
 | Verification | Yes | `admin_list_verification_applications()` | Approve/reject via `admin_review_verification_application()` | Live read + guarded RPC |
 | Products | Yes | `products` | None | Live read |
 | Categories | Yes | `product_categories` | None | Live read |
-| Orders | Yes | `orders`, `order_deliveries` | Admin status update + audit + buyer notification; cancellation restores checkout-deducted stock | Live read + controlled Admin lifecycle |
+| Orders | Yes | `orders`, `order_deliveries` | Status writes locked until a verified server-side RPC atomically validates transitions, restores stock on cancellation, records audit and emits notifications | Live read; lifecycle write intentionally locked |
 | Product Reviews | Yes | `product_reviews` | Approve/reject with moderation note, audit log, and buyer/Seller notifications | Live read + moderation |
 | Payments | Yes | `payment_transactions` | None | Live read; payment provider verifies payment |
 | Wallet & Ledger | Yes | `wallet_ledger` | None | Live read; no direct balance writes |
