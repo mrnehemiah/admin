@@ -35,6 +35,7 @@
   const roleLabel = value => ({
     buyer: 'Buyer',
     vendor: 'Seller',
+    driver: 'Driver',
     admin: 'Admin'
   }[value] || value || '—');
 
@@ -471,84 +472,46 @@
 
 
 
-    const fields = [
-
-      [
-        'Jina kamili',
-        profile.full_name
-      ],
-
-      [
-        'Email',
-        profile.email
-      ],
-
-      [
-        'Simu',
-        profile.phone_number
-      ],
-
-      [
-        'ZUNE ID',
-        profile.zune_id
-      ],
-
-      [
-        'Vendor code',
-        profile.vendor_code
-      ],
-
-      [
-        'Role',
-        roleLabel(profile.role)
-      ],
-
-      [
-        'Hali ya akaunti',
-        statusLabel(profile.account_status)
-      ],
-
-      [
-        'Verification',
-        profile.is_verified
-        ? 'Verified'
-        : 'Unverified'
-      ],
-
-      [
-        'Amesajiliwa',
-        layout().date(profile.created_at)
-      ]
-
-    ];
-
-
-
-    const details =
-      fields.map(field =>
-
-        `
-
-        <div>
-
-          <span>
-          ${esc(field[0])}
-          </span>
-
-          <strong>
-          ${esc(field[1])}
-          </strong>
-
-
-        </div>
-
-        `
-
-      )
-      .join('');
-
-
-
+    const profileLabels = {
+      id:'Auth User ID', full_name:'Jina kamili', email:'Email', phone_number:'Namba ya simu',
+      zune_id:'ZUNE ID', vendor_code:'Vendor code', role:'Aina ya akaunti',
+      account_status:'Hali ya akaunti', is_verified:'Verified', gender:'Jinsia',
+      date_of_birth:'Tarehe ya kuzaliwa', residential_address:'Anwani ya makazi',
+      avatar_path:'Picha ya wasifu (Storage path)', created_at:'Tarehe ya usajili',
+      suspended_at:'Tarehe ya kusimamishwa', removed_at:'Tarehe ya kuondolewa',
+      status_updated_by:'Aliyesasisha hali', removal_type:'Aina ya kuondoa'
+    };
+    const displayValue = (key,value) => {
+      if (value === null || value === undefined || value === '') return 'Haijawekwa';
+      if (key === 'role') return roleLabel(value);
+      if (key === 'is_verified') return value ? 'Verified' : 'Not verified';
+      if (key === 'gender') return ({male:'Mwanaume',female:'Mwanamke',other:'Nyingine',prefer_not_to_say:'Hajataja'})[value] || value;
+      if ((key === 'date_of_birth' || key.endsWith('_date') || key.endsWith('_at')) && typeof value === 'string') return layout().date(value);
+      if (typeof value === 'object') return JSON.stringify(value);
+      return String(value);
+    };
+    const fields = Object.entries(profile).map(([key,value]) => [
+      profileLabels[key] || key.replaceAll('_',' ').replace(/\\b\\w/g,c=>c.toUpperCase()),
+      displayValue(key,value)
+    ]);
+    const details = fields.map(field => `
+      <div><span>${esc(field[0])}</span><strong>${esc(field[1])}</strong></div>
+    `).join('');
+    const objectDetails = (obj, omit=[]) => {
+      if (!obj || typeof obj !== 'object') return '<p class="users-muted">Hakuna taarifa zilizohifadhiwa.</p>';
+      const pairs = Object.entries(obj).filter(([key])=>!omit.includes(key));
+      if (!pairs.length) return '<p class="users-muted">Hakuna taarifa zilizohifadhiwa.</p>';
+      return '<div class="user-detail-grid">'+pairs.map(([key,value])=>`
+        <div><span>${esc(key.replaceAll('_',' '))}</span><strong>${esc(displayValue(key,value))}</strong></div>
+      `).join('')+'</div>';
+    };
+    const autoRowsTable = rows => {
+      if (!Array.isArray(rows) || !rows.length) return '<p class="users-muted">Hakuna rekodi zilizohifadhiwa.</p>';
+      const keys = Object.keys(rows[0]).filter(key => !['raw_user_meta_data','raw_app_meta_data'].includes(key));
+      return '<div class="table-wrap"><table><thead><tr>'+keys.map(key=>'<th>'+esc(key.replaceAll('_',' '))+'</th>').join('')+'</tr></thead><tbody>'+
+        rows.map(row=>'<tr>'+keys.map(key=>'<td>'+esc(displayValue(key,row[key]))+'</td>').join('')+'</tr>').join('')+
+        '</tbody></table></div>';
+    };
     const metricCards = [
 
       [
@@ -724,6 +687,83 @@
     `;
 
 
+    const linkedSections = [
+      section('Akaunti ya Supabase Auth', objectDetails(data.auth_account, ['id'])),
+      section('Taarifa za Duka / Seller', objectDetails(data.store)),
+      section('Wallet ya Mtumiaji', objectDetails(data.wallet)),
+      section('Taarifa za Dereva', objectDetails(data.driver_profile)),
+      section('Anwani za Delivery', autoRowsTable(data.delivery_addresses)),
+      section('Maombi ya Dereva', autoRowsTable(data.driver_applications)),
+      section('Nyaraka za Dereva', autoRowsTable(data.driver_documents)),
+      section('Mabadiliko ya Chombo cha Dereva', autoRowsTable(data.driver_vehicle_change_requests)),
+      section('Malipo ya Dereva', autoRowsTable(data.driver_payment_records)),
+      section('Maombi ya Seller', autoRowsTable(data.seller_applications)),
+      section('Verification Applications', autoRowsTable(data.verification_applications)),
+      section('Verification Requests', autoRowsTable(data.verification_requests)),
+      section('Verification Audit History', autoRowsTable(data.verification_audit_logs)),
+      section('Verified Badge Requests', autoRowsTable(data.verified_badge_requests)),
+      section('Verified Badges', autoRowsTable(data.public_badges)),
+      section('Individual Badges', autoRowsTable(data.public_individual_badges)),
+      section('Store Badges', autoRowsTable(data.public_store_badges)),
+      section('Bidhaa za Mtumiaji / Seller', autoRowsTable(data.products)),
+      section('Oda alizonunua', autoRowsTable(data.buyer_orders)),
+      section('Oda alizouza', autoRowsTable(data.seller_orders)),
+      section('Order Items', autoRowsTable(data.order_items)),
+      section('Delivery Records', autoRowsTable(data.order_deliveries)),
+      section('Shopping Cart', autoRowsTable(data.cart_items)),
+      section('Wishlist', autoRowsTable(data.wishlists)),
+      section('Price Drop Alerts', autoRowsTable(data.price_drop_alerts)),
+      section('Coupon Redemptions', autoRowsTable(data.coupon_redemptions)),
+      section('Checkout Records', autoRowsTable(data.order_checkouts)),
+      section('Product Reviews', autoRowsTable(data.product_reviews)),
+      section('Product Questions', autoRowsTable(data.product_questions)),
+      section('Seller Answers', autoRowsTable(data.product_answers)),
+      section('Payments', autoRowsTable(data.payments)),
+      section('Order Payments', autoRowsTable(data.order_payments)),
+      section('Wallet Transactions', autoRowsTable(data.wallet_transactions)),
+      section('Wallet Ledger', autoRowsTable(data.wallet_ledger)),
+      section('Payout Accounts', autoRowsTable(data.wallet_payout_accounts)),
+      section('Refund Requests', autoRowsTable(data.wallet_refunds)),
+      section('Withdrawals', autoRowsTable(data.withdrawals)),
+      section('Support Tickets', autoRowsTable(data.support_tickets)),
+      section('Disputes', autoRowsTable(data.disputes)),
+      section('Notifications', autoRowsTable(data.notifications)),
+      section('Chat Conversations', autoRowsTable(data.chat_conversations)),
+      section('Conversation Participation', autoRowsTable(data.conversation_participants)),
+      section('Conversations Created', autoRowsTable(data.conversations_created)),
+      section('Security Events', autoRowsTable(data.security_events)),
+      section('Login History', autoRowsTable(data.admin_login_events)),
+      section('Seller Earnings', autoRowsTable(data.seller_earnings)),
+      section('Seller Payout Methods', autoRowsTable(data.seller_payout_methods)),
+      section('Seller Locations', autoRowsTable(data.seller_locations)),
+      section('Seller Promotions', autoRowsTable(data.seller_promotions)),
+      section('Seller Business Goals', autoRowsTable(data.seller_business_goals)),
+      section('Ad Campaigns', autoRowsTable(data.ad_campaigns)),
+      section('Ad Auction Bids', autoRowsTable(data.ad_auction_bids)),
+      section('Ads Wallet', objectDetails(data.ads_wallet)),
+      section('Ads Wallet Transactions', autoRowsTable(data.ads_wallet_transactions)),
+      section('Coupons za Seller', autoRowsTable(data.coupon_ownership)),
+      section('Store Login Aliases', autoRowsTable(data.store_login_aliases)),
+      section('Store Follows', autoRowsTable(data.store_follows)),
+      section('Reels', autoRowsTable(data.reels)),
+      section('Reel Comments', autoRowsTable(data.reel_comments)),
+      section('Reel Likes', autoRowsTable(data.reel_likes)),
+      section('Reel Saves', autoRowsTable(data.reel_saves)),
+      section('Reel Shares', autoRowsTable(data.reel_shares)),
+      section('Reel Follows', autoRowsTable(data.reel_follows)),
+      section('Status Comments', autoRowsTable(data.status_comments)),
+      section('Status Likes', autoRowsTable(data.status_likes)),
+      section('Store Statuses', autoRowsTable(data.store_statuses)),
+      section('Creator Earnings', autoRowsTable(data.creator_earnings)),
+      section('Creator Applications', autoRowsTable(data.creator_applications)),
+      section('Creator Withdrawals', autoRowsTable(data.creator_withdrawals)),
+      section('Reward Accounts', autoRowsTable(data.reward_accounts)),
+      section('Reward Ledger', autoRowsTable(data.reward_ledger)),
+      section('Referral Codes', autoRowsTable(data.referral_codes)),
+      section('Theme Assets', autoRowsTable(data.theme_assets)),
+      section('Theme Trusted Creator', autoRowsTable(data.theme_trusted_creator)),
+      section('Admin Actions History', autoRowsTable(data.admin_actions))
+    ].join('');
     host.innerHTML =
 
     `
@@ -786,17 +826,7 @@
 
 
 
-    ${section(
-      'Verification Requests',
-      rowsTable(
-        data.verification_requests,
-        [
-          ['Hali','status'],
-          ['Tarehe','created_at']
-        ],
-        'Hakuna verification requests.'
-      )
-    )}
+    ${linkedSections}
 
     `;
 
