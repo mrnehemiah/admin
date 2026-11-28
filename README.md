@@ -52,6 +52,17 @@ ZUNE_PREMIUM_ADMIN/
 5. Hakikisha RLS ya marketplace tables inaruhusu Admin SELECT. Package haitazima RLS wala kubadilisha policies zilizopo.
 6. Deploy site kupitia HTTPS.
 
+## Phase 5 — Admin Intelligence (2026-11-28)
+
+- Added guarded RPC `admin_intelligence_overview(p_from, p_to)` in `migrations/20261128_admin_intelligence_overview.sql`.
+- RPC requires a signed-in Admin Mkuu, verifies the single-admin invariant, validates the date window, and grants execution to `authenticated` only (not `anon`).
+- Dashboard now reads aggregate metrics from the RPC rather than independently counting raw tables for the primary KPI cards.
+- Date filters: last 7 days, last 30 days, last 90 days, this month, all time, and custom date range.
+- Financial measures are explicitly separated: completed-order gross value and order commission are not described as confirmed cash received; paid payments, paid verification transactions, wallet liabilities, pending withdrawals, and Admin Wallet balance are separate measures.
+- Operations signals include open disputes (including waiting-for-buyer/seller states), open support, in-transit deliveries, payout holds, high/critical security events, and AI usage/error summaries.
+- Dashboard failures show an error state; it does not fall back to fabricated or partial-sample financial totals.
+- Live signed-in Admin browser execution and visual/mobile E2E verification are still required. The RPC migration is applied to the shared Supabase project.
+
 ## Data tables zinazotumiwa
 
 | Module | Table / source | Hali |
